@@ -16,6 +16,45 @@
   --roxo2:#8e24aa;
   --claro:#f3e5f5;
 }
+  .painel{
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  margin-top:15px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.painel h3{
+  margin-bottom:10px;
+  font-size:18px;
+}
+
+.grupo{
+  margin-bottom:10px;
+}
+
+.linha{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:5px;
+}
+
+.bola{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:#fff;
+  font-size:14px;
+}
+
+.quente{ background:#e53935; }
+.neutra{ background:#757575; }
+.fria{ background:#1e88e5; }
   
 
 body{
@@ -73,6 +112,24 @@ textarea,input,select{
   border-radius:12px;
   border:1px solid #ccc;
   font-size:16px;
+  <div class="painel">
+  <h3>📊 Análise das Dezenas</h3>
+
+  <div class="grupo">
+    <strong>🔥 Quentes</strong>
+    <div id="quentes" class="linha"></div>
+  </div>
+
+  <div class="grupo">
+    <strong>⚪ Neutras</strong>
+    <div id="neutras" class="linha"></div>
+  </div>
+
+  <div class="grupo">
+    <strong>❄️ Frias</strong>
+    <div id="frias" class="linha"></div>
+  </div>
+</div>
 }
 
 button{
@@ -203,6 +260,7 @@ function rankingPonderado(jogos){
 
 function gerarEstatistico(){
   let jogos = parseResultados();
+  atualizarPainel(jogos);
   if(jogos.length < 5){
     alert("Cole pelo menos 5 concursos.");
     return;
@@ -252,6 +310,22 @@ function gerarAleatorio(){
     out+=`<div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
   }
   saida.innerHTML=out;
+}
+  function atualizarPainel(jogos){
+  let ranking = rankingPonderado(jogos);
+
+  let quentes = ranking.slice(0,8);
+  let neutras = ranking.slice(8,17);
+  let frias   = ranking.slice(17);
+
+  document.getElementById("quentes").innerHTML =
+    quentes.map(n=><div class="bola quente">${String(n).padStart(2,"0")}</div>).join("");
+
+  document.getElementById("neutras").innerHTML =
+    neutras.map(n=><div class="bola neutra">${String(n).padStart(2,"0")}</div>).join("");
+
+  document.getElementById("frias").innerHTML =
+    frias.map(n=><div class="bola fria">${String(n).padStart(2,"0")}</div>).join("");
 }
 </script>
 
