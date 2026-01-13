@@ -182,22 +182,57 @@ function parseResultados(){
   return t.split("\n").map(l=>l.trim().split(/\s+/).map(Number));
 }
 
-function rankingFreq(jogos){
-  let f={};for(let i=1;i<=25;i++)f[i]=0;
-  jogos.forEach(j=>j.forEach(n=>f[n]++));
-  return Object.keys(f).sort((a,b)=>f[b]-f[a]).map(Number);
+function rankingPonderado(jogos){
+  let pesos = {};
+  for(let i=1;i<=25;i++) pesos[i]=0;
+
+  jogos.forEach((jogo, idx)=>{
+    let peso = 1;
+    if(idx >= jogos.length-10) peso = 3;
+    else if(idx >= jogos.length-30) peso = 2;
+
+    jogo.forEach(n=>{
+      pesos[n] += peso;
+    });
+  });
+
+  return Object.keys(pesos)
+    .sort((a,b)=>pesos[b]-pesos[a])
+    .map(Number);
 }
 
 function gerarEstatistico(){
-  let jogos=parseResultados();
-  if(!jogos.length){alert("Cole os resultados");return;}
-  let qJ=+qtdJogos.value,qN=+qtdNums.value;
-  let rank=rankingFreq(jogos),out="";
+  let jogos = parseResultados();
+  if(jogos.length < 5){
+    alert("Cole pelo menos 5 concursos.");
+    return;
+  }
+
+  let qJ = +qtdJogos.value;
+  let qN = +qtdNums.value;
+  let ranking = rankingPonderado(jogos);
+  let out = "";
+
   for(let i=0;i<qJ;i++){
-    let jogo=rank.slice(0,Math.floor(qN*0.7));
-    while(jogo.length<qN){
-      let n=Math.floor(Math.random()*25)+1;
-      if(!jogo.includes(n))jogo.push(n);
+    let jogo = [];
+
+    let fixos = Math.floor(qN * 0.7);
+    while(jogo.length < fixos){
+      let n = ranking[Math.floor(Math.random()*10)];
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+
+    while(jogo.length < qN){
+      let n = Math.floor(Math.random()*25)+1;
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+
+    jogo.sort((a,b)=>a-b);
+    out += <div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>;
+  }
+
+  saida.innerHTML = out;
+}
     }
     jogo.sort((a,b)=>a-b);
     out+=`<div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
