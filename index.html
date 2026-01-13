@@ -219,6 +219,16 @@ function atualizarPainel(jogos){
   document.getElementById("frias").innerHTML=r.slice(17).map(n=>`<div class="bola fria">${String(n).padStart(2,"0")}</div>`).join("");
 }
 
+  function validarParesImpares(jogo){
+  let pares = jogo.filter(n => n % 2 === 0).length;
+  let impares = jogo.length - pares;
+
+  return (
+    (pares === 7 && impares === 8) ||
+    (pares === 8 && impares === 7)
+  );
+}
+  
 function gerarEstatistico(){
   let jogos=parseResultados();
   if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
@@ -238,7 +248,13 @@ function gerarEstatistico(){
       if(!j.includes(n))j.push(n);
     }
     j.sort((a,b)=>a-b);
-    out+=`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+
+if(!validarParesImpares(j)){
+  i--;
+  continue;
+}
+
+out+=<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
   }
   saida.innerHTML=out;
 }
