@@ -254,7 +254,284 @@ if(!validarParesImpares(j)){
   continue;
 }
 
+out+=<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lotofácil">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Lotofácil App</title>
+
+<style>
+:root{
+  --roxo:#6a1b9a;
+  --roxo2:#8e24aa;
+  --claro:#f3e5f5;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:linear-gradient(180deg,var(--roxo),var(--roxo2));
+}
+
+.app{
+  max-width:430px;
+  margin:auto;
+  min-height:100vh;
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  overflow:hidden;
+}
+
+header{
+  background:linear-gradient(135deg,var(--roxo),var(--roxo2));
+  color:#fff;
+  padding:20px;
+  text-align:center;
+  font-size:20px;
+  font-weight:600;
+}
+
+.tabs{
+  display:flex;
+  background:#eee;
+}
+
+.tab{
+  flex:1;
+  padding:14px;
+  text-align:center;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.tab.active{
+  background:#fff;
+  color:var(--roxo);
+  border-bottom:3px solid var(--roxo);
+}
+
+.content{
+  padding:20px;
+}
+
+textarea,input,select{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  margin-top:15px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--roxo),var(--roxo2));
+  color:#fff;
+  font-size:17px;
+  font-weight:600;
+}
+
+.resultado{
+  background:var(--claro);
+  padding:14px;
+  border-radius:12px;
+  margin-top:12px;
+  color:#4a148c;
+  font-weight:600;
+  text-align:center;
+}
+
+.painel{
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  margin-top:15px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.linha{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:6px;
+}
+
+.bola{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:#fff;
+}
+
+.quente{background:#e53935;}
+.neutra{background:#757575;}
+.fria{background:#1e88e5;}
+
+.footer{
+  text-align:center;
+  font-size:12px;
+  color:#888;
+  padding:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+<header>🎯 Lotofácil Inteligente</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="trocarTab(0)">📊 Estatística</div>
+  <div class="tab" onclick="trocarTab(1)">🎲 Aleatório</div>
+</div>
+
+<div class="content" id="tab0">
+  <textarea id="resultados" rows="5" placeholder="Cole os concursos (1 por linha)"></textarea>
+
+  <input type="number" id="qtdJogos" value="5" min="1" max="50">
+  <select id="qtdNums">
+    <option value="15">15 números</option>
+    <option value="16">16 números</option>
+    <option value="17">17 números</option>
+    <option value="18">18 números</option>
+  </select>
+
+  <button onclick="gerarEstatistico()">Gerar Jogos Estatísticos</button>
+
+  <div class="painel">
+    <h3>📊 Análise das Dezenas</h3>
+    <strong>🔥 Quentes</strong>
+    <div id="quentes" class="linha"></div>
+
+    <strong>⚪ Neutras</strong>
+    <div id="neutras" class="linha"></div>
+
+    <strong>❄️ Frias</strong>
+    <div id="frias" class="linha"></div>
+  </div>
+</div>
+
+<div class="content" id="tab1" style="display:none">
+  <input type="number" id="qtdJogosA" value="5" min="1" max="50">
+  <select id="qtdNumsA">
+    <option value="15">15 números</option>
+    <option value="16">16 números</option>
+    <option value="17">17 números</option>
+    <option value="18">18 números</option>
+  </select>
+  <button onclick="gerarAleatorio()">Gerar Jogos Aleatórios</button>
+</div>
+
+<div class="content">
+  <div id="saida"></div>
+</div>
+
+<div class="footer">Lotofácil • Estatística Inteligente</div>
+</div>
+
+<script>
+function trocarTab(i){
+  document.querySelectorAll('.tab').forEach((t,idx)=>{
+    t.classList.toggle('active',idx===i);
+    document.getElementById('tab'+idx).style.display = idx===i?'block':'none';
+  });
+}
+
+function parseResultados(){
+  let t=document.getElementById('resultados').value.trim();
+  if(!t)return[];
+  return t.split("\n").map(l=>l.trim().split(/\s+/).map(Number));
+}
+
+function rankingPonderado(jogos){
+  let pesos={};
+  for(let i=1;i<=25;i++)pesos[i]=0;
+  jogos.forEach((j,idx)=>{
+    let p=idx>=jogos.length-10?3:idx>=jogos.length-30?2:1;
+    j.forEach(n=>pesos[n]+=p);
+  });
+  return Object.keys(pesos).sort((a,b)=>pesos[b]-pesos[a]).map(Number);
+}
+
+function atualizarPainel(jogos){
+  let r=rankingPonderado(jogos);
+  document.getElementById("quentes").innerHTML=r.slice(0,8).map(n=>`<div class="bola quente">${String(n).padStart(2,"0")}</div>`).join("");
+  document.getElementById("neutras").innerHTML=r.slice(8,17).map(n=>`<div class="bola neutra">${String(n).padStart(2,"0")}</div>`).join("");
+  document.getElementById("frias").innerHTML=r.slice(17).map(n=>`<div class="bola fria">${String(n).padStart(2,"0")}</div>`).join("");
+}
+
+  function validarParesImpares(jogo){
+  let pares = jogo.filter(n => n % 2 === 0).length;
+  let impares = jogo.length - pares;
+
+  return (
+    (pares === 7 && impares === 8) ||
+    (pares === 8 && impares === 7)
+  );
+}
+  
+function gerarEstatistico(){
+  let jogos=parseResultados();
+  if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
+  atualizarPainel(jogos);
+
+  let qJ=+qtdJogos.value,qN=+qtdNums.value,out="";
+  let r=rankingPonderado(jogos);
+
+  for(let i=0;i<qJ;i++){
+    let j=[];
+    while(j.length<Math.floor(qN*0.7)){
+      let n=r[Math.floor(Math.random()*10)];
+      if(!j.includes(n))j.push(n);
+    }
+    while(j.length<qN){
+      let n=Math.floor(Math.random()*25)+1;
+      if(!j.includes(n))j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+
+if(!validarParesImpares(j)){
+  i--;
+  continue;
+}
+
 out+=<`div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+  }
+  saida.innerHTML=out;
+}
+
+function gerarAleatorio(){
+  let qJ=+qtdJogosA.value,qN=+qtdNumsA.value,out="";
+  for(let i=0;i<qJ;i++){
+    let j=[];
+    while(j.length<qN){
+      let n=Math.floor(Math.random()*25)+1;
+      if(!j.includes(n))j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+    out+=`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+  }
+  saida.innerHTML=out;
+}
+</script>
+
+</body>
+</html`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
   }
   saida.innerHTML=out;
 }
