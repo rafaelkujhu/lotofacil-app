@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <link rel="apple-touch-icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,52 +16,11 @@
   --roxo2:#8e24aa;
   --claro:#f3e5f5;
 }
-  .painel{
-  background:#fff;
-  border-radius:12px;
-  padding:15px;
-  margin-top:15px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
-
-.painel h3{
-  margin-bottom:10px;
-  font-size:18px;
-}
-
-.grupo{
-  margin-bottom:10px;
-}
-
-.linha{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:5px;
-}
-
-.bola{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  color:#fff;
-  font-size:14px;
-}
-
-.quente{ background:#e53935; }
-.neutra{ background:#757575; }
-.fria{ background:#1e88e5; }
-  
 
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
   background:linear-gradient(180deg,var(--roxo),var(--roxo2));
-  color:#333;
 }
 
 .app{
@@ -112,24 +71,6 @@ textarea,input,select{
   border-radius:12px;
   border:1px solid #ccc;
   font-size:16px;
-  <div class="painel">
-  <h3>📊 Análise das Dezenas</h3>
-
-  <div class="grupo">
-    <strong>🔥 Quentes</strong>
-    <div id="quentes" class="linha"></div>
-  </div>
-
-  <div class="grupo">
-    <strong>⚪ Neutras</strong>
-    <div id="neutras" class="linha"></div>
-  </div>
-
-  <div class="grupo">
-    <strong>❄️ Frias</strong>
-    <div id="frias" class="linha"></div>
-  </div>
-</div>
 }
 
 button{
@@ -142,11 +83,6 @@ button{
   color:#fff;
   font-size:17px;
   font-weight:600;
-  cursor:pointer;
-}
-
-button:active{
-  transform:scale(.97);
 }
 
 .resultado{
@@ -157,13 +93,37 @@ button:active{
   color:#4a148c;
   font-weight:600;
   text-align:center;
-  animation:fade .3s ease;
 }
 
-@keyframes fade{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1}
+.painel{
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  margin-top:15px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
+
+.linha{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:6px;
+}
+
+.bola{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:#fff;
+}
+
+.quente{background:#e53935;}
+.neutra{background:#757575;}
+.fria{background:#1e88e5;}
 
 .footer{
   text-align:center;
@@ -185,13 +145,9 @@ button:active{
 </div>
 
 <div class="content" id="tab0">
-  <p>Cole até 100 concursos (um por linha):</p>
-  <textarea id="resultados" rows="5"
-  placeholder="01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"></textarea>
+  <textarea id="resultados" rows="5" placeholder="Cole os concursos (1 por linha)"></textarea>
 
-  <input type="number" id="qtdJogos" value="5" min="1" max="50"
-  placeholder="Quantidade de jogos">
-
+  <input type="number" id="qtdJogos" value="5" min="1" max="50">
   <select id="qtdNums">
     <option value="15">15 números</option>
     <option value="16">16 números</option>
@@ -200,6 +156,18 @@ button:active{
   </select>
 
   <button onclick="gerarEstatistico()">Gerar Jogos Estatísticos</button>
+
+  <div class="painel">
+    <h3>📊 Análise das Dezenas</h3>
+    <strong>🔥 Quentes</strong>
+    <div id="quentes" class="linha"></div>
+
+    <strong>⚪ Neutras</strong>
+    <div id="neutras" class="linha"></div>
+
+    <strong>❄️ Frias</strong>
+    <div id="frias" class="linha"></div>
+  </div>
 </div>
 
 <div class="content" id="tab1" style="display:none">
@@ -210,26 +178,21 @@ button:active{
     <option value="17">17 números</option>
     <option value="18">18 números</option>
   </select>
-
   <button onclick="gerarAleatorio()">Gerar Jogos Aleatórios</button>
 </div>
 
 <div class="content">
-  <h3>🧾 Jogos Gerados</h3>
   <div id="saida"></div>
 </div>
 
-<div class="footer">
-  App Lotofácil • Estatística Inteligente
-</div>
+<div class="footer">Lotofácil • Estatística Inteligente</div>
 </div>
 
 <script>
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
     t.classList.toggle('active',idx===i);
-    document.getElementById('tab'+idx).style.display =
-      idx===i?'block':'none';
+    document.getElementById('tab'+idx).style.display = idx===i?'block':'none';
   });
 }
 
@@ -240,60 +203,42 @@ function parseResultados(){
 }
 
 function rankingPonderado(jogos){
-  let pesos = {};
-  for(let i=1;i<=25;i++) pesos[i]=0;
-
-  jogos.forEach((jogo, idx)=>{
-    let peso = 1;
-    if(idx >= jogos.length-10) peso = 3;
-    else if(idx >= jogos.length-30) peso = 2;
-
-    jogo.forEach(n=>{
-      pesos[n] += peso;
-    });
+  let pesos={};
+  for(let i=1;i<=25;i++)pesos[i]=0;
+  jogos.forEach((j,idx)=>{
+    let p=idx>=jogos.length-10?3:idx>=jogos.length-30?2:1;
+    j.forEach(n=>pesos[n]+=p);
   });
+  return Object.keys(pesos).sort((a,b)=>pesos[b]-pesos[a]).map(Number);
+}
 
-  return Object.keys(pesos)
-    .sort((a,b)=>pesos[b]-pesos[a])
-    .map(Number);
+function atualizarPainel(jogos){
+  let r=rankingPonderado(jogos);
+  document.getElementById("quentes").innerHTML=r.slice(0,8).map(n=>`<div class="bola quente">${String(n).padStart(2,"0")}</div>`).join("");
+  document.getElementById("neutras").innerHTML=r.slice(8,17).map(n=>`<div class="bola neutra">${String(n).padStart(2,"0")}</div>`).join("");
+  document.getElementById("frias").innerHTML=r.slice(17).map(n=>`<div class="bola fria">${String(n).padStart(2,"0")}</div>`).join("");
 }
 
 function gerarEstatistico(){
-  let jogos = parseResultados();
+  let jogos=parseResultados();
+  if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
   atualizarPainel(jogos);
-  if(jogos.length < 5){
-    alert("Cole pelo menos 5 concursos.");
-    return;
-  }
 
-  let qJ = +qtdJogos.value;
-  let qN = +qtdNums.value;
-  let ranking = rankingPonderado(jogos);
-  let out = "";
+  let qJ=+qtdJogos.value,qN=+qtdNums.value,out="";
+  let r=rankingPonderado(jogos);
 
   for(let i=0;i<qJ;i++){
-    let jogo = [];
-
-    let fixos = Math.floor(qN * 0.7);
-    while(jogo.length < fixos){
-      let n = ranking[Math.floor(Math.random()*10)];
-      if(!jogo.includes(n)) jogo.push(n);
+    let j=[];
+    while(j.length<Math.floor(qN*0.7)){
+      let n=r[Math.floor(Math.random()*10)];
+      if(!j.includes(n))j.push(n);
     }
-
-    while(jogo.length < qN){
-      let n = Math.floor(Math.random()*25)+1;
-      if(!jogo.includes(n)) jogo.push(n);
+    while(j.length<qN){
+      let n=Math.floor(Math.random()*25)+1;
+      if(!j.includes(n))j.push(n);
     }
-
-    jogo.sort((a,b)=>a-b);
-    out += <div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>;
-  }
-
-  saida.innerHTML = out;
-}
-    }
-    jogo.sort((a,b)=>a-b);
-    out+=`<div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+    j.sort((a,b)=>a-b);
+    out+=`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
   }
   saida.innerHTML=out;
 }
@@ -301,31 +246,15 @@ function gerarEstatistico(){
 function gerarAleatorio(){
   let qJ=+qtdJogosA.value,qN=+qtdNumsA.value,out="";
   for(let i=0;i<qJ;i++){
-    let jogo=[];
-    while(jogo.length<qN){
+    let j=[];
+    while(j.length<qN){
       let n=Math.floor(Math.random()*25)+1;
-      if(!jogo.includes(n))jogo.push(n);
+      if(!j.includes(n))j.push(n);
     }
-    jogo.sort((a,b)=>a-b);
-    out+=`<div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+    j.sort((a,b)=>a-b);
+    out+=`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
   }
   saida.innerHTML=out;
-}
-  function atualizarPainel(jogos){
-  let ranking = rankingPonderado(jogos);
-
-  let quentes = ranking.slice(0,8);
-  let neutras = ranking.slice(8,17);
-  let frias   = ranking.slice(17);
-
-  document.getElementById("quentes").innerHTML =
-    quentes.map(n=><div class="bola quente">${String(n).padStart(2,"0")}</div>).join("");
-
-  document.getElementById("neutras").innerHTML =
-    neutras.map(n=><div class="bola neutra">${String(n).padStart(2,"0")}</div>).join("");
-
-  document.getElementById("frias").innerHTML =
-    frias.map(n=><div class="bola fria">${String(n).padStart(2,"0")}</div>).join("");
 }
 </script>
 
