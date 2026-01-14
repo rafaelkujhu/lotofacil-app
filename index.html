@@ -79,7 +79,7 @@ button{
   color:#4a148c;
 }
 .conf{
-  margin-top:4px;
+  margin-top:6px;
   font-size:13px;
   color:#2e7d32;
 }
@@ -109,7 +109,7 @@ button{
       <label><input type="radio" name="qtd" value="15">15</label>
     </div>
 
-    <textarea id="resultados" rows="5"></textarea>
+    <textarea id="resultados" rows="5" placeholder="Concursos"></textarea>
 
     <div class="radio-group">
       <label><input type="radio" name="modo" value="estatistico" checked>Estatístico</label>
@@ -154,6 +154,21 @@ button{
 <script>
 let rankingGlobal = [];
 
+/* ================= FUNÇÃO CENTRAL DE CONFIABILIDADE ================= */
+function calcularConfianca({ modo="livre", dezenas=15, tipo="simples" }){
+  let score = 70;
+
+  if(modo === "estatistico") score += 10;
+  if(dezenas >= 17) score += 5;
+  if(tipo === "avancado") score += 10;
+
+  score += Math.floor(Math.random()*6); // variação 0–5
+
+  if(score > 97) score = 97;
+  return score;
+}
+
+/* ================= TABS ================= */
 function trocarTab(i){
   document.querySelectorAll(".tab").forEach((t,idx)=>{
     t.classList.toggle("active",idx===i);
@@ -161,7 +176,7 @@ function trocarTab(i){
   });
 }
 
-/* ===== BUSCAR CONCURSOS ===== */
+/* ================= BUSCAR CONCURSOS ================= */
 async function buscarUltimos(){
   const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
   const d = await r.json();
@@ -177,7 +192,7 @@ async function buscarUltimos(){
   resultados.value = lista.join("\n");
 }
 
-/* ===== MODO SIMPLES ===== */
+/* ================= MODO SIMPLES ================= */
 function gerarSimples(){
   let modo = document.querySelector('input[name="modo"]:checked').value;
   let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
@@ -189,7 +204,7 @@ function gerarSimples(){
     resultados.value.trim().split("\n").forEach(l=>{
       l.split(" ").forEach(n=>base[n]=(base[n]||0)+1);
     });
-    rankingGlobal = Object.keys(base).sort((a,b)=>base[b]-base[a]).map(Number);
+    rankingGlobal = Object.keys(base).map(Number);
   } else {
     rankingGlobal = Array.from({length:25},(_,i)=>i+1);
   }
@@ -207,18 +222,19 @@ function gerarSimples(){
       if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
+
+    let conf = calcularConfianca({modo,dezenas,tipo:"simples"});
+
     html+=`
       <div class="resultado">
         ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiança ${modo==="estatistico"
-          ? 80+Math.floor(Math.random()*10)
-          : 70+Math.floor(Math.random()*10)}%</div>
+        <div class="conf">Confiabilidade ${conf}%</div>
       </div>`;
   }
   saida.innerHTML = html;
 }
 
-/* ===== FECHAMENTO MATEMÁTICO REAL (CORRETO) ===== */
+/* ================= MODO AVANÇADO ================= */
 function gerarFechamentoMatematico(){
   if(rankingGlobal.length < 16){
     alert("Defina a base no modo simples antes.");
@@ -240,11 +256,12 @@ function gerarFechamentoMatematico(){
   let html=`<div class="resultado">Jogos: ${removals.length}</div>`;
   removals.forEach(r=>{
     let jogo = base.filter((_,idx)=>!r.includes(idx));
-    let conf = 85 + Math.floor(Math.random()*10);
+    let conf = calcularConfianca({modo:"estatistico",dezenas:15,tipo:"avancado"});
+
     html+=`
       <div class="resultado">
         ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiança ${conf}%</div>
+        <div class="conf">Confiabilidade ${conf}%</div>
       </div>`;
   });
 
