@@ -96,7 +96,6 @@ button{
 <div class="content" id="tab0">
 
   <div class="card">
-    <strong>Lotofácil – Modo Simples</strong>
     <button onclick="buscarUltimos()">Buscar concursos</button>
 
     <div class="radio-group">
@@ -136,7 +135,6 @@ button{
       <option value="16">16 → 15 (garante 14)</option>
       <option value="17">17 → 15 (garante 14)</option>
       <option value="18">18 → 15 (garante 14)</option>
-      <option value="18g">18 → 15 (garante 14/15)</option>
     </select>
 
     <button onclick="gerarFechamentoMatematico()">Gerar Fechamento</button>
@@ -156,34 +154,82 @@ function trocarTab(i){
   });
 }
 
-/* ================= FECHAMENTO MATEMÁTICO ================= */
+/* ===== BUSCAR CONCURSOS ===== */
+async function buscarUltimos(){
+  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+  const d = await r.json();
+  const ult = d.numero;
+  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
+
+  let lista=[];
+  for(let i=ult;i>ult-qtd;i--){
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+    let dd = await rr.json();
+    lista.push(dd.listaDezenas.join(" "));
+  }
+  resultados.value = lista.join("\n");
+}
+
+/* ===== MODO SIMPLES ===== */
+function gerarSimples(){
+  let modo = document.querySelector('input[name="modo"]:checked').value;
+  let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
+  let qtd = +qtdJogos.value;
+
+  let ranking = [];
+
+  if(modo==="estatistico"){
+    let base={};
+    resultados.value.trim().split("\n").forEach(l=>{
+      l.split(" ").forEach(n=>base[n]=(base[n]||0)+1);
+    });
+    ranking = Object.keys(base).sort((a,b)=>base[b]-base[a]).map(Number);
+  } else {
+    ranking = Array.from({length:25},(_,i)=>i+1);
+  }
+
+  let html="";
+  for(let i=0;i<qtd;i++){
+    let j=[];
+    while(j.length<dezenas){
+      let n = ranking[Math.floor(Math.random()*ranking.length)];
+      if(!j.includes(n)) j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+    html+=`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+  }
+  saida.innerHTML = html;
+}
+
+/* ===== FECHAMENTO MATEMÁTICO REAL ===== */
 function gerarFechamentoMatematico(){
-  const tipo = document.getElementById("tipoFechamento").value;
-  const base = Array.from({length: tipo.startsWith("18") ? 18 : Number(tipo)},(_,i)=>i+1);
+  let tipo = +document.getElementById("tipoFechamento").value;
+  let linhas = resultados.value.trim().split("\n").filter(l=>l);
+  if(linhas.length===0){
+    alert("Use o modo simples para definir a base.");
+    return;
+  }
 
-  let removals = [];
+  let base={};
+  linhas.forEach(l=>l.split(" ").forEach(n=>base[n]=(base[n]||0)+1));
+  let dezenasBase = Object.keys(base).sort((a,b)=>base[b]-base[a]).slice(0,tipo).map(Number);
 
-  if(tipo==="16"){
+  let removals=[];
+  if(tipo===16){
     removals = [...Array(16).keys()].map(i=>[i]);
-  }
-  else if(tipo==="17"){
+  } else if(tipo===17){
     for(let i=0;i<17;i++) removals.push([i,(i+1)%17]);
-  }
-  else if(tipo==="18"){
+  } else {
     for(let i=0;i<18;i++) removals.push([i,(i+1)%18,(i+2)%18]);
   }
-  else{
-    for(let i=0;i<18;i++) removals.push([i,(i+3)%18,(i+6)%18]);
-  }
 
-  let html = `<div class="resultado">Jogos: ${removals.length}</div>`;
-
+  let html=`<div class="resultado">Jogos: ${removals.length}</div>`;
   removals.forEach(r=>{
-    let jogo = base.filter((_,idx)=>!r.includes(idx));
-    html+=`<div class="resultado">${jogo.join(" - ")}</div>`;
+    let jogo = dezenasBase.filter((_,idx)=>!r.includes(idx)).slice(0,15);
+    html+=`<div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
   });
 
-  document.getElementById("saidaAvancado").innerHTML = html;
+  saidaAvancado.innerHTML = html;
 }
 </script>
 
