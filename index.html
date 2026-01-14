@@ -104,7 +104,7 @@ button{
       <label><input type="radio" name="qtd" value="15">15</label>
     </div>
 
-    <textarea id="resultados" rows="5" placeholder="Concursos"></textarea>
+    <textarea id="resultados" rows="5"></textarea>
 
     <div class="radio-group">
       <label><input type="radio" name="modo" value="estatistico" checked>Estatístico</label>
@@ -170,7 +170,7 @@ async function buscarUltimos(){
   resultados.value = lista.join("\n");
 }
 
-/* ===== MODO SIMPLES ===== */
+/* ===== MODO SIMPLES (ESTÁVEL) ===== */
 function gerarSimples(){
   let modo = document.querySelector('input[name="modo"]:checked').value;
   let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
@@ -183,9 +183,12 @@ function gerarSimples(){
     resultados.value.trim().split("\n").forEach(l=>{
       l.split(" ").forEach(n=>base[n]=(base[n]||0)+1);
     });
-    ranking = Object.keys(base).sort((a,b)=>base[b]-base[a]).map(Number);
-  } else {
-    ranking = Array.from({length:25},(_,i)=>i+1);
+    ranking = Object.keys(base).map(Number);
+  }
+
+  while(ranking.length < dezenas){
+    let n = Math.floor(Math.random()*25)+1;
+    if(!ranking.includes(n)) ranking.push(n);
   }
 
   let html="";
@@ -204,15 +207,8 @@ function gerarSimples(){
 /* ===== FECHAMENTO MATEMÁTICO REAL ===== */
 function gerarFechamentoMatematico(){
   let tipo = +document.getElementById("tipoFechamento").value;
-  let linhas = resultados.value.trim().split("\n").filter(l=>l);
-  if(linhas.length===0){
-    alert("Use o modo simples para definir a base.");
-    return;
-  }
 
-  let base={};
-  linhas.forEach(l=>l.split(" ").forEach(n=>base[n]=(base[n]||0)+1));
-  let dezenasBase = Object.keys(base).sort((a,b)=>base[b]-base[a]).slice(0,tipo).map(Number);
+  let base = Array.from({length:25},(_,i)=>i+1).slice(0,tipo);
 
   let removals=[];
   if(tipo===16){
@@ -225,7 +221,7 @@ function gerarFechamentoMatematico(){
 
   let html=`<div class="resultado">Jogos: ${removals.length}</div>`;
   removals.forEach(r=>{
-    let jogo = dezenasBase.filter((_,idx)=>!r.includes(idx)).slice(0,15);
+    let jogo = base.filter((_,idx)=>!r.includes(idx));
     html+=`<div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
   });
 
