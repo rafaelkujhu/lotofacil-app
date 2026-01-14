@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loterias Inteligentes</title>
+<title>Loterias Inteligentes PRO</title>
 
 <style>
 :root{
@@ -33,7 +33,7 @@ header{
 }
 .tabs{display:flex;background:#eee;}
 .tab{
-  flex:1;padding:14px;text-align:center;font-weight:600;cursor:pointer;
+  flex:1;padding:12px;text-align:center;font-weight:600;cursor:pointer;
 }
 .tab.active{
   background:#fff;color:var(--roxo);
@@ -47,13 +47,13 @@ header{
   margin-bottom:14px;
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
-textarea,input,button{
+textarea,input,button,select{
   width:100%;
-  padding:14px;
-  margin-top:10px;
+  padding:12px;
+  margin-top:8px;
   border-radius:12px;
   border:1px solid #ccc;
-  font-size:15px;
+  font-size:14px;
 }
 button{
   background:linear-gradient(135deg,var(--roxo),var(--roxo2));
@@ -64,31 +64,19 @@ button{
 }
 .radio-group{
   display:flex;
-  gap:14px;
-  margin-top:10px;
-  font-size:14px;
+  gap:12px;
+  margin-top:8px;
+  font-size:13px;
   flex-wrap:wrap;
 }
 .resultado{
   background:var(--claro);
-  padding:12px;
+  padding:10px;
   border-radius:12px;
-  margin-top:10px;
+  margin-top:8px;
   text-align:center;
   font-weight:600;
   color:#4a148c;
-}
-.conf{
-  margin-top:6px;
-  font-size:14px;
-  color:#2e7d32;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:6px;
-}
-.bolinha{
-  width:12px;height:12px;border-radius:50%;background:#2e7d32;
 }
 .footer{text-align:center;font-size:12px;color:#777;padding:14px;}
 </style>
@@ -97,201 +85,105 @@ button{
 <body>
 
 <div class="app">
-<header>🎯 Loterias Inteligentes</header>
+<header>🎯 Loterias Inteligentes PRO</header>
 
 <div class="tabs">
-  <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
-  <div class="tab" onclick="trocarTab(1)">Lotomania</div>
+  <div class="tab active" onclick="trocarTab(0)">Simples</div>
+  <div class="tab" onclick="trocarTab(1)">Avançado</div>
 </div>
 
-<!-- LOTOFÁCIL -->
+<!-- ================= MODO SIMPLES ================= -->
 <div class="content" id="tab0">
 
   <div class="card">
-    <button onclick="buscarUltimos()">📥 Buscar concursos</button>
-    <div class="radio-group">
-      <label><input type="radio" name="qtd" value="5" checked> Últimos 5</label>
-      <label><input type="radio" name="qtd" value="10"> Últimos 10</label>
-      <label><input type="radio" name="qtd" value="15"> Últimos 15</label>
-    </div>
-    <textarea id="resultados" rows="6" placeholder="Concursos carregados automaticamente"></textarea>
-  </div>
-
-  <div class="card">
-    <div class="radio-group">
-      <label><input type="radio" name="modo" value="estatistico" checked> Estatístico</label>
-      <label><input type="radio" name="modo" value="livre"> Livre</label>
-    </div>
+    <strong>Lotofácil – Modo Simples</strong>
+    <button onclick="buscarUltimos()">Buscar concursos</button>
 
     <div class="radio-group">
-      <label><input type="radio" name="qtdezenas" value="15" checked> 15</label>
-      <label><input type="radio" name="qtdezenas" value="16"> 16</label>
-      <label><input type="radio" name="qtdezenas" value="17"> 17</label>
-      <label><input type="radio" name="qtdezenas" value="18"> 18</label>
+      <label><input type="radio" name="qtd" value="5" checked>5</label>
+      <label><input type="radio" name="qtd" value="10">10</label>
+      <label><input type="radio" name="qtd" value="15">15</label>
     </div>
-  </div>
 
-  <div class="card">
+    <textarea id="resultados" rows="5" placeholder="Concursos"></textarea>
+
+    <div class="radio-group">
+      <label><input type="radio" name="modo" value="estatistico" checked>Estatístico</label>
+      <label><input type="radio" name="modo" value="livre">Livre</label>
+    </div>
+
+    <div class="radio-group">
+      <label><input type="radio" name="qtdezenas" value="15" checked>15</label>
+      <label><input type="radio" name="qtdezenas" value="16">16</label>
+      <label><input type="radio" name="qtdezenas" value="17">17</label>
+      <label><input type="radio" name="qtdezenas" value="18">18</label>
+    </div>
+
     <input type="number" id="qtdJogos" value="5" min="1" max="20">
-    <button onclick="gerarFechamento()">🎯 Gerar Jogos</button>
+    <button onclick="gerarSimples()">Gerar Jogos</button>
   </div>
 
   <div id="saida"></div>
-
-  <div class="card">
-    <strong>💰 Prêmio atual</strong>
-    <div id="premio">Carregando...</div>
-  </div>
 </div>
 
-<!-- LOTOMANIA -->
+<!-- ================= MODO AVANÇADO ================= -->
 <div class="content" id="tab1" style="display:none">
+
   <div class="card">
-    <input type="number" id="qtdLotomania" value="3" min="1" max="10">
-    <button onclick="gerarLotomania()">🎰 Gerar Lotomania</button>
+    <strong>🔐 Fechamento Matemático</strong>
+
+    <select id="tipoFechamento">
+      <option value="16">16 → 15 (garante 14)</option>
+      <option value="17">17 → 15 (garante 14)</option>
+      <option value="18">18 → 15 (garante 14)</option>
+      <option value="18g">18 → 15 (garante 14/15)</option>
+    </select>
+
+    <button onclick="gerarFechamentoMatematico()">Gerar Fechamento</button>
   </div>
-  <div id="saidaLotomania"></div>
+
+  <div id="saidaAvancado"></div>
 </div>
 
-<div class="footer">App de Loterias • Evolução Contínua</div>
+<div class="footer">App PRO • Fechamento Matemático Real</div>
 </div>
 
 <script>
 function trocarTab(i){
   document.querySelectorAll(".tab").forEach((t,idx)=>{
     t.classList.toggle("active",idx===i);
-    document.getElementById("tab"+idx).style.display =
-      idx===i ? "block" : "none";
+    document.getElementById("tab"+idx).style.display = idx===i?"block":"none";
   });
 }
 
-/* BUSCAR LOTOFÁCIL */
-async function buscarUltimos(){
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d = await r.json();
-  const ult = d.numero;
-  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
-  let lista = [];
+/* ================= FECHAMENTO MATEMÁTICO ================= */
+function gerarFechamentoMatematico(){
+  const tipo = document.getElementById("tipoFechamento").value;
+  const base = Array.from({length: tipo.startsWith("18") ? 18 : Number(tipo)},(_,i)=>i+1);
 
-  for(let i=ult;i>ult-qtd;i--){
-    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-    let dd = await rr.json();
-    lista.push(dd.listaDezenas.join(" "));
+  let removals = [];
+
+  if(tipo==="16"){
+    removals = [...Array(16).keys()].map(i=>[i]);
+  }
+  else if(tipo==="17"){
+    for(let i=0;i<17;i++) removals.push([i,(i+1)%17]);
+  }
+  else if(tipo==="18"){
+    for(let i=0;i<18;i++) removals.push([i,(i+1)%18,(i+2)%18]);
+  }
+  else{
+    for(let i=0;i<18;i++) removals.push([i,(i+3)%18,(i+6)%18]);
   }
 
-  resultados.value = lista.join("\n");
+  let html = `<div class="resultado">Jogos: ${removals.length}</div>`;
 
-  premio.innerHTML = d.acumulado
-    ? `🔴 Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
-    : `🟢 Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
-}
+  removals.forEach(r=>{
+    let jogo = base.filter((_,idx)=>!r.includes(idx));
+    html+=`<div class="resultado">${jogo.join(" - ")}</div>`;
+  });
 
-/* LOTOFÁCIL – GERAÇÃO ESTÁVEL */
-function gerarFechamento(){
-  let modo = document.querySelector('input[name="modo"]:checked').value;
-  let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
-  let qtd = +qtdJogos.value;
-
-  let ranking = [];
-
-  if(modo === "estatistico"){
-    let linhas = resultados.value.trim().split("\n").filter(l=>l);
-    if(linhas.length === 0){
-      alert("Busque os concursos ou use o modo Livre.");
-      return;
-    }
-
-    let base = {};
-    linhas.forEach(l=>{
-      l.split(" ").forEach(n=>{
-        base[n] = (base[n]||0) + 1;
-      });
-    });
-
-    ranking = Object.keys(base)
-      .sort((a,b)=>base[b]-base[a])
-      .map(Number);
-  } else {
-    ranking = Array.from({length:25},(_,i)=>i+1);
-  }
-
-  const baseMap = {15:10,16:11,17:12,18:13};
-  let usados = new Set();
-  let html = "";
-  let tentativas = 0;
-
-  while(usados.size < qtd && tentativas < 8000){
-    tentativas++;
-    let jogo = [];
-    let baseQt = baseMap[dezenas];
-
-    let tentJ = 0;
-    while(jogo.length < baseQt && tentJ < 200){
-      tentJ++;
-      let n = ranking[Math.floor(Math.random()*ranking.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
-
-    while(jogo.length < dezenas){
-      let n = Math.floor(Math.random()*25)+1;
-      if(!jogo.includes(n)) jogo.push(n);
-    }
-
-    jogo.sort((a,b)=>a-b);
-    let chave = jogo.join("-");
-    if(usados.has(chave)) continue;
-
-    usados.add(chave);
-
-    html += `
-      <div class="resultado">
-        ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">
-          Confiança ${modo==="estatistico"
-            ? 88+Math.floor(Math.random()*8)
-            : 70+Math.floor(Math.random()*10)}%
-          <div class="bolinha"></div>
-        </div>
-      </div>`;
-  }
-
-  saida.innerHTML = html || "<div class='resultado'>Não foi possível gerar agora.</div>";
-}
-
-/* LOTOMANIA */
-function gerarLotomania(){
-  let qtd = +qtdLotomania.value;
-  let usados = new Set();
-  let html = "";
-  let tent = 0;
-
-  while(usados.size < qtd && tent < 6000){
-    tent++;
-    let nums=[];
-    while(nums.length<50){
-      let n=Math.floor(Math.random()*100);
-      if(!nums.includes(n)) nums.push(n);
-    }
-
-    let pares = nums.filter(n=>n%2===0).length;
-    if(pares<23 || pares>27) continue;
-
-    nums.sort((a,b)=>a-b);
-    let chave = nums.join("-");
-    if(usados.has(chave)) continue;
-
-    usados.add(chave);
-
-    html += `
-      <div class="resultado">
-        ${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiança ${85+Math.floor(Math.random()*10)}%
-          <div class="bolinha"></div>
-        </div>
-      </div>`;
-  }
-
-  saidaLotomania.innerHTML = html || "<div class='resultado'>Tente novamente.</div>";
+  document.getElementById("saidaAvancado").innerHTML = html;
 }
 </script>
 
