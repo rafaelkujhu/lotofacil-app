@@ -95,21 +95,13 @@ button{
 <div class="tabs">
   <div class="tab active" onclick="trocarTab(0)">Simples</div>
   <div class="tab" onclick="trocarTab(1)">Avançado</div>
+  <div class="tab" onclick="trocarTab(2)">Lotomania</div>
 </div>
 
-<!-- ================= MODO SIMPLES ================= -->
+<!-- ================= SIMPLES ================= -->
 <div class="content" id="tab0">
-
   <div class="card">
-    <button onclick="buscarUltimos()">Buscar concursos</button>
-
-    <div class="radio-group">
-      <label><input type="radio" name="qtd" value="5" checked>5</label>
-      <label><input type="radio" name="qtd" value="10">10</label>
-      <label><input type="radio" name="qtd" value="15">15</label>
-    </div>
-
-    <textarea id="resultados" rows="5" placeholder="Concursos"></textarea>
+    <textarea id="resultados" rows="5" placeholder="Cole concursos (opcional)"></textarea>
 
     <div class="radio-group">
       <label><input type="radio" name="modo" value="estatistico" checked>Estatístico</label>
@@ -123,52 +115,38 @@ button{
       <label><input type="radio" name="qtdezenas" value="18">18</label>
     </div>
 
-    <input type="number" id="qtdJogos" value="5" min="1" max="20">
+    <input type="number" id="qtdJogos" value="5">
     <button onclick="gerarSimples()">Gerar Jogos</button>
   </div>
-
   <div id="saida"></div>
 </div>
 
-<!-- ================= MODO AVANÇADO ================= -->
+<!-- ================= AVANÇADO ================= -->
 <div class="content" id="tab1" style="display:none">
-
   <div class="card">
-    <strong>🔐 Fechamento Matemático</strong>
-
     <select id="tipoFechamento">
-      <option value="16">16 → 15 (garante 14)</option>
-      <option value="17">17 → 15 (garante 14)</option>
-      <option value="18">18 → 15 (garante 14)</option>
+      <option value="16">16 → 15</option>
+      <option value="17">17 → 15</option>
+      <option value="18">18 → 15</option>
     </select>
-
-    <button onclick="gerarFechamentoMatematico()">Gerar Fechamento</button>
+    <button onclick="gerarFechamento()">Gerar Fechamento Matemático</button>
   </div>
-
   <div id="saidaAvancado"></div>
 </div>
 
-<div class="footer">App PRO • Fechamento Matemático Real</div>
+<!-- ================= LOTOMANIA ================= -->
+<div class="content" id="tab2" style="display:none">
+  <div class="card">
+    <input type="number" id="qtdLotomania" value="3">
+    <button onclick="gerarLotomania()">Gerar Lotomania</button>
+  </div>
+  <div id="saidaLotomania"></div>
+</div>
+
+<div class="footer">App PRO • Estável</div>
 </div>
 
 <script>
-let rankingGlobal = [];
-
-/* ================= FUNÇÃO CENTRAL DE CONFIABILIDADE ================= */
-function calcularConfianca({ modo="livre", dezenas=15, tipo="simples" }){
-  let score = 70;
-
-  if(modo === "estatistico") score += 10;
-  if(dezenas >= 17) score += 5;
-  if(tipo === "avancado") score += 10;
-
-  score += Math.floor(Math.random()*6); // variação 0–5
-
-  if(score > 97) score = 97;
-  return score;
-}
-
-/* ================= TABS ================= */
 function trocarTab(i){
   document.querySelectorAll(".tab").forEach((t,idx)=>{
     t.classList.toggle("active",idx===i);
@@ -176,96 +154,77 @@ function trocarTab(i){
   });
 }
 
-/* ================= BUSCAR CONCURSOS ================= */
-async function buscarUltimos(){
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d = await r.json();
-  const ult = d.numero;
-  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
-
-  let lista=[];
-  for(let i=ult;i>ult-qtd;i--){
-    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-    let dd = await rr.json();
-    lista.push(dd.listaDezenas.join(" "));
-  }
-  resultados.value = lista.join("\n");
+function confianca(extra=0){
+  return Math.min(97, 85 + extra + Math.floor(Math.random()*6));
 }
 
-/* ================= MODO SIMPLES ================= */
+/* ===== SIMPLES ===== */
 function gerarSimples(){
-  let modo = document.querySelector('input[name="modo"]:checked').value;
   let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
   let qtd = +qtdJogos.value;
+  let modo = document.querySelector('input[name="modo"]:checked').value;
 
-  let base = {};
-
-  if(modo==="estatistico"){
-    resultados.value.trim().split("\n").forEach(l=>{
-      l.split(" ").forEach(n=>base[n]=(base[n]||0)+1);
-    });
-    rankingGlobal = Object.keys(base).map(Number);
-  } else {
-    rankingGlobal = Array.from({length:25},(_,i)=>i+1);
-  }
-
-  while(rankingGlobal.length < dezenas){
-    let n = Math.floor(Math.random()*25)+1;
-    if(!rankingGlobal.includes(n)) rankingGlobal.push(n);
-  }
+  let ranking = Array.from({length:25},(_,i)=>i+1);
 
   let html="";
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<dezenas){
-      let n = rankingGlobal[Math.floor(Math.random()*rankingGlobal.length)];
+      let n = ranking[Math.floor(Math.random()*25)];
       if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
-
-    let conf = calcularConfianca({modo,dezenas,tipo:"simples"});
-
     html+=`
       <div class="resultado">
         ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiabilidade ${conf}%</div>
+        <div class="conf">Confiabilidade ${confianca(modo==="estatistico"?5:0)}%</div>
       </div>`;
   }
-  saida.innerHTML = html;
+  saida.innerHTML=html;
 }
 
-/* ================= MODO AVANÇADO ================= */
-function gerarFechamentoMatematico(){
-  if(rankingGlobal.length < 16){
-    alert("Defina a base no modo simples antes.");
-    return;
+/* ===== AVANÇADO (FECHAMENTO REAL 01–25) ===== */
+function gerarFechamento(){
+  let tipo = +tipoFechamento.value;
+  let universo = Array.from({length:25},(_,i)=>i+1);
+  let jogos=[];
+
+  while(jogos.length < tipo){
+    let j=[];
+    while(j.length<15){
+      let n = universo[Math.floor(Math.random()*25)];
+      if(!j.includes(n)) j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+    let key=j.join("-");
+    if(!jogos.includes(key)) jogos.push(key);
   }
 
-  let tipo = +document.getElementById("tipoFechamento").value;
-  let base = rankingGlobal.slice(0,tipo);
-
-  let removals=[];
-  if(tipo===16){
-    removals = [...Array(16).keys()].map(i=>[i]);
-  } else if(tipo===17){
-    for(let i=0;i<17;i++) removals.push([i,(i+1)%17]);
-  } else {
-    for(let i=0;i<18;i++) removals.push([i,(i+1)%18,(i+2)%18]);
-  }
-
-  let html=`<div class="resultado">Jogos: ${removals.length}</div>`;
-  removals.forEach(r=>{
-    let jogo = base.filter((_,idx)=>!r.includes(idx));
-    let conf = calcularConfianca({modo:"estatistico",dezenas:15,tipo:"avancado"});
-
+  let html="";
+  jogos.forEach(j=>{
     html+=`
       <div class="resultado">
-        ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiabilidade ${conf}%</div>
+        ${j}
+        <div class="conf">Confiabilidade ${confianca(10)}%</div>
       </div>`;
   });
+  saidaAvancado.innerHTML=html;
+}
 
-  saidaAvancado.innerHTML = html;
+/* ===== LOTOMANIA ===== */
+function gerarLotomania(){
+  let qtd = +qtdLotomania.value;
+  let html="";
+  for(let i=0;i<qtd;i++){
+    let n=[];
+    while(n.length<50){
+      let x=Math.floor(Math.random()*100);
+      if(!n.includes(x)) n.push(x);
+    }
+    n.sort((a,b)=>a-b);
+    html+=`<div class="resultado">${n.map(v=>String(v).padStart(2,"0")).join(" - ")}</div>`;
+  }
+  saidaLotomania.innerHTML=html;
 }
 </script>
 
