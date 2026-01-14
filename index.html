@@ -1,81 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Lotofácil">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Lotofácil App</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lotofácil">
+<title>Lotofácil Inteligente</title>
 
 <style>
-:root{
-  --roxo:#6a1b9a;
-  --roxo2:#8e24aa;
-  --claro:#f3e5f5;
-}
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  background:linear-gradient(180deg,var(--roxo),var(--roxo2));
-}
-.app{
-  max-width:430px;
-  margin:auto;
-  min-height:100vh;
-  background:#fff;
-  border-radius:20px 20px 0 0;
-  overflow:hidden;
-}
-header{
-  background:linear-gradient(135deg,var(--roxo),var(--roxo2));
-  color:#fff;
-  padding:20px;
-  text-align:center;
-  font-size:20px;
-  font-weight:600;
-}
-.tabs{display:flex;background:#eee;}
-.tab{
-  flex:1;padding:14px;text-align:center;
-  font-weight:600;cursor:pointer;
-}
-.tab.active{
-  background:#fff;color:var(--roxo);
-  border-bottom:3px solid var(--roxo);
-}
+:root{--roxo:#6a1b9a;--roxo2:#8e24aa;--claro:#f3e5f5;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Roboto;
+background:linear-gradient(180deg,var(--roxo),var(--roxo2));}
+.app{max-width:430px;margin:auto;min-height:100vh;background:#fff;
+border-radius:20px 20px 0 0;overflow:hidden;}
+header{background:linear-gradient(135deg,var(--roxo),var(--roxo2));
+color:#fff;padding:20px;text-align:center;font-size:20px;font-weight:600;}
 .content{padding:20px;}
-textarea,input,select{
-  width:100%;padding:14px;margin-top:10px;
-  border-radius:12px;border:1px solid #ccc;font-size:16px;
-}
-button{
-  width:100%;padding:16px;margin-top:15px;
-  border:none;border-radius:14px;
-  background:linear-gradient(135deg,var(--roxo),var(--roxo2));
-  color:#fff;font-size:16px;font-weight:600;
-}
-.resultado{
-  background:var(--claro);padding:14px;
-  border-radius:12px;margin-top:12px;
-  color:#4a148c;font-weight:600;text-align:center;
-}
-.painel{
-  background:#fff;border-radius:12px;
-  padding:15px;margin-top:15px;
-  box-shadow:0 4px 12px rgba(0,0,0,.08);
-}
-.linha{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-.bola{
-  width:36px;height:36px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:bold;color:#fff;
-}
-.quente{background:#e53935;}
-.neutra{background:#757575;}
-.fria{background:#1e88e5;}
+select,textarea,input,button{
+width:100%;padding:14px;margin-top:10px;
+border-radius:12px;border:1px solid #ccc;font-size:16px;}
+button{border:none;background:linear-gradient(135deg,var(--roxo),var(--roxo2));
+color:#fff;font-weight:600;}
+.resultado{background:var(--claro);padding:14px;border-radius:12px;
+margin-top:12px;color:#4a148c;font-weight:600;text-align:center;}
+.conf-alta{color:#2e7d32;}
+.conf-media{color:#f9a825;}
+.conf-baixa{color:#c62828;}
 .footer{text-align:center;font-size:12px;color:#888;padding:15px;}
 </style>
 </head>
@@ -84,160 +34,104 @@ button{
 <div class="app">
 <header>🎯 Lotofácil Inteligente</header>
 
-<div class="tabs">
-  <div class="tab active" onclick="trocarTab(0)">📊 Estatística</div>
-  <div class="tab" onclick="trocarTab(1)">🎲 Aleatório</div>
-</div>
+<div class="content">
+  <button onclick="buscarUltimosJogos()">📥 Buscar últimos 5 concursos</button>
 
-<div class="content" id="tab0">
-  <textarea id="resultados" rows="5" placeholder="Cole os concursos (1 por linha)"></textarea>
-  <input type="number" id="qtdJogos" value="5" min="1" max="50">
-
-  <select id="qtdNums">
-    <option value="15">15 números</option>
-    <option value="16">16 números</option>
-    <option value="17">17 números</option>
-    <option value="18">18 números</option>
+  <select id="modo">
+    <option value="normal">Modo Normal</option>
+    <option value="14">🎯 Foco em 14 Pontos</option>
   </select>
 
-  <button onclick="gerarEstatistico()">Gerar Jogos Estatísticos</button>
-  <button onclick="gerarJogoSemana()">⭐ Jogo da Semana</button>
-  <button onclick="simularResultados()">🧪 Simular 14 e 15 pontos</button>
+  <textarea id="resultados" rows="5"
+    placeholder="Concursos (1 por linha)"></textarea>
 
-  <div class="painel">
-    <h3>📊 Análise das Dezenas</h3>
-    <strong>🔥 Quentes</strong>
-    <div id="quentes" class="linha"></div>
-    <strong>⚪ Neutras</strong>
-    <div id="neutras" class="linha"></div>
-    <strong>❄️ Frias</strong>
-    <div id="frias" class="linha"></div>
-  </div>
-</div>
-
-<div class="content" id="tab1" style="display:none">
-  <input type="number" id="qtdJogosA" value="5" min="1" max="50">
-  <select id="qtdNumsA">
-    <option value="15">15 números</option>
-    <option value="16">16 números</option>
-    <option value="17">17 números</option>
-    <option value="18">18 números</option>
-  </select>
-  <button onclick="gerarAleatorio()">Gerar Jogos Aleatórios</button>
+  <input type="number" id="qtdJogos" value="6" min="1" max="20">
+  <button onclick="gerarJogos()">Gerar Jogos</button>
 </div>
 
 <div class="content"><div id="saida"></div></div>
-<div class="footer">Lotofácil • Estatística Inteligente</div>
+<div class="footer">Lotofácil • Modo 14 Pontos</div>
 </div>
 
 <script>
-function trocarTab(i){
-  document.querySelectorAll('.tab').forEach((t,idx)=>{
-    t.classList.toggle('active',idx===i);
-    document.getElementById('tab'+idx).style.display=idx===i?'block':'none';
-  });
-}
-
 function parseResultados(){
-  let t=resultados.value.trim();
-  if(!t) return [];
-  return t.split("\n").map(l=>l.trim().split(/\s+/).map(Number));
+ let t=resultados.value.trim();
+ if(!t)return[];
+ return t.split("\n").map(l=>l.trim().split(/\s+/).map(Number));
 }
 
 function rankingPonderado(jogos){
-  let p={}; for(let i=1;i<=25;i++)p[i]=0;
-  jogos.forEach((j,idx)=>{
-    let w=idx>=jogos.length-10?3:idx>=jogos.length-30?2:1;
-    j.forEach(n=>p[n]+=w);
-  });
-  return Object.keys(p).sort((a,b)=>p[b]-p[a]).map(Number);
+ let p={}; for(let i=1;i<=25;i++)p[i]=0;
+ jogos.forEach((j,idx)=>{
+ let w=idx>=jogos.length-5?3:idx>=jogos.length-15?2:1;
+ j.forEach(n=>p[n]+=w);
+ });
+ return Object.keys(p).sort((a,b)=>p[b]-p[a]).map(Number);
 }
 
-function atualizarPainel(jogos){
-  let r=rankingPonderado(jogos);
-  quentes.innerHTML=r.slice(0,8).map(n=>`<div class="bola quente">${String(n).padStart(2,"0")}</div>`).join("");
-  neutras.innerHTML=r.slice(8,17).map(n=>`<div class="bola neutra">${String(n).padStart(2,"0")}</div>`).join("");
-  frias.innerHTML=r.slice(17).map(n=>`<div class="bola fria">${String(n).padStart(2,"0")}</div>`).join("");
+function validarBase(j){
+ let pares=j.filter(n=>n%2===0).length;
+ let baixas=j.filter(n=>n<=13).length;
+ if(!((pares===7||pares===8)&&(baixas===7||baixas===8)))return false;
+ for(let i=1;i<j.length-1;i++)
+   if(j[i]===j[i-1]+1 && j[i+1]===j[i]+1) return false;
+ return true;
 }
 
-function validarParesImpares(j){
-  let p=j.filter(n=>n%2===0).length;
-  return (p===7||p===8);
+function calcularConfianca(jogo,ranking){
+ let score=0;
+ let pares=jogo.filter(n=>n%2===0).length;
+ if(pares===7||pares===8) score+=20;
+ let baixas=jogo.filter(n=>n<=13).length;
+ if(baixas===7||baixas===8) score+=20;
+ let quentes=jogo.filter(n=>ranking.slice(0,10).includes(n)).length;
+ if(quentes>=8) score+=30;
+ if(quentes>=6) score+=20;
+ score+=20;
+ return Math.min(score,100);
 }
 
-function gerarEstatistico(){
-  let jogos=parseResultados();
-  if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
-  atualizarPainel(jogos);
-  let r=rankingPonderado(jogos),out="",qJ=+qtdJogos.value,qN=+qtdNums.value;
+function gerarJogos(){
+ let jogos=parseResultados();
+ if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
+ let ranking=rankingPonderado(jogos);
+ let out="",qJ=+qtdJogos.value;
+ let foco14=modo.value==="14";
 
-  for(let i=0;i<qJ;i++){
-    let j=[];
-    while(j.length<Math.floor(qN*0.7)){
-      let n=r[Math.floor(Math.random()*10)];
-      if(!j.includes(n))j.push(n);
-    }
-    while(j.length<qN){
-      let n=Math.floor(Math.random()*25)+1;
-      if(!j.includes(n))j.push(n);
-    }
-    j.sort((a,b)=>a-b);
-    if(!validarParesImpares(j)){i--;continue;}
-    out+=`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
-  }
-  saida.innerHTML=out;
+ for(let i=0;i<qJ;i++){
+   let jogo=[];
+   let pool=foco14?ranking.slice(0,12):ranking.slice(0,15);
+
+   while(jogo.length<15){
+     let n=pool[Math.floor(Math.random()*pool.length)];
+     if(!jogo.includes(n))jogo.push(n);
+   }
+   jogo.sort((a,b)=>a-b);
+   if(!validarBase(jogo)){i--;continue;}
+
+   let conf=calcularConfianca(jogo,ranking);
+   let cls=conf>=80?"conf-alta":conf>=60?"conf-media":"conf-baixa";
+   let ic=conf>=80?"🟢":conf>=60?"🟡":"🔴";
+
+   out+=`<div class="resultado">
+   ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}<br>
+   <span class="${cls}">Confiança: ${conf}% ${ic}</span>
+   </div>`;
+ }
+ saida.innerHTML=out;
 }
 
-function gerarJogoSemana(){
-  let jogos=parseResultados();
-  if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
-  atualizarPainel(jogos);
-  let r=rankingPonderado(jogos),j=[];
-  while(j.length<15){
-    let n=r[Math.floor(Math.random()*12)];
-    if(!j.includes(n))j.push(n);
-  }
-  while(!validarParesImpares(j)){
-    j=[];
-    while(j.length<15){
-      let n=r[Math.floor(Math.random()*12)];
-      if(!j.includes(n))j.push(n);
-    }
-  }
-  j.sort((a,b)=>a-b);
-  saida.innerHTML=`<div class="resultado">⭐ <strong>JOGO DA SEMANA</strong><br><br>${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
-}
-
-function simularResultados(){
-  let concursos=parseResultados();
-  let jogos=[...document.querySelectorAll(".resultado")]
-    .map(d=>d.innerText.match(/\d+/g)?.map(Number))
-    .filter(j=>j&&j.length>=15);
-  if(!jogos.length){alert("Gere jogos primeiro");return;}
-
-  let r={13:0,14:0,15:0};
-  jogos.forEach(j=>{
-    concursos.forEach(c=>{
-      let a=j.filter(n=>c.includes(n)).length;
-      if(a>=13)r[a]++;
-    });
-  });
-
-  saida.innerHTML+=`<div class="resultado">🧪 <strong>SIMULAÇÃO</strong><br>13 pts: ${r[13]}<br>14 pts: ${r[14]}<br>15 pts: ${r[15]}</div>`;
-}
-
-function gerarAleatorio(){
-  let qJ=+qtdJogosA.value,qN=+qtdNumsA.value,out="";
-  for(let i=0;i<qJ;i++){
-    let j=[];
-    while(j.length<qN){
-      let n=Math.floor(Math.random()*25)+1;
-      if(!j.includes(n))j.push(n);
-    }
-    j.sort((a,b)=>a-b);
-    out+=`<div class="resultado">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
-  }
-  saida.innerHTML=out;
+async function buscarUltimosJogos(){
+ try{
+ const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+ const d=await r.json(); let ult=d.numero,lista=[];
+ for(let i=ult;i>ult-5;i--){
+ const rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+ const dd=await rr.json();
+ lista.push(dd.listaDezenas.join(" "));
+ }
+ resultados.value=lista.join("\n");
+ }catch(e){alert("Erro ao buscar concursos");}
 }
 </script>
 </body>
