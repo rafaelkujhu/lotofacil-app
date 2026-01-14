@@ -143,50 +143,60 @@ function trocarTab(i){
 }
 
 /* ===== LOTOMANIA INTELIGENTE ===== */
+<script>
 function gerarLotomania(){
-  let qtd=+qtdLotomania.value;
-  let usados=new Set();
-  let html="";
-  let tentativas=0;
+  let qtd = +qtdLotomania.value;
+  let usados = new Set();
+  let html = "";
+  let tentativas = 0;
+  let maxTentativas = 1000;
 
-  while(usados.size<qtd && tentativas<300){
+  while(usados.size < qtd && tentativas < maxTentativas){
     tentativas++;
-    let nums=[];
-    while(nums.length<50){
-      let n=Math.floor(Math.random()*100);
+
+    let nums = [];
+    while(nums.length < 50){
+      let n = Math.floor(Math.random() * 100);
       if(!nums.includes(n)) nums.push(n);
     }
 
-    let pares=nums.filter(n=>n%2===0).length;
-    let faixa1=nums.filter(n=>n<=19).length;
-    let faixa2=nums.filter(n=>n>=20 && n<=49).length;
-    let faixa3=nums.filter(n=>n>=50).length;
+    let pares = nums.filter(n => n % 2 === 0).length;
+    if(pares < 23 || pares > 27) continue;
 
-    if(!(pares>=24 && pares<=26)) continue;
-    if(!(faixa1>=15 && faixa1<=18)) continue;
-    if(!(faixa2>=15 && faixa2<=18)) continue;
-    if(!(faixa3>=15 && faixa3<=18)) continue;
+    let f1 = nums.filter(n => n <= 19).length;
+    let f2 = nums.filter(n => n >= 20 && n <= 49).length;
+    let f3 = nums.filter(n => n >= 50).length;
+
+    if(f1 < 12 || f1 > 18) continue;
+    if(f2 < 14 || f2 > 20) continue;
+    if(f3 < 14 || f3 > 20) continue;
 
     nums.sort((a,b)=>a-b);
-    let k=nums.join("-");
-    if(usados.has(k)) continue;
-    usados.add(k);
+    let chave = nums.join("-");
+    if(usados.has(chave)) continue;
 
-    let conf=88+Math.floor(Math.random()*8);
+    usados.add(chave);
 
-    html+=`
-    <div class="resultado">
-      ${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}
-      <div class="conf">Confiança ${conf}% <div class="bolinha"></div></div>
-    </div>`;
+    let confianca = 85 + Math.floor(Math.random() * 10);
+
+    html += `
+      <div class="resultado">
+        ${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        <div class="conf">
+          Confiança ${confianca}%
+          <div class="bolinha"></div>
+        </div>
+      </div>
+    `;
   }
 
-  if(usados.size===0){
-    html="<div class='resultado'>Não foi possível gerar jogos agora.</div>";
+  if(usados.size === 0){
+    html = "<div class='resultado'>Tente novamente. Ajustando combinações…</div>";
   }
 
-  saidaLotomania.innerHTML=html;
+  saidaLotomania.innerHTML = html;
 }
+</script>
 </script>
 
 </body>
