@@ -11,12 +11,16 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Roboto;background:#6a
 .app{max-width:430px;margin:auto;background:#fff;min-height:100vh;border-radius:20px 20px 0 0;}
 header{background:#8e24aa;color:#fff;padding:18px;text-align:center;font-size:20px;font-weight:600;}
 .content{padding:16px;}
-select,textarea,input,button{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid #ccc;}
+select,textarea,input,button{
+width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid #ccc;
+}
 button{background:#6a1b9a;color:#fff;font-weight:600;border:none;}
+button:active{opacity:.8}
 .resultado{background:#f3e5f5;padding:12px;border-radius:10px;margin-top:10px;text-align:center;}
 .conf-alta{color:#2e7d32;}
 .conf-media{color:#f9a825;}
 .conf-baixa{color:#c62828;}
+.status{margin-top:8px;font-size:13px;color:#555;text-align:center;}
 </style>
 </head>
 
@@ -32,16 +36,12 @@ button{background:#6a1b9a;color:#fff;font-weight:600;border:none;}
     <option value="14">🎯 Foco em 14 Pontos</option>
   </select>
 
-  <select id="estrategia">
-    <option value="conservadora">Conservadora</option>
-    <option value="equilibrada" selected>Equilibrada</option>
-    <option value="agressiva">Agressiva</option>
-  </select>
-
   <textarea id="resultados" rows="4" placeholder="Concursos (1 por linha)"></textarea>
 
   <input type="number" id="qtdJogos" value="6" min="1" max="20">
   <button onclick="gerarJogos()">Gerar Jogos</button>
+
+  <div id="status" class="status"></div>
 </div>
 
 <div class="content" id="saida"></div>
@@ -63,51 +63,89 @@ function ranking(jogos){
  return Object.keys(p).sort((a,b)=>p[b]-p[a]).map(Number);
 }
 
-function validar(j){
+function validarBasico(j){
  let pares=j.filter(n=>n%2===0).length;
  let baixas=j.filter(n=>n<=13).length;
  if(!(pares>=6&&pares<=9&&baixas>=6&&baixas<=9))return false;
- for(let i=1;i<j.length-1;i++)
+ for(let i=1;i<j.length-1;i++){
    if(j[i]===j[i-1]+1 && j[i+1]===j[i]+1) return false;
+ }
  return true;
 }
 
 function confianca(j,rank){
  let q=j.filter(n=>rank.slice(0,10).includes(n)).length;
- return Math.min(50 + q*5, 95);
+ return Math.min(60 + q*4, 95);
 }
 
 function gerarJogos(){
  let jogos=parseResultados();
- if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
- let rank=ranking(jogos);
- let foco14=modo.value==="14";
- let tentativasMax=200;
- let out="",gerados=0;
-
- while(gerados<qtdJogos.value){
-   let tent=0,j=[];
-   while(tent<tentativasMax){
-     j=[];
-     let pool=foco14?rank.slice(0,12):rank.slice(0,15);
-     while(j.length<15){
-       let n=pool[Math.floor(Math.random()*pool.length)];
-       if(!j.includes(n))j.push(n);
-     }
-     j.sort((a,b)=>a-b);
-     if(validar(j))break;
-     tent++;
-   }
-   if(j.length){
-     let c=confianca(j,rank);
-     let cls=c>=80?"conf-alta":c>=65?"conf-media":"conf-baixa";
-     let ic=c>=80?"🟢":c>=65?"🟡":"🔴";
-     out+=`<div class="resultado">${j.join(" - ")}<br><span class="${cls}">Confiança ${c}% ${ic}</span></div>`;
-     gerados++;
-   }else break;
+ if(jogos.length<5){
+   alert("Cole ao menos 5 concursos");
+   return;
  }
 
- saida.innerHTML=out || "Não foi possível gerar jogos com esses critérios.";
+ status.innerText="Gerando jogos...";
+ saida.innerHTML="";
+
+ let rank=ranking(jogos);
+ let modo14=modo.value==="14";
+ let total=+qtdJogos.value;
+ let out="";
+
+ if(modo14){
+   // 🔹 BASE FIXA – SEM LOOP
+   let base=rank.slice(0,18);
+
+   for(let i=0;i<total;i++){
+     let jogo=base.slice();
+
+     // remove 3 dezenas diferentes a cada jogo
+     while(jogo.length>15){
+       let idx=Math.floor(Math.random()*jogo.length);
+       jogo.splice(idx,1);
+     }
+
+     jogo.sort((a,b)=>a-b);
+     if(!validarBasico(jogo)){i--;continue;}
+
+     let c=confianca(jogo,rank);
+     let cls=c>=80?"conf-alta":c>=65?"conf-media":"conf-baixa";
+     let ic=c>=80?"🟢":c>=65?"🟡":"🔴";
+
+     out+=`<div class="resultado">${jogo.join(" - ")}<br>
+     <span class="${cls}">Confiança ${c}% ${ic}</span></div>`;
+   }
+
+ }else{
+   // 🔹 MODO NORMAL (com limite de tentativas)
+   let gerados=0,tentMax=200;
+
+   while(gerados<total){
+     let tent=0,j=[];
+     while(tent<tentMax){
+       j=[];
+       while(j.length<15){
+         let n=rank[Math.floor(Math.random()*15)];
+         if(!j.includes(n))j.push(n);
+       }
+       j.sort((a,b)=>a-b);
+       if(validarBasico(j))break;
+       tent++;
+     }
+     if(j.length){
+       let c=confianca(j,rank);
+       let cls=c>=80?"conf-alta":c>=65?"conf-media":"conf-baixa";
+       let ic=c>=80?"🟢":c>=65?"🟡":"🔴";
+       out+=`<div class="resultado">${j.join(" - ")}<br>
+       <span class="${cls}">Confiança ${c}% ${ic}</span></div>`;
+       gerados++;
+     }else break;
+   }
+ }
+
+ saida.innerHTML=out || "Não foi possível gerar jogos.";
+ status.innerText="Pronto ✔️";
 }
 
 async function buscarUltimosJogos(){
@@ -115,9 +153,9 @@ async function buscarUltimosJogos(){
  const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
  const d=await r.json(); let ult=d.numero,lista=[];
  for(let i=ult;i>ult-5;i--){
- const rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
- const dd=await rr.json();
- lista.push(dd.listaDezenas.join(" "));
+   const rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+   const dd=await rr.json();
+   lista.push(dd.listaDezenas.join(" "));
  }
  resultados.value=lista.join("\n");
  }catch(e){alert("Erro ao buscar concursos");}
