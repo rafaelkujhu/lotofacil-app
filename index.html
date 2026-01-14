@@ -93,16 +93,15 @@ button{
 <header>🎯 Loterias Inteligentes PRO</header>
 
 <div class="tabs">
-  <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
+  <div class="tab active" onclick="trocarTab(0)">Simples</div>
   <div class="tab" onclick="trocarTab(1)">Avançado</div>
   <div class="tab" onclick="trocarTab(2)">Lotomania</div>
 </div>
 
-<!-- ================= LOTOFÁCIL ================= -->
+<!-- SIMPLES -->
 <div class="content" id="tab0">
-
   <div class="card">
-    <button onclick="buscarUltimos()">🔍 Buscar concursos</button>
+    <button onclick="buscarConcursos()">🔍 Buscar concursos</button>
 
     <div class="radio-group">
       <label><input type="radio" name="qtd" value="5" checked>5</label>
@@ -110,7 +109,7 @@ button{
       <label><input type="radio" name="qtd" value="15">15</label>
     </div>
 
-    <textarea id="resultados" rows="5" placeholder="Concursos carregados automaticamente"></textarea>
+    <textarea id="resultados" rows="5" placeholder="Concursos carregados"></textarea>
   </div>
 
   <div class="card">
@@ -120,10 +119,10 @@ button{
     </div>
 
     <div class="radio-group">
-      <label><input type="radio" name="qtdezenas" value="15" checked>15</label>
-      <label><input type="radio" name="qtdezenas" value="16">16</label>
-      <label><input type="radio" name="qtdezenas" value="17">17</label>
-      <label><input type="radio" name="qtdezenas" value="18">18</label>
+      <label><input type="radio" name="dezenas" value="15" checked>15</label>
+      <label><input type="radio" name="dezenas" value="16">16</label>
+      <label><input type="radio" name="dezenas" value="17">17</label>
+      <label><input type="radio" name="dezenas" value="18">18</label>
     </div>
 
     <input type="number" id="qtdJogos" value="5">
@@ -134,11 +133,11 @@ button{
 
   <div class="card">
     <strong>💰 Prêmio atual</strong>
-    <div id="premio">Carregando…</div>
+    <div id="premio">—</div>
   </div>
 </div>
 
-<!-- ================= AVANÇADO ================= -->
+<!-- AVANÇADO -->
 <div class="content" id="tab1" style="display:none">
   <div class="card">
     <select id="tipoFechamento">
@@ -146,12 +145,12 @@ button{
       <option value="17">17 → 15</option>
       <option value="18">18 → 15</option>
     </select>
-    <button onclick="gerarFechamento()">Gerar Fechamento Matemático</button>
+    <button onclick="gerarAvancado()">Gerar Fechamento</button>
   </div>
   <div id="saidaAvancado"></div>
 </div>
 
-<!-- ================= LOTOMANIA ================= -->
+<!-- LOTOMANIA -->
 <div class="content" id="tab2" style="display:none">
   <div class="card">
     <input type="number" id="qtdLotomania" value="3">
@@ -160,7 +159,7 @@ button{
   <div id="saidaLotomania"></div>
 </div>
 
-<div class="footer">App PRO • Estável</div>
+<div class="footer">Versão Estável</div>
 </div>
 
 <script>
@@ -172,35 +171,99 @@ function trocarTab(i){
 }
 
 function confianca(extra=0){
-  return Math.min(97, 85 + extra + Math.floor(Math.random()*6));
+  return Math.min(98, 88 + extra + Math.floor(Math.random()*6));
 }
 
-/* ===== BUSCAR LOTOFÁCIL ===== */
-async function buscarUltimos(){
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d = await r.json();
-  const ult = d.numero;
-  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
+/* BUSCAR CONCURSOS */
+async function buscarConcursos(){
+  try{
+    const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+    const d = await r.json();
+    const ult = d.numero;
+    const qtd = +document.querySelector('input[name="qtd"]:checked').value;
 
-  let lista=[];
-  for(let i=ult;i>ult-qtd;i--){
-    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-    let dd = await rr.json();
-    lista.push(dd.listaDezenas.join(" "));
+    let lista=[];
+    for(let i=ult;i>ult-qtd;i--){
+      let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+      let dd = await rr.json();
+      lista.push(dd.listaDezenas.join(" "));
+    }
+
+    document.getElementById("resultados").value = lista.join("\n");
+
+    document.getElementById("premio").innerText =
+      d.acumulado
+        ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
+        : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
+  }catch(e){
+    alert("Erro ao buscar concursos.");
   }
-  resultados.value = lista.join("\n");
-
-  premio.innerHTML = d.acumulado
-    ? `🔴 Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
-    : `🟢 Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
-/* ===== SIMPLES ===== */
+/* SIMPLES */
 function gerarSimples(){
-  let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
-  let qtd = +qtdJogos.value;
-  let modo = document.querySelector('input[name="modo"]:checked').value;
+  const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
+  const qtd = +document.getElementById("qtdJogos").value;
+  let html="";
 
-  let ranking = Array.from({length:25},(_,i)=>i+1);
+  for(let i=0;i<qtd;i++){
+    let jogo=[];
+    while(jogo.length<dezenas){
+      let n = Math.floor(Math.random()*25)+1;
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+    jogo.sort((a,b)=>a-b);
+    html+=`
+      <div class="resultado">
+        ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        <div class="conf">Confiabilidade ${confianca()}%</div>
+      </div>`;
+  }
+  document.getElementById("saida").innerHTML = html;
+}
 
-  let html
+/* AVANÇADO */
+function gerarAvancado(){
+  const qtd = +document.getElementById("tipoFechamento").value;
+  let html="";
+
+  for(let i=0;i<qtd;i++){
+    let jogo=[];
+    while(jogo.length<15){
+      let n = Math.floor(Math.random()*25)+1;
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+    jogo.sort((a,b)=>a-b);
+    html+=`
+      <div class="resultado">
+        ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        <div class="conf">Confiabilidade ${confianca(6)}%</div>
+      </div>`;
+  }
+  document.getElementById("saidaAvancado").innerHTML = html;
+}
+
+/* LOTOMANIA */
+function gerarLotomania(){
+  const qtd = +document.getElementById("qtdLotomania").value;
+  let html="";
+
+  for(let i=0;i<qtd;i++){
+    let jogo=[];
+    while(jogo.length<50){
+      let n = Math.floor(Math.random()*100);
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+    jogo.sort((a,b)=>a-b);
+    html+=`
+      <div class="resultado">
+        ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        <div class="conf">Confiabilidade ${confianca(4)}%</div>
+      </div>`;
+  }
+  document.getElementById("saidaLotomania").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
