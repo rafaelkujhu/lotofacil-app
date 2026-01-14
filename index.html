@@ -109,29 +109,25 @@ button{
 
   <div class="card">
     <button onclick="buscarUltimos()">📥 Buscar concursos</button>
-
-    <!-- FILTRO DE QUANTIDADE DE CONCURSOS -->
     <div class="radio-group">
       <label><input type="radio" name="qtd" value="5" checked> Últimos 5</label>
       <label><input type="radio" name="qtd" value="10"> Últimos 10</label>
       <label><input type="radio" name="qtd" value="15"> Últimos 15</label>
     </div>
-
-    <textarea id="resultados" rows="6"
-      placeholder="Concursos carregados automaticamente"></textarea>
+    <textarea id="resultados" rows="6" placeholder="Concursos carregados automaticamente"></textarea>
   </div>
 
-  <!-- MODOS (ACRESCENTADOS) -->
   <div class="card">
     <div class="radio-group">
-      <label>
-        <input type="radio" name="modo" value="estatistico" checked>
-        📊 Estatístico
-      </label>
-      <label>
-        <input type="radio" name="modo" value="livre">
-        🎲 Livre
-      </label>
+      <label><input type="radio" name="modo" value="estatistico" checked> Estatístico</label>
+      <label><input type="radio" name="modo" value="livre"> Livre</label>
+    </div>
+
+    <div class="radio-group">
+      <label><input type="radio" name="qtdezenas" value="15" checked> 15</label>
+      <label><input type="radio" name="qtdezenas" value="16"> 16</label>
+      <label><input type="radio" name="qtdezenas" value="17"> 17</label>
+      <label><input type="radio" name="qtdezenas" value="18"> 18</label>
     </div>
   </div>
 
@@ -192,9 +188,10 @@ async function buscarUltimos(){
     : `🟢 Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
-/* LOTOFÁCIL – ESTATÍSTICO + LIVRE */
+/* LOTOFÁCIL – GERAÇÃO COM FECHAMENTO INTELIGENTE */
 function gerarFechamento(){
   let modo = document.querySelector('input[name="modo"]:checked').value;
+  let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
   let qtd = +qtdJogos.value;
 
   let ranking = [];
@@ -224,12 +221,22 @@ function gerarFechamento(){
   let html = "";
   let tentativas = 0;
 
-  while(usados.size < qtd && tentativas < 4000){
+  while(usados.size < qtd && tentativas < 6000){
     tentativas++;
+
+    let baseQt = dezenas === 16 ? 14 :
+                 dezenas === 18 ? 15 :
+                 dezenas;
+
     let jogo = [];
 
-    while(jogo.length < 15){
-      let n = ranking[Math.floor(Math.random()*ranking.length)];
+    while(jogo.length < baseQt){
+      let n = ranking[Math.floor(Math.random()*Math.min(10, ranking.length))];
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+
+    while(jogo.length < dezenas){
+      let n = Math.floor(Math.random()*25)+1;
       if(!jogo.includes(n)) jogo.push(n);
     }
 
@@ -244,7 +251,7 @@ function gerarFechamento(){
         ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
         <div class="conf">
           Confiança ${modo==="estatistico"
-            ? 90+Math.floor(Math.random()*6)
+            ? 88+Math.floor(Math.random()*8)
             : 70+Math.floor(Math.random()*10)}%
           <div class="bolinha"></div>
         </div>
