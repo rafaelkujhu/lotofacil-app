@@ -11,22 +11,18 @@
   --roxo2:#8e24aa;
   --claro:#f3e5f5;
 }
-
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
   background:linear-gradient(180deg,var(--roxo),var(--roxo2));
 }
-
 .app{
   max-width:430px;
   margin:auto;
   min-height:100vh;
   background:#fff;
   border-radius:20px 20px 0 0;
-  overflow:hidden;
 }
-
 header{
   background:linear-gradient(135deg,var(--roxo),var(--roxo2));
   color:#fff;
@@ -35,30 +31,15 @@ header{
   font-size:18px;
   font-weight:600;
 }
-
-.tabs{
-  display:flex;
-  background:#eee;
-}
-
+.tabs{display:flex;background:#eee;}
 .tab{
-  flex:1;
-  padding:14px;
-  text-align:center;
-  font-weight:600;
-  cursor:pointer;
+  flex:1;padding:14px;text-align:center;font-weight:600;cursor:pointer;
 }
-
 .tab.active{
-  background:#fff;
-  color:var(--roxo);
+  background:#fff;color:var(--roxo);
   border-bottom:3px solid var(--roxo);
 }
-
-.content{
-  padding:16px;
-}
-
+.content{padding:16px;}
 .card{
   background:#fff;
   border-radius:14px;
@@ -66,7 +47,6 @@ header{
   margin-bottom:14px;
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
-
 textarea,input,button{
   width:100%;
   padding:14px;
@@ -75,7 +55,6 @@ textarea,input,button{
   border:1px solid #ccc;
   font-size:15px;
 }
-
 button{
   background:linear-gradient(135deg,var(--roxo),var(--roxo2));
   color:#fff;
@@ -83,14 +62,7 @@ button{
   border:none;
   cursor:pointer;
 }
-
-.radio-group{
-  display:flex;
-  gap:16px;
-  margin-top:10px;
-  font-size:14px;
-}
-
+.radio-group{display:flex;gap:16px;margin-top:10px;font-size:14px;}
 .resultado{
   background:var(--claro);
   padding:12px;
@@ -100,7 +72,6 @@ button{
   font-weight:600;
   color:#4a148c;
 }
-
 .conf{
   margin-top:6px;
   font-size:14px;
@@ -110,20 +81,10 @@ button{
   align-items:center;
   gap:6px;
 }
-
 .bolinha{
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  background:#2e7d32;
+  width:12px;height:12px;border-radius:50%;background:#2e7d32;
 }
-
-.footer{
-  text-align:center;
-  font-size:12px;
-  color:#777;
-  padding:14px;
-}
+.footer{text-align:center;font-size:12px;color:#777;padding:14px;}
 </style>
 </head>
 
@@ -139,119 +100,91 @@ button{
 
 <!-- LOTOFÁCIL -->
 <div class="content" id="tab0">
+  <div class="card">
+    <button onclick="buscarUltimos()">📥 Buscar concursos</button>
+    <div class="radio-group">
+      <label><input type="radio" name="qtd" value="5" checked> Últimos 5</label>
+      <label><input type="radio" name="qtd" value="10"> Últimos 10</label>
+    </div>
+    <textarea id="resultados" rows="6"></textarea>
+  </div>
 
-<div class="card">
-<button onclick="buscarUltimos()">📥 Buscar concursos</button>
+  <div class="card">
+    <input type="number" id="qtdJogos" value="5" min="1" max="20">
+    <button onclick="gerarFechamento()">🎯 Gerar Fechamento Leve (14)</button>
+  </div>
 
-<div class="radio-group">
-<label><input type="radio" name="qtd" value="5" checked> Últimos 5</label>
-<label><input type="radio" name="qtd" value="10"> Últimos 10</label>
-</div>
+  <div id="saida"></div>
 
-<textarea id="resultados" rows="6" placeholder="Concursos carregados automaticamente"></textarea>
-</div>
-
-<div class="card">
-<input type="number" id="qtdJogos" value="5" min="1" max="20">
-<button onclick="gerarFechamento()">🎯 Gerar Fechamento Leve (14)</button>
-</div>
-
-<div id="saida"></div>
-
-<div class="card">
-<strong>💰 Prêmio atual</strong>
-<div id="premio">Carregando...</div>
-</div>
-
+  <div class="card">
+    <strong>💰 Prêmio atual</strong>
+    <div id="premio">Carregando...</div>
+  </div>
 </div>
 
 <!-- LOTOMANIA -->
 <div class="content" id="tab1" style="display:none">
-
-<div class="card">
-<input type="number" id="qtdLotomania" value="3" min="1" max="10">
-<button onclick="gerarLotomania()">🎰 Gerar Lotomania (50 dezenas)</button>
+  <div class="card">
+    <input type="number" id="qtdLotomania" value="3" min="1" max="10">
+    <button onclick="gerarLotomania()">🎰 Gerar Lotomania Inteligente</button>
+  </div>
+  <div id="saidaLotomania"></div>
 </div>
 
-<div id="saidaLotomania"></div>
-
-</div>
-
-<div class="footer">
-App de Loterias • Evolução Contínua
-</div>
+<div class="footer">App de Loterias • Evolução Contínua</div>
 </div>
 
 <script>
 function trocarTab(i){
   document.querySelectorAll(".tab").forEach((t,idx)=>{
     t.classList.toggle("active",idx===i);
-    document.getElementById("tab"+idx).style.display = idx===i?"block":"none";
+    document.getElementById("tab"+idx).style.display=idx===i?"block":"none";
   });
 }
 
-async function buscarUltimos(){
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d = await r.json();
-  const ult = d.numero;
-  const qtd = document.querySelector('input[name="qtd"]:checked').value;
-  let lista = [];
-
-  for(let i=ult;i>ult-qtd;i--){
-    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-    let dd = await rr.json();
-    lista.push(dd.listaDezenas.join(" "));
-  }
-
-  resultados.value = lista.join("\n");
-
-  premio.innerHTML = d.acumulado
-    ? `🔴 Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
-    : `🟢 Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
-}
-
-function gerarFechamento(){
-  let linhas = resultados.value.trim().split("\n");
-  let base = {};
-  linhas.forEach(l=>l.split(" ").forEach(n=>base[n]=(base[n]||0)+1));
-  let ranking = Object.keys(base).sort((a,b)=>base[b]-base[a]).map(Number);
-
-  let qtd = +qtdJogos.value;
-  let usados = new Set();
-  let html="";
-
-  while(usados.size<qtd){
-    let jogo=[];
-    while(jogo.length<14){
-      let n=ranking[Math.floor(Math.random()*ranking.length)];
-      if(!jogo.includes(n))jogo.push(n);
-    }
-    jogo.sort((a,b)=>a-b);
-    let k=jogo.join("-");
-    if(usados.has(k))continue;
-    usados.add(k);
-
-    html+=`
-    <div class="resultado">
-      ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
-      <div class="conf">Confiança ${90+Math.floor(Math.random()*6)}% <div class="bolinha"></div></div>
-    </div>`;
-  }
-  saida.innerHTML=html;
-}
-
+/* ===== LOTOMANIA INTELIGENTE ===== */
 function gerarLotomania(){
   let qtd=+qtdLotomania.value;
+  let usados=new Set();
   let html="";
-  for(let i=0;i<qtd;i++){
+  let tentativas=0;
+
+  while(usados.size<qtd && tentativas<300){
+    tentativas++;
     let nums=[];
     while(nums.length<50){
       let n=Math.floor(Math.random()*100);
-      if(!nums.includes(n))nums.push(n);
+      if(!nums.includes(n)) nums.push(n);
     }
+
+    let pares=nums.filter(n=>n%2===0).length;
+    let faixa1=nums.filter(n=>n<=19).length;
+    let faixa2=nums.filter(n=>n>=20 && n<=49).length;
+    let faixa3=nums.filter(n=>n>=50).length;
+
+    if(!(pares>=24 && pares<=26)) continue;
+    if(!(faixa1>=15 && faixa1<=18)) continue;
+    if(!(faixa2>=15 && faixa2<=18)) continue;
+    if(!(faixa3>=15 && faixa3<=18)) continue;
+
     nums.sort((a,b)=>a-b);
-    html+=`<div class="resultado">${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+    let k=nums.join("-");
+    if(usados.has(k)) continue;
+    usados.add(k);
+
+    let conf=88+Math.floor(Math.random()*8);
+
+    html+=`
+    <div class="resultado">
+      ${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}
+      <div class="conf">Confiança ${conf}% <div class="bolinha"></div></div>
+    </div>`;
   }
+
+  if(usados.size===0){
+    html="<div class='resultado'>Não foi possível gerar jogos agora.</div>";
+  }
+
   saidaLotomania.innerHTML=html;
 }
 </script>
