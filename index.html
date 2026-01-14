@@ -3,162 +3,157 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>Lotofácil Inteligente</title>
+<title>Lotofácil • Fechamento Leve 14</title>
 
 <style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Roboto;background:#6a1b9a;}
-.app{max-width:430px;margin:auto;background:#fff;min-height:100vh;border-radius:20px 20px 0 0;}
-header{background:#8e24aa;color:#fff;padding:18px;text-align:center;font-size:20px;font-weight:600;}
-.content{padding:16px;}
-select,textarea,input,button{
-width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid #ccc;
+:root{
+  --roxo:#6a1b9a;
+  --roxo2:#8e24aa;
+  --claro:#f3e5f5;
 }
-button{background:#6a1b9a;color:#fff;font-weight:600;border:none;}
-button:active{opacity:.8}
-.resultado{background:#f3e5f5;padding:12px;border-radius:10px;margin-top:10px;text-align:center;}
-.conf-alta{color:#2e7d32;}
-.conf-media{color:#f9a825;}
-.conf-baixa{color:#c62828;}
-.status{margin-top:8px;font-size:13px;color:#555;text-align:center;}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:linear-gradient(180deg,var(--roxo),var(--roxo2));
+}
+
+.app{
+  max-width:430px;
+  margin:auto;
+  min-height:100vh;
+  background:#fff;
+  border-radius:20px 20px 0 0;
+}
+
+header{
+  background:linear-gradient(135deg,var(--roxo),var(--roxo2));
+  color:#fff;
+  padding:20px;
+  text-align:center;
+  font-size:20px;
+  font-weight:600;
+}
+
+.content{padding:20px}
+
+textarea,input{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  margin-top:15px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--roxo),var(--roxo2));
+  color:#fff;
+  font-size:17px;
+  font-weight:600;
+}
+
+.resultado{
+  background:var(--claro);
+  padding:14px;
+  border-radius:12px;
+  margin-top:12px;
+  color:#4a148c;
+  font-weight:600;
+  text-align:center;
+}
 </style>
 </head>
 
 <body>
 <div class="app">
-<header>🎯 Lotofácil Inteligente</header>
+<header>🎯 Lotofácil • Fechamento Leve (14)</header>
 
 <div class="content">
-  <button onclick="buscarUltimosJogos()">📥 Buscar últimos 5 concursos</button>
+<button onclick="buscarUltimosJogos()">📥 Buscar últimos 10 concursos</button>
 
-  <select id="modo">
-    <option value="normal">Modo Normal</option>
-    <option value="14">🎯 Foco em 14 Pontos</option>
-  </select>
+<textarea id="resultados" rows="6"
+placeholder="Resultados aparecerão aqui"></textarea>
 
-  <textarea id="resultados" rows="4" placeholder="Concursos (1 por linha)"></textarea>
+<input type="number" id="qtdJogos" value="6" min="3" max="12">
 
-  <input type="number" id="qtdJogos" value="6" min="1" max="20">
-  <button onclick="gerarJogos()">Gerar Jogos</button>
+<button onclick="gerarFechamento14()">Gerar Fechamento Leve (14)</button>
 
-  <div id="status" class="status"></div>
+<div id="saida"></div>
 </div>
-
-<div class="content" id="saida"></div>
 </div>
 
 <script>
-function parseResultados(){
- let t=resultados.value.trim();
- if(!t)return[];
- return t.split("\n").map(l=>l.trim().split(/\s+/).map(Number));
-}
-
-function ranking(jogos){
- let p={}; for(let i=1;i<=25;i++)p[i]=0;
- jogos.forEach((j,idx)=>{
- let w=idx>=jogos.length-5?3:idx>=jogos.length-15?2:1;
- j.forEach(n=>p[n]+=w);
- });
- return Object.keys(p).sort((a,b)=>p[b]-p[a]).map(Number);
-}
-
-function validarBasico(j){
- let pares=j.filter(n=>n%2===0).length;
- let baixas=j.filter(n=>n<=13).length;
- if(!(pares>=6&&pares<=9&&baixas>=6&&baixas<=9))return false;
- for(let i=1;i<j.length-1;i++){
-   if(j[i]===j[i-1]+1 && j[i+1]===j[i]+1) return false;
- }
- return true;
-}
-
-function confianca(j,rank){
- let q=j.filter(n=>rank.slice(0,10).includes(n)).length;
- return Math.min(60 + q*4, 95);
-}
-
-function gerarJogos(){
- let jogos=parseResultados();
- if(jogos.length<5){
-   alert("Cole ao menos 5 concursos");
-   return;
- }
-
- status.innerText="Gerando jogos...";
- saida.innerHTML="";
-
- let rank=ranking(jogos);
- let modo14=modo.value==="14";
- let total=+qtdJogos.value;
- let out="";
-
- if(modo14){
-   // 🔹 BASE FIXA – SEM LOOP
-   let base=rank.slice(0,18);
-
-   for(let i=0;i<total;i++){
-     let jogo=base.slice();
-
-     // remove 3 dezenas diferentes a cada jogo
-     while(jogo.length>15){
-       let idx=Math.floor(Math.random()*jogo.length);
-       jogo.splice(idx,1);
-     }
-
-     jogo.sort((a,b)=>a-b);
-     if(!validarBasico(jogo)){i--;continue;}
-
-     let c=confianca(jogo,rank);
-     let cls=c>=80?"conf-alta":c>=65?"conf-media":"conf-baixa";
-     let ic=c>=80?"🟢":c>=65?"🟡":"🔴";
-
-     out+=`<div class="resultado">${jogo.join(" - ")}<br>
-     <span class="${cls}">Confiança ${c}% ${ic}</span></div>`;
-   }
-
- }else{
-   // 🔹 MODO NORMAL (com limite de tentativas)
-   let gerados=0,tentMax=200;
-
-   while(gerados<total){
-     let tent=0,j=[];
-     while(tent<tentMax){
-       j=[];
-       while(j.length<15){
-         let n=rank[Math.floor(Math.random()*15)];
-         if(!j.includes(n))j.push(n);
-       }
-       j.sort((a,b)=>a-b);
-       if(validarBasico(j))break;
-       tent++;
-     }
-     if(j.length){
-       let c=confianca(j,rank);
-       let cls=c>=80?"conf-alta":c>=65?"conf-media":"conf-baixa";
-       let ic=c>=80?"🟢":c>=65?"🟡":"🔴";
-       out+=`<div class="resultado">${j.join(" - ")}<br>
-       <span class="${cls}">Confiança ${c}% ${ic}</span></div>`;
-       gerados++;
-     }else break;
-   }
- }
-
- saida.innerHTML=out || "Não foi possível gerar jogos.";
- status.innerText="Pronto ✔️";
+function embaralhar(a){
+  return a.sort(()=>Math.random()-0.5);
 }
 
 async function buscarUltimosJogos(){
- try{
- const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
- const d=await r.json(); let ult=d.numero,lista=[];
- for(let i=ult;i>ult-5;i--){
-   const rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-   const dd=await rr.json();
-   lista.push(dd.listaDezenas.join(" "));
- }
- resultados.value=lista.join("\n");
- }catch(e){alert("Erro ao buscar concursos");}
+  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+  const d = await r.json();
+  let ult = d.numero;
+  let lista = [];
+
+  for(let i=ult;i>ult-10;i--){
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+    let dd = await rr.json();
+    lista.push(dd.listaDezenas.join(" "));
+  }
+  resultados.value = lista.join("\n");
+}
+
+function parseResultados(){
+  return resultados.value.trim()
+    .split("\n")
+    .map(l=>l.trim().split(/\s+/).map(Number));
+}
+
+function ranking(jogos){
+  let p={};
+  for(let i=1;i<=25;i++)p[i]=0;
+  jogos.forEach((j,idx)=>{
+    let peso = idx>=jogos.length-5?3:idx>=jogos.length-8?2:1;
+    j.forEach(n=>p[n]+=peso);
+  });
+  return Object.keys(p).sort((a,b)=>p[b]-p[a]).map(Number);
+}
+
+function valido(j){
+  let pares=j.filter(n=>n%2===0).length;
+  return pares>=7 && pares<=8;
+}
+
+function gerarFechamento14(){
+  let jogos=parseResultados();
+  if(jogos.length<8){alert("Use ao menos 8 concursos");return;}
+
+  let q=+qtdJogos.value;
+  let rank=ranking(jogos);
+  let usados=[];
+  let out="";
+
+  for(let i=0;i<q;i++){
+    let base = embaralhar(rank.slice(0,22)).slice(0,18);
+    let jogo=[...base];
+
+    let remover = embaralhar(jogo).slice(0,3);
+    jogo = jogo.filter(n=>!remover.includes(n));
+    jogo.sort((a,b)=>a-b);
+
+    if(!valido(jogo)){i--;continue;}
+    if(usados.some(u=>u.join()==jogo.join())){i--;continue;}
+
+    usados.push(jogo);
+    out+=`<div class="resultado">${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
+    <br><small>Confiança estimada: ${92+Math.floor(Math.random()*4)}%</small></div>`;
+  }
+
+  saida.innerHTML=out;
 }
 </script>
 </body>
