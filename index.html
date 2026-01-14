@@ -64,7 +64,7 @@ button{
 }
 .radio-group{
   display:flex;
-  gap:16px;
+  gap:14px;
   margin-top:10px;
   font-size:14px;
   flex-wrap:wrap;
@@ -148,7 +148,7 @@ button{
 <div class="content" id="tab1" style="display:none">
   <div class="card">
     <input type="number" id="qtdLotomania" value="3" min="1" max="10">
-    <button onclick="gerarLotomania()">🎰 Gerar Lotomania Inteligente</button>
+    <button onclick="gerarLotomania()">🎰 Gerar Lotomania</button>
   </div>
   <div id="saidaLotomania"></div>
 </div>
@@ -174,9 +174,7 @@ async function buscarUltimos(){
   let lista = [];
 
   for(let i=ult;i>ult-qtd;i--){
-    let rr = await fetch(
-      `https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`
-    );
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
     let dd = await rr.json();
     lista.push(dd.listaDezenas.join(" "));
   }
@@ -188,7 +186,7 @@ async function buscarUltimos(){
     : `🟢 Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
-/* LOTOFÁCIL – GERAÇÃO COM FECHAMENTO INTELIGENTE */
+/* LOTOFÁCIL – GERAÇÃO ESTÁVEL */
 function gerarFechamento(){
   let modo = document.querySelector('input[name="modo"]:checked').value;
   let dezenas = +document.querySelector('input[name="qtdezenas"]:checked').value;
@@ -217,21 +215,20 @@ function gerarFechamento(){
     ranking = Array.from({length:25},(_,i)=>i+1);
   }
 
+  const baseMap = {15:10,16:11,17:12,18:13};
   let usados = new Set();
   let html = "";
   let tentativas = 0;
 
-  while(usados.size < qtd && tentativas < 6000){
+  while(usados.size < qtd && tentativas < 8000){
     tentativas++;
-
-    let baseQt = dezenas === 16 ? 14 :
-                 dezenas === 18 ? 15 :
-                 dezenas;
-
     let jogo = [];
+    let baseQt = baseMap[dezenas];
 
-    while(jogo.length < baseQt){
-      let n = ranking[Math.floor(Math.random()*Math.min(10, ranking.length))];
+    let tentJ = 0;
+    while(jogo.length < baseQt && tentJ < 200){
+      tentJ++;
+      let n = ranking[Math.floor(Math.random()*ranking.length)];
       if(!jogo.includes(n)) jogo.push(n);
     }
 
@@ -255,12 +252,10 @@ function gerarFechamento(){
             : 70+Math.floor(Math.random()*10)}%
           <div class="bolinha"></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
-  saida.innerHTML =
-    html || "<div class='resultado'>Não foi possível gerar agora.</div>";
+  saida.innerHTML = html || "<div class='resultado'>Não foi possível gerar agora.</div>";
 }
 
 /* LOTOMANIA */
@@ -268,10 +263,10 @@ function gerarLotomania(){
   let qtd = +qtdLotomania.value;
   let usados = new Set();
   let html = "";
-  let tentativas = 0;
+  let tent = 0;
 
-  while(usados.size < qtd && tentativas < 5000){
-    tentativas++;
+  while(usados.size < qtd && tent < 6000){
+    tent++;
     let nums=[];
     while(nums.length<50){
       let n=Math.floor(Math.random()*100);
@@ -287,19 +282,16 @@ function gerarLotomania(){
 
     usados.add(chave);
 
-    html+=`
+    html += `
       <div class="resultado">
         ${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">
-          Confiança ${85+Math.floor(Math.random()*10)}%
+        <div class="conf">Confiança ${85+Math.floor(Math.random()*10)}%
           <div class="bolinha"></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
-  saidaLotomania.innerHTML =
-    html || "<div class='resultado'>Tente novamente.</div>";
+  saidaLotomania.innerHTML = html || "<div class='resultado'>Tente novamente.</div>";
 }
 </script>
 
