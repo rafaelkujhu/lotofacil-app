@@ -2,31 +2,21 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Lotofácil">
 <title>Lotofácil Inteligente</title>
 
 <style>
-:root{--roxo:#6a1b9a;--roxo2:#8e24aa;--claro:#f3e5f5;}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Roboto;
-background:linear-gradient(180deg,var(--roxo),var(--roxo2));}
-.app{max-width:430px;margin:auto;min-height:100vh;background:#fff;
-border-radius:20px 20px 0 0;overflow:hidden;}
-header{background:linear-gradient(135deg,var(--roxo),var(--roxo2));
-color:#fff;padding:20px;text-align:center;font-size:20px;font-weight:600;}
-.content{padding:20px;}
-select,textarea,input,button{
-width:100%;padding:14px;margin-top:10px;
-border-radius:12px;border:1px solid #ccc;font-size:16px;}
-button{border:none;background:linear-gradient(135deg,var(--roxo),var(--roxo2));
-color:#fff;font-weight:600;}
-.resultado{background:var(--claro);padding:14px;border-radius:12px;
-margin-top:12px;color:#4a148c;font-weight:600;text-align:center;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Roboto;background:#6a1b9a;}
+.app{max-width:430px;margin:auto;background:#fff;min-height:100vh;border-radius:20px 20px 0 0;}
+header{background:#8e24aa;color:#fff;padding:18px;text-align:center;font-size:20px;font-weight:600;}
+.content{padding:16px;}
+select,textarea,input,button{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid #ccc;}
+button{background:#6a1b9a;color:#fff;font-weight:600;border:none;}
+.resultado{background:#f3e5f5;padding:12px;border-radius:10px;margin-top:10px;text-align:center;}
 .conf-alta{color:#2e7d32;}
 .conf-media{color:#f9a825;}
 .conf-baixa{color:#c62828;}
-.footer{text-align:center;font-size:12px;color:#888;padding:15px;}
 </style>
 </head>
 
@@ -42,15 +32,19 @@ margin-top:12px;color:#4a148c;font-weight:600;text-align:center;}
     <option value="14">🎯 Foco em 14 Pontos</option>
   </select>
 
-  <textarea id="resultados" rows="5"
-    placeholder="Concursos (1 por linha)"></textarea>
+  <select id="estrategia">
+    <option value="conservadora">Conservadora</option>
+    <option value="equilibrada" selected>Equilibrada</option>
+    <option value="agressiva">Agressiva</option>
+  </select>
+
+  <textarea id="resultados" rows="4" placeholder="Concursos (1 por linha)"></textarea>
 
   <input type="number" id="qtdJogos" value="6" min="1" max="20">
   <button onclick="gerarJogos()">Gerar Jogos</button>
 </div>
 
-<div class="content"><div id="saida"></div></div>
-<div class="footer">Lotofácil • Modo 14 Pontos</div>
+<div class="content" id="saida"></div>
 </div>
 
 <script>
@@ -60,7 +54,7 @@ function parseResultados(){
  return t.split("\n").map(l=>l.trim().split(/\s+/).map(Number));
 }
 
-function rankingPonderado(jogos){
+function ranking(jogos){
  let p={}; for(let i=1;i<=25;i++)p[i]=0;
  jogos.forEach((j,idx)=>{
  let w=idx>=jogos.length-5?3:idx>=jogos.length-15?2:1;
@@ -69,56 +63,51 @@ function rankingPonderado(jogos){
  return Object.keys(p).sort((a,b)=>p[b]-p[a]).map(Number);
 }
 
-function validarBase(j){
+function validar(j){
  let pares=j.filter(n=>n%2===0).length;
  let baixas=j.filter(n=>n<=13).length;
- if(!((pares===7||pares===8)&&(baixas===7||baixas===8)))return false;
+ if(!(pares>=6&&pares<=9&&baixas>=6&&baixas<=9))return false;
  for(let i=1;i<j.length-1;i++)
    if(j[i]===j[i-1]+1 && j[i+1]===j[i]+1) return false;
  return true;
 }
 
-function calcularConfianca(jogo,ranking){
- let score=0;
- let pares=jogo.filter(n=>n%2===0).length;
- if(pares===7||pares===8) score+=20;
- let baixas=jogo.filter(n=>n<=13).length;
- if(baixas===7||baixas===8) score+=20;
- let quentes=jogo.filter(n=>ranking.slice(0,10).includes(n)).length;
- if(quentes>=8) score+=30;
- if(quentes>=6) score+=20;
- score+=20;
- return Math.min(score,100);
+function confianca(j,rank){
+ let q=j.filter(n=>rank.slice(0,10).includes(n)).length;
+ return Math.min(50 + q*5, 95);
 }
 
 function gerarJogos(){
  let jogos=parseResultados();
  if(jogos.length<5){alert("Cole ao menos 5 concursos");return;}
- let ranking=rankingPonderado(jogos);
- let out="",qJ=+qtdJogos.value;
+ let rank=ranking(jogos);
  let foco14=modo.value==="14";
+ let tentativasMax=200;
+ let out="",gerados=0;
 
- for(let i=0;i<qJ;i++){
-   let jogo=[];
-   let pool=foco14?ranking.slice(0,12):ranking.slice(0,15);
-
-   while(jogo.length<15){
-     let n=pool[Math.floor(Math.random()*pool.length)];
-     if(!jogo.includes(n))jogo.push(n);
+ while(gerados<qtdJogos.value){
+   let tent=0,j=[];
+   while(tent<tentativasMax){
+     j=[];
+     let pool=foco14?rank.slice(0,12):rank.slice(0,15);
+     while(j.length<15){
+       let n=pool[Math.floor(Math.random()*pool.length)];
+       if(!j.includes(n))j.push(n);
+     }
+     j.sort((a,b)=>a-b);
+     if(validar(j))break;
+     tent++;
    }
-   jogo.sort((a,b)=>a-b);
-   if(!validarBase(jogo)){i--;continue;}
-
-   let conf=calcularConfianca(jogo,ranking);
-   let cls=conf>=80?"conf-alta":conf>=60?"conf-media":"conf-baixa";
-   let ic=conf>=80?"🟢":conf>=60?"🟡":"🔴";
-
-   out+=`<div class="resultado">
-   ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}<br>
-   <span class="${cls}">Confiança: ${conf}% ${ic}</span>
-   </div>`;
+   if(j.length){
+     let c=confianca(j,rank);
+     let cls=c>=80?"conf-alta":c>=65?"conf-media":"conf-baixa";
+     let ic=c>=80?"🟢":c>=65?"🟡":"🔴";
+     out+=`<div class="resultado">${j.join(" - ")}<br><span class="${cls}">Confiança ${c}% ${ic}</span></div>`;
+     gerados++;
+   }else break;
  }
- saida.innerHTML=out;
+
+ saida.innerHTML=out || "Não foi possível gerar jogos com esses critérios.";
 }
 
 async function buscarUltimosJogos(){
