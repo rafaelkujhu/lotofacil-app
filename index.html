@@ -3,11 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lotofácil • Fechamento Leve (14)</title>
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Lotofácil">
+<title>Loterias Inteligentes</title>
 
 <style>
 :root{
@@ -34,14 +30,41 @@ body{
 header{
   background:linear-gradient(135deg,var(--roxo),var(--roxo2));
   color:#fff;
-  padding:18px;
+  padding:16px;
   text-align:center;
   font-size:18px;
   font-weight:600;
 }
 
+.tabs{
+  display:flex;
+  background:#eee;
+}
+
+.tab{
+  flex:1;
+  padding:14px;
+  text-align:center;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.tab.active{
+  background:#fff;
+  color:var(--roxo);
+  border-bottom:3px solid var(--roxo);
+}
+
 .content{
-  padding:18px;
+  padding:16px;
+}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:14px;
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
 
 textarea,input,button{
@@ -61,12 +84,11 @@ button{
   cursor:pointer;
 }
 
-.card{
-  background:#fff;
-  border-radius:14px;
-  padding:14px;
-  margin-top:14px;
-  box-shadow:0 4px 10px rgba(0,0,0,.08);
+.radio-group{
+  display:flex;
+  gap:16px;
+  margin-top:10px;
+  font-size:14px;
 }
 
 .resultado{
@@ -84,8 +106,8 @@ button{
   font-size:14px;
   color:#2e7d32;
   display:flex;
-  align-items:center;
   justify-content:center;
+  align-items:center;
   gap:6px;
 }
 
@@ -108,22 +130,31 @@ button{
 <body>
 
 <div class="app">
-<header>🎯 Lotofácil • Fechamento Leve (14)</header>
+<header>🎯 Loterias Inteligentes</header>
 
-<div class="content">
+<div class="tabs">
+  <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
+  <div class="tab" onclick="trocarTab(1)">Lotomania</div>
+</div>
 
-<button onclick="buscarUltimosJogos()">📥 Buscar últimos concursos</button>
+<!-- LOTOFÁCIL -->
+<div class="content" id="tab0">
 
-<div style="margin-top:8px;font-size:14px">
-<label><input type="radio" name="qtdBusca" value="5" checked> Últimos 5</label>
-<label style="margin-left:10px"><input type="radio" name="qtdBusca" value="10"> Últimos 10</label>
+<div class="card">
+<button onclick="buscarUltimos()">📥 Buscar concursos</button>
+
+<div class="radio-group">
+<label><input type="radio" name="qtd" value="5" checked> Últimos 5</label>
+<label><input type="radio" name="qtd" value="10"> Últimos 10</label>
 </div>
 
 <textarea id="resultados" rows="6" placeholder="Concursos carregados automaticamente"></textarea>
+</div>
 
-<input type="number" id="qtdJogos" value="5" min="1" max="20" placeholder="Quantidade de jogos">
-
+<div class="card">
+<input type="number" id="qtdJogos" value="5" min="1" max="20">
 <button onclick="gerarFechamento()">🎯 Gerar Fechamento Leve (14)</button>
+</div>
 
 <div id="saida"></div>
 
@@ -132,27 +163,38 @@ button{
 <div id="premio">Carregando...</div>
 </div>
 
+</div>
+
+<!-- LOTOMANIA -->
+<div class="content" id="tab1" style="display:none">
+
 <div class="card">
-<strong>🚧 Lotomania</strong>
-<div style="font-size:13px;color:#777">
-Área preparada para próxima implementação
+<input type="number" id="qtdLotomania" value="3" min="1" max="10">
+<button onclick="gerarLotomania()">🎰 Gerar Lotomania (50 dezenas)</button>
 </div>
-</div>
+
+<div id="saidaLotomania"></div>
 
 </div>
 
 <div class="footer">
-App Lotofácil • Estatística Inteligente
+App de Loterias • Evolução Contínua
 </div>
 </div>
 
 <script>
-async function buscarUltimosJogos(){
+function trocarTab(i){
+  document.querySelectorAll(".tab").forEach((t,idx)=>{
+    t.classList.toggle("active",idx===i);
+    document.getElementById("tab"+idx).style.display = idx===i?"block":"none";
+  });
+}
+
+async function buscarUltimos(){
   const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
   const d = await r.json();
-
-  let ult = d.numero;
-  let qtd = document.querySelector('input[name="qtdBusca"]:checked').value;
+  const ult = d.numero;
+  const qtd = document.querySelector('input[name="qtd"]:checked').value;
   let lista = [];
 
   for(let i=ult;i>ult-qtd;i--){
@@ -162,12 +204,6 @@ async function buscarUltimosJogos(){
   }
 
   resultados.value = lista.join("\n");
-  buscarPremioAtual();
-}
-
-async function buscarPremioAtual(){
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d = await r.json();
 
   premio.innerHTML = d.acumulado
     ? `🔴 Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
@@ -176,48 +212,47 @@ async function buscarPremioAtual(){
 
 function gerarFechamento(){
   let linhas = resultados.value.trim().split("\n");
-  if(linhas.length < 5){
-    alert("Busque ao menos 5 concursos");
-    return;
-  }
-
   let base = {};
-  linhas.forEach(l=>{
-    l.split(" ").forEach(n=>{
-      base[n]=(base[n]||0)+1;
-    });
-  });
-
+  linhas.forEach(l=>l.split(" ").forEach(n=>base[n]=(base[n]||0)+1));
   let ranking = Object.keys(base).sort((a,b)=>base[b]-base[a]).map(Number);
-  let qtdJogos = +qtdJogos.value;
-  let saidaHTML = "";
+
+  let qtd = +qtdJogos.value;
   let usados = new Set();
+  let html="";
 
-  while(usados.size < qtdJogos){
-    let jogo = [];
-
-    while(jogo.length < 14){
-      let n = ranking[Math.floor(Math.random()*ranking.length)];
-      if(!jogo.includes(n)) jogo.push(n);
+  while(usados.size<qtd){
+    let jogo=[];
+    while(jogo.length<14){
+      let n=ranking[Math.floor(Math.random()*ranking.length)];
+      if(!jogo.includes(n))jogo.push(n);
     }
-
     jogo.sort((a,b)=>a-b);
-    let key = jogo.join("-");
+    let k=jogo.join("-");
+    if(usados.has(k))continue;
+    usados.add(k);
 
-    if(usados.has(key)) continue;
-    usados.add(key);
-
-    saidaHTML += `
+    html+=`
     <div class="resultado">
       ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
-      <div class="conf">
-        Confiança ${(90 + Math.floor(Math.random()*6))}% 
-        <div class="bolinha"></div>
-      </div>
+      <div class="conf">Confiança ${90+Math.floor(Math.random()*6)}% <div class="bolinha"></div></div>
     </div>`;
   }
+  saida.innerHTML=html;
+}
 
-  saida.innerHTML = saidaHTML;
+function gerarLotomania(){
+  let qtd=+qtdLotomania.value;
+  let html="";
+  for(let i=0;i<qtd;i++){
+    let nums=[];
+    while(nums.length<50){
+      let n=Math.floor(Math.random()*100);
+      if(!nums.includes(n))nums.push(n);
+    }
+    nums.sort((a,b)=>a-b);
+    html+=`<div class="resultado">${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>`;
+  }
+  saidaLotomania.innerHTML=html;
 }
 </script>
 
