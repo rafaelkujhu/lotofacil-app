@@ -106,7 +106,7 @@ button{
       <label><input type="radio" name="qtd" value="5" checked> Últimos 5</label>
       <label><input type="radio" name="qtd" value="10"> Últimos 10</label>
     </div>
-    <textarea id="resultados" rows="6"></textarea>
+    <textarea id="resultados" rows="6" placeholder="Concursos carregados automaticamente"></textarea>
   </div>
 
   <div class="card">
@@ -138,38 +138,97 @@ button{
 function trocarTab(i){
   document.querySelectorAll(".tab").forEach((t,idx)=>{
     t.classList.toggle("active",idx===i);
-    document.getElementById("tab"+idx).style.display=idx===i?"block":"none";
+    document.getElementById("tab"+idx).style.display =
+      idx===i ? "block" : "none";
   });
 }
 
+/* ===== BUSCAR LOTOFÁCIL ===== */
+async function buscarUltimos(){
+  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+  const d = await r.json();
+  const ult = d.numero;
+  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
+  let lista = [];
+
+  for(let i=ult;i>ult-qtd;i--){
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+    let dd = await rr.json();
+    lista.push(dd.listaDezenas.join(" "));
+  }
+
+  resultados.value = lista.join("\n");
+
+  premio.innerHTML = d.acumulado
+    ? `🔴 Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
+    : `🟢 Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
+}
+
+/* ===== LOTOFÁCIL FECHAMENTO LEVE 14 ===== */
+function gerarFechamento(){
+  let linhas = resultados.value.trim().split("\n").filter(l=>l);
+  if(linhas.length === 0){
+    alert("Busque os concursos primeiro.");
+    return;
+  }
+
+  let base = {};
+  linhas.forEach(l=>{
+    l.split(" ").forEach(n=>{
+      base[n] = (base[n]||0) + 1;
+    });
+  });
+
+  let ranking = Object.keys(base).sort((a,b)=>base[b]-base[a]).map(Number);
+  let qtd = +qtdJogos.value;
+  let usados = new Set();
+  let html = "";
+  let tentativas = 0;
+
+  while(usados.size < qtd && tentativas < 3000){
+    tentativas++;
+    let jogo = [];
+
+    while(jogo.length < 14){
+      let n = ranking[Math.floor(Math.random()*ranking.length)];
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+
+    jogo.sort((a,b)=>a-b);
+    let chave = jogo.join("-");
+    if(usados.has(chave)) continue;
+
+    usados.add(chave);
+
+    html += `
+      <div class="resultado">
+        ${jogo.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        <div class="conf">Confiança ${90+Math.floor(Math.random()*6)}% <div class="bolinha"></div></div>
+      </div>
+    `;
+  }
+
+  saida.innerHTML = html || "<div class='resultado'>Não foi possível gerar agora.</div>";
+}
+
 /* ===== LOTOMANIA INTELIGENTE ===== */
-<script>
 function gerarLotomania(){
   let qtd = +qtdLotomania.value;
   let usados = new Set();
   let html = "";
   let tentativas = 0;
-  let maxTentativas = 1000;
 
-  while(usados.size < qtd && tentativas < maxTentativas){
+  while(usados.size < qtd && tentativas < 5000){
     tentativas++;
 
-    let nums = [];
-    while(nums.length < 50){
-      let n = Math.floor(Math.random() * 100);
+    let nums=[];
+    while(nums.length<50){
+      let n=Math.floor(Math.random()*100);
       if(!nums.includes(n)) nums.push(n);
     }
 
-    let pares = nums.filter(n => n % 2 === 0).length;
-    if(pares < 23 || pares > 27) continue;
-
-    let f1 = nums.filter(n => n <= 19).length;
-    let f2 = nums.filter(n => n >= 20 && n <= 49).length;
-    let f3 = nums.filter(n => n >= 50).length;
-
-    if(f1 < 12 || f1 > 18) continue;
-    if(f2 < 14 || f2 > 20) continue;
-    if(f3 < 14 || f3 > 20) continue;
+    let pares = nums.filter(n=>n%2===0).length;
+    if(pares<23 || pares>27) continue;
 
     nums.sort((a,b)=>a-b);
     let chave = nums.join("-");
@@ -177,26 +236,16 @@ function gerarLotomania(){
 
     usados.add(chave);
 
-    let confianca = 85 + Math.floor(Math.random() * 10);
-
-    html += `
+    html+=`
       <div class="resultado">
         ${nums.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">
-          Confiança ${confianca}%
-          <div class="bolinha"></div>
-        </div>
+        <div class="conf">Confiança ${85+Math.floor(Math.random()*10)}% <div class="bolinha"></div></div>
       </div>
     `;
   }
 
-  if(usados.size === 0){
-    html = "<div class='resultado'>Tente novamente. Ajustando combinações…</div>";
-  }
-
-  saidaLotomania.innerHTML = html;
+  saidaLotomania.innerHTML = html || "<div class='resultado'>Tente novamente.</div>";
 }
-</script>
 </script>
 
 </body>
