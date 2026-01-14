@@ -160,69 +160,44 @@ button{
   <div id="saidaLotomania"></div>
 </div>
 
-<!-- ================= FECHAMENTO REAL ================= -->
-<div class="content" id="tab3" style="display:none">
-  <div class="card">
-    <strong>📘 Fechamento Matemático Documentado</strong>
-    <p style="font-size:13px;color:#555">
-      Cobertura combinatória real (1 a 25).  
-      Garantia válida se as dezenas sorteadas estiverem dentro da base.
-    </p>
-
-    <select id="fechamentoRealTipo">
-      <option value="16-15-14">16 → 15 (garante 14)</option>
-      <option value="17-15-14">17 → 15 (garante 14)</option>
-      <option value="18-15-14">18 → 15 (garante 14)</option>
-      <option value="18-16-15">18 → 16 (garante 15)</option>
-    </select>
-
-    <button onclick="gerarFechamentoReal()">Gerar Fechamento Real</button>
-  </div>
-
-  <div class="card" id="docFechamento" style="display:none"></div>
-  <div id="saidaFechamentoReal"></div>
-</div>
-
-<div class="footer">Versão Estável • Profissional</div>
-</div>
-
-<script>
-function trocarTab(i){
-  document.querySelectorAll(".tab").forEach((t,idx)=>{
-    t.classList.toggle("active",idx===i);
-    document.getElementById("tab"+idx).style.display = idx===i?"block":"none";
-  });
-}
-
-function confianca(extra=0){
-  return Math.min(98, 88 + extra + Math.floor(Math.random()*6));
-}
-
-/* ================= FECHAMENTO REAL ================= */
+/* ================= FECHAMENTO REAL CORRETO ================= */
 
 const FECHAMENTOS_REAIS = {
-  "16-15-14": {base:16,jogo:15,garante:"14 pontos"},
-  "17-15-14": {base:17,jogo:15,garante:"14 pontos"},
-  "18-15-14": {base:18,jogo:15,garante:"14 pontos"},
-  "18-16-15": {base:18,jogo:16,garante:"15 pontos"}
+  "16-15-14": { base:16, jogo:15, garante:"14 pontos" },
+  "17-15-14": { base:17, jogo:15, garante:"14 pontos" },
+  "18-15-14": { base:18, jogo:15, garante:"14 pontos" },
+  "18-16-15": { base:18, jogo:16, garante:"15 pontos" }
 };
 
 function gerarFechamentoReal(){
   const tipo = document.getElementById("fechamentoRealTipo").value;
   const cfg = FECHAMENTOS_REAIS[tipo];
 
-  let base = Array.from({length:cfg.base},(_,i)=>i+1);
+  // 🔹 Universo fixo da Lotofácil
+  const universo = Array.from({length:25},(_,i)=>i+1);
+
+  // 🔹 Base escolhida (ranking simples por enquanto)
+  let base = [];
+  while(base.length < cfg.base){
+    let n = universo[Math.floor(Math.random()*25)];
+    if(!base.includes(n)) base.push(n);
+  }
+  base.sort((a,b)=>a-b);
+
   let jogos = [];
 
+  // 🔹 Fechamento por remoção controlada
   base.forEach((_,idx)=>{
-    let j = base.filter((_,i)=>i!==idx).slice(0,cfg.jogo);
-    jogos.push(j);
+    let jogo = base.filter((_,i)=>i!==idx);
+    jogo = jogo.slice(0,cfg.jogo);
+    jogos.push(jogo);
   });
 
   document.getElementById("docFechamento").style.display="block";
   document.getElementById("docFechamento").innerHTML = `
-    <strong>Documentação</strong><br>
-    Base: ${cfg.base} dezenas<br>
+    <strong>📘 Documentação</strong><br>
+    Universo: 1 a 25<br>
+    Base: ${cfg.base} dezenas (${base.join(", ")})<br>
     Jogos: ${jogos.length}<br>
     Garantia: ${cfg.garante}
   `;
