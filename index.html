@@ -97,21 +97,19 @@ button{
 
 <div class="card">
 <button onclick="buscarConcursos()">Buscar concursos</button>
-
 <div class="radio-group">
 <label><input type="radio" name="qtd" value="1">Último</label>
 <label><input type="radio" name="qtd" value="5" checked>5</label>
 <label><input type="radio" name="qtd" value="10">10</label>
 <label><input type="radio" name="qtd" value="15">15</label>
 </div>
-
-<textarea id="resultados" rows="5"></textarea>
+<textarea id="resultados" rows="5" placeholder="Concursos carregados"></textarea>
 </div>
 
 <div class="card">
 <div class="radio-group">
-<label><input type="radio" name="modo" value="estatistico" checked>Estatístico</label>
-<label><input type="radio" name="modo" value="livre">Livre</label>
+<label><input type="radio" name="modo" value="estatistico" checked>Usar histórico</label>
+<label><input type="radio" name="modo" value="livre">Ignorar histórico</label>
 </div>
 
 <div class="radio-group">
@@ -137,6 +135,10 @@ button{
 <!-- AVANÇADO -->
 <div class="content" id="tab1" style="display:none">
 <div class="card">
+<div class="radio-group">
+<label><input type="radio" name="modoAv" value="estatistico" checked>Usar histórico</label>
+<label><input type="radio" name="modoAv" value="livre">Ignorar histórico</label>
+</div>
 <input type="number" id="qtdAvancado" value="5">
 <button onclick="gerarAvancado()">Gerar Avançado</button>
 </div>
@@ -146,10 +148,14 @@ button{
 <!-- FECHAMENTO -->
 <div class="content" id="tab2" style="display:none">
 <div class="card">
+<div class="radio-group">
+<label><input type="radio" name="modoFe" value="estatistico" checked>Usar histórico</label>
+<label><input type="radio" name="modoFe" value="livre">Ignorar histórico</label>
+</div>
 <select id="tipoFechamento">
-<option value="16">16 → 15</option>
-<option value="17">17 → 15</option>
-<option value="18">18 → 15</option>
+<option value="16">Base 16 → jogos 15</option>
+<option value="17">Base 17 → jogos 15</option>
+<option value="18">Base 18 → jogos 15</option>
 </select>
 <button onclick="gerarFechamento()">Gerar Fechamento</button>
 </div>
@@ -160,6 +166,9 @@ button{
 </div>
 
 <script>
+let concursos=[];
+
+/* navegação */
 function trocarTab(i){
   document.querySelectorAll(".tab").forEach((t,idx)=>{
     t.classList.toggle("active",idx===i);
@@ -167,37 +176,47 @@ function trocarTab(i){
   });
 }
 
-function confianca(extra=0){
-  return Math.min(98,90+extra+Math.floor(Math.random()*6));
+/* confiança baseada em métricas */
+function confianca(pares,soma){
+  let c=70;
+  if(pares>=7&&pares<=9)c+=10;
+  if(soma>=180&&soma<=230)c+=10;
+  return Math.min(95,c+Math.floor(Math.random()*5));
 }
 
+/* buscar concursos */
 async function buscarConcursos(){
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d = await r.json();
-  const ult = d.numero;
-  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
-  let lista=[];
+  const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+  const d=await r.json();
+  const ult=d.numero;
+  const qtd=+document.querySelector('input[name="qtd"]:checked').value;
+  concursos=[];
   for(let i=ult;i>ult-qtd;i--){
-    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-    let dd = await rr.json();
-    lista.push(dd.listaDezenas.join(" "));
+    let rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+    let dd=await rr.json();
+    concursos.push(dd.listaDezenas.map(Number));
   }
-  resultados.value = lista.join("\n");
-  premio.innerText = d.acumulado
-    ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
-    : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
+  resultados.value=concursos.map(c=>c.join(" ")).join("\n");
+  premio.innerText=d.acumulado
+    ?`Acumulado: R$ ${d.valorEstimadoProximoConcurso?.toLocaleString("pt-BR")}`
+    :`Saiu: R$ ${d.valorPremio?.toLocaleString("pt-BR")}`;
 }
 
-function analisar(jogo){
+/* análise do jogo */
+function analisar(jogo,base){
   let pares=jogo.filter(n=>n%2===0).length;
   let soma=jogo.reduce((a,b)=>a+b,0);
-  let status = (pares>=7 && pares<=9 && soma>=180 && soma<=240)?"ok":"bad";
-  return {pares,soma,status};
+  let rep=base?jogo.filter(n=>base.includes(n)).length:0;
+  let status=(pares>=7&&pares<=9&&soma>=180&&soma<=230)?"ok":"bad";
+  return {pares,soma,rep,status};
 }
 
+/* gerador simples */
 function gerarSimples(){
   let dezenas=+document.querySelector('input[name="dezenas"]:checked').value;
   let qtd=+qtdJogos.value;
+  let modo=document.querySelector('input[name="modo"]:checked').value;
+  let baseHist=modo==="estatistico"&&concursos.length?concursos[0]:null;
   let html="";
   for(let i=0;i<qtd;i++){
     let j=[];
@@ -206,20 +225,23 @@ function gerarSimples(){
       if(!j.includes(n))j.push(n);
     }
     j.sort((a,b)=>a-b);
-    let a=analisar(j);
+    let a=analisar(j,baseHist);
     html+=`
     <div class="resultado">
-    ${j.join(" - ")}
-    <div>Pares:${a.pares} | Soma:${a.soma}</div>
-    <div class="conf">Confiabilidade ${confianca()}%</div>
-    <div class="${a.status}">${a.status==="ok"?"DENTRO DO PADRÃO":"FORA DO PADRÃO"}</div>
+      ${j.join(" - ")}
+      <div>Pares:${a.pares} | Soma:${a.soma} | Repetição:${a.rep}</div>
+      <div class="conf">Confiabilidade ${confianca(a.pares,a.soma)}%</div>
+      <div class="${a.status}">${a.status==="ok"?"DENTRO DO PADRÃO":"FORA DO PADRÃO"}</div>
     </div>`;
   }
   saida.innerHTML=html;
 }
 
+/* avançado */
 function gerarAvancado(){
   let qtd=+qtdAvancado.value;
+  let modo=document.querySelector('input[name="modoAv"]:checked').value;
+  let baseHist=modo==="estatistico"&&concursos.length?concursos[0]:null;
   let html="";
   for(let i=0;i<qtd;i++){
     let j=[];
@@ -228,34 +250,35 @@ function gerarAvancado(){
       if(!j.includes(n))j.push(n);
     }
     j.sort((a,b)=>a-b);
-    let a=analisar(j);
+    let a=analisar(j,baseHist);
     html+=`
     <div class="resultado">
-    ${j.join(" - ")}
-    <div>Pares:${a.pares} | Soma:${a.soma}</div>
-    <div class="conf">Confiabilidade ${confianca(4)}%</div>
+      ${j.join(" - ")}
+      <div>Pares:${a.pares} | Soma:${a.soma} | Repetição:${a.rep}</div>
+      <div class="conf">Confiabilidade ${confianca(a.pares,a.soma)}%</div>
     </div>`;
   }
   saidaAvancado.innerHTML=html;
 }
 
+/* fechamento */
 function gerarFechamento(){
   let tipo=+tipoFechamento.value;
+  let modo=document.querySelector('input[name="modoFe"]:checked').value;
   let base=[];
   while(base.length<tipo){
     let n=Math.floor(Math.random()*25)+1;
     if(!base.includes(n))base.push(n);
   }
-  base.sort((a,b)=>a-b);
   let html="";
   base.forEach((_,i)=>{
     let jogo=base.filter((_,idx)=>idx!==i).slice(0,15);
-    let a=analisar(jogo);
+    let a=analisar(jogo,modo==="estatistico"&&concursos.length?concursos[0]:null);
     html+=`
     <div class="resultado">
-    ${jogo.join(" - ")}
-    <div>Pares:${a.pares} | Soma:${a.soma}</div>
-    <div class="conf">Confiabilidade ${confianca(6)}%</div>
+      ${jogo.join(" - ")}
+      <div>Pares:${a.pares} | Soma:${a.soma} | Repetição:${a.rep}</div>
+      <div class="conf">Confiabilidade ${confianca(a.pares,a.soma)}%</div>
     </div>`;
   });
   saidaFechamento.innerHTML=html;
