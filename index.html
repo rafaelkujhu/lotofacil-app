@@ -74,21 +74,19 @@ button{
   padding:10px;
   border-radius:12px;
   margin-top:8px;
+  text-align:center;
   font-weight:600;
   color:#4a148c;
 }
-.linha-nums{ text-align:center; }
 .conf{
   margin-top:6px;
   font-size:13px;
   color:#2e7d32;
-  text-align:center;
 }
-.stats-jogo{
-  font-size:12px;
-  color:#333;
+.stats{
   margin-top:6px;
-  line-height:1.4;
+  font-size:13px;
+  color:#333;
 }
 .footer{text-align:center;font-size:12px;color:#777;padding:14px;}
 </style>
@@ -113,6 +111,7 @@ button{
     <button onclick="buscarConcursos()">🔍 Buscar concursos</button>
 
     <div class="radio-group">
+      <label><input type="radio" name="qtd" value="1">Último</label>
       <label><input type="radio" name="qtd" value="5" checked>5</label>
       <label><input type="radio" name="qtd" value="10">10</label>
       <label><input type="radio" name="qtd" value="15">15</label>
@@ -121,7 +120,7 @@ button{
     <textarea id="resultados" rows="5" placeholder="Concursos carregados"></textarea>
   </div>
 
-  <!-- Estatística ÚNICA dos concursos -->
+  <!-- ESTATÍSTICA DOS CONCURSOS -->
   <div class="card" id="estatisticaConcursos" style="display:none"></div>
 
   <div class="card">
@@ -216,119 +215,70 @@ async function buscarConcursos(){
     const qtd = +document.querySelector('input[name="qtd"]:checked').value;
 
     let concursos=[];
-    let lista=[];
-    for(let i=ult;i>Math.max(0,ult-qtd);i--){
+    for(let i=ult;i>ult-qtd;i--){
       let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
       let dd = await rr.json();
-      let arr = dd.listaDezenas.map(Number);
-      concursos.push(arr);
-      lista.push(arr.join(" "));
+      concursos.push(dd.listaDezenas.map(Number));
     }
 
-    resultados.value = lista.join("\n");
+    resultados.value = concursos.map(c=>c.join(" ")).join("\n");
 
     premio.innerText = d.acumulado
       ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
       : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 
-    estatisticaConcursosUnica(concursos);
+    gerarEstatisticaConcursos(concursos);
+
+    setTimeout(()=>{
+      document.getElementById("estatisticaConcursos").scrollIntoView({behavior:"smooth"});
+    },200);
 
   }catch(e){
     alert("Erro ao buscar concursos.");
   }
 }
 
-/* ===== ESTATÍSTICA ÚNICA DOS CONCURSOS ===== */
-function estatisticaConcursosUnica(concursos){
-  if(!concursos || concursos.length===0) return;
-
-  let totalNums = 0, pares = 0, soma = 0;
-  let faixas = [0,0,0,0,0];
-  let freq = {};
-
-  concursos.flat().forEach(n=>{
-    totalNums++;
-    soma += n;
-    if(n%2===0) pares++;
-
-    if(n<=5) faixas[0]++;
-    else if(n<=10) faixas[1]++;
-    else if(n<=15) faixas[2]++;
-    else if(n<=20) faixas[3]++;
-    else faixas[4]++;
-
-    freq[n]=(freq[n]||0)+1;
-  });
-
-  const top = Object.keys(freq).sort((a,b)=>freq[b]-freq[a]).slice(0,5).join(", ");
+/* ===== ESTATÍSTICA CONCURSOS ===== */
+function gerarEstatisticaConcursos(concursos){
+  let totalJogos = concursos.length;
+  let totalDezenas = concursos.flat();
+  let pares = totalDezenas.filter(n=>n%2===0).length;
+  let impares = totalDezenas.length - pares;
+  let soma = totalDezenas.reduce((a,b)=>a+b,0);
 
   estatisticaConcursos.style.display="block";
-  estatisticaConcursos.innerHTML = `
+  estatisticaConcursos.innerHTML=`
     <strong>📊 Estatística dos Concursos</strong>
-    <div>Pares: ${pares} | Ímpares: ${totalNums-pares}</div>
-    <div>Soma média: ${(soma/concursos.length).toFixed(1)}</div>
-    <div>Faixas: ${faixas.join(" / ")}</div>
-    <div>Top dezenas: ${top}</div>
-    <div>Concursos analisados: ${concursos.length}</div>
+    <div class="stats">Pares: ${(pares/totalJogos).toFixed(1)} | Ímpares: ${(impares/totalJogos).toFixed(1)}</div>
+    <div class="stats">Soma média: ${(soma/totalJogos).toFixed(1)}</div>
   `;
 }
 
-/* ===== SIMPLES (com estatística POR JOGO) ===== */
+/* ===== SIMPLES ===== */
 function gerarSimples(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
   const qtd = +qtdJogos.value;
-  const modo = document.querySelector('input[name="modo"]:checked').value;
-  const texto = resultados.value.trim();
-
-  let universo = Array.from({length:25},(_,i)=>i+1);
-  let ranking = universo;
-
-  if(modo==="estatistico"){
-    if(texto===""){
-      alert("Busque concursos antes de usar modo estatístico.");
-      return;
-    }
-    let base={};
-    texto.split("\n").forEach(l=>{
-      l.split(" ").forEach(n=>{
-        let num=+n;
-        if(num>=1 && num<=25){
-          base[num]=(base[num]||0)+1;
-        }
-      });
-    });
-    ranking = Object.keys(base).map(Number);
-  }
-
   let html="";
+
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<dezenas){
-      let n = ranking[Math.floor(Math.random()*ranking.length)];
+      let n=Math.floor(Math.random()*25)+1;
       if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
 
-    // estatística POR JOGO
-    let pares=0, soma=0, f=[0,0,0,0,0];
-    j.forEach(n=>{
-      soma+=n;
-      if(n%2===0) pares++;
-      if(n<=5) f[0]++; else if(n<=10) f[1]++; else if(n<=15) f[2]++; else if(n<=20) f[3]++; else f[4]++;
-    });
+    let pares=j.filter(n=>n%2===0).length;
+    let soma=j.reduce((a,b)=>a+b,0);
 
     html+=`
       <div class="resultado">
-        <div class="linha-nums">${j.map(n=>String(n).padStart(2,"0")).join(" - ")}</div>
-        <div class="stats-jogo">
-          Pares: ${pares} | Ímpares: ${j.length-pares}<br>
-          Soma: ${soma}<br>
-          Faixas: ${f.join(" / ")}
-        </div>
+        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        <div class="stats">Pares:${pares} | Ímpares:${dezenas-pares} | Soma:${soma}</div>
         <div class="conf">Confiabilidade ${confianca()}%</div>
       </div>`;
   }
-  saida.innerHTML = html;
+  saida.innerHTML=html;
 }
 
 /* ===== AVANÇADO ===== */
@@ -338,17 +288,17 @@ function gerarAvancado(){
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<15){
-      let n = Math.floor(Math.random()*25)+1;
+      let n=Math.floor(Math.random()*25)+1;
       if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
     html+=`
       <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        ${j.join(" - ")}
         <div class="conf">Confiabilidade ${confianca(6)}%</div>
       </div>`;
   }
-  saidaAvancado.innerHTML = html;
+  saidaAvancado.innerHTML=html;
 }
 
 /* ===== LOTOMANIA ===== */
@@ -358,24 +308,23 @@ function gerarLotomania(){
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<50){
-      let n = Math.floor(Math.random()*100);
+      let n=Math.floor(Math.random()*100);
       if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
     html+=`
       <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        ${j.join(" - ")}
         <div class="conf">Confiabilidade ${confianca(4)}%</div>
       </div>`;
   }
-  saidaLotomania.innerHTML = html;
+  saidaLotomania.innerHTML=html;
 }
 
 /* ===== FECHAMENTO REAL ===== */
 function gerarFechamentoReal(){
   const baseQtd = +fechamentoRealTipo.value;
   let universo = Array.from({length:25},(_,i)=>i+1);
-
   let base=[];
   while(base.length<baseQtd){
     let n = universo[Math.floor(Math.random()*25)];
@@ -383,31 +332,24 @@ function gerarFechamentoReal(){
   }
   base.sort((a,b)=>a-b);
 
-  let jogos=[];
-  base.forEach((_,idx)=>{
-    let j = base.filter((_,i)=>i!==idx).slice(0,15);
-    jogos.push(j);
-  });
-
   docFechamento.style.display="block";
-  docFechamento.innerHTML = `
+  docFechamento.innerHTML=`
     <strong>Documentação</strong><br>
     Universo: 1 a 25<br>
     Base: ${base.join(", ")}<br>
-    Jogos: ${jogos.length}<br>
     Garantia: 14 pontos
   `;
 
   let html="";
-  jogos.forEach(j=>{
+  base.forEach((_,idx)=>{
+    let j=base.filter((_,i)=>i!==idx).slice(0,15);
     html+=`
       <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        ${j.join(" - ")}
         <div class="conf">Confiabilidade matemática</div>
       </div>`;
   });
-
-  saidaFechamentoReal.innerHTML = html;
+  saidaFechamentoReal.innerHTML=html;
 }
 </script>
 
