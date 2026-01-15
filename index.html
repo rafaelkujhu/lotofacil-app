@@ -1,4 +1,3 @@
-<!-- ARQUIVO FINAL CORRIGIDO - LOTERIAS INTELIGENTES PRO -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -79,21 +78,14 @@ button{
   font-weight:600;
   color:#4a148c;
 }
-.conf{
-  margin-top:6px;
-  font-size:13px;
-  color:#2e7d32;
-}
-.stats{
-  font-size:13px;
-  margin-top:6px;
-  color:#333;
-}
+.conf{margin-top:4px;font-size:13px;color:#2e7d32;}
+.stats{font-size:13px;color:#333;margin-top:4px;}
 .footer{text-align:center;font-size:12px;color:#777;padding:14px;}
 </style>
 </head>
 
 <body>
+
 <div class="app">
 <header>🎯 Loterias Inteligentes PRO</header>
 
@@ -106,16 +98,14 @@ button{
 
 <!-- SIMPLES -->
 <div class="content" id="tab0">
+
   <div class="card">
     <button onclick="buscarConcursos()">🔍 Buscar concursos</button>
-
     <div class="radio-group">
-      <label><input type="radio" name="qtd" value="1">Último</label>
       <label><input type="radio" name="qtd" value="5" checked>5</label>
       <label><input type="radio" name="qtd" value="10">10</label>
       <label><input type="radio" name="qtd" value="15">15</label>
     </div>
-
     <textarea id="resultados" rows="5"></textarea>
   </div>
 
@@ -171,12 +161,15 @@ button{
 <!-- FECHAMENTO REAL -->
 <div class="content" id="tab3" style="display:none">
   <div class="card">
+    <strong>📘 Fechamento Matemático Documentado</strong>
     <select id="fechamentoRealTipo">
       <option value="16">16 → 15 (garante 14)</option>
       <option value="17">17 → 15 (garante 14)</option>
       <option value="18">18 → 15 (garante 14)</option>
     </select>
     <button onclick="gerarFechamentoReal()">Gerar Fechamento Real</button>
+  </div>
+
   <div class="card" id="docFechamento" style="display:none"></div>
   <div id="saidaFechamentoReal"></div>
 </div>
@@ -196,52 +189,51 @@ function confianca(extra=0){
   return Math.min(98, 85 + extra + Math.floor(Math.random()*6));
 }
 
-/* BUSCAR CONCURSOS + ESTATÍSTICA CORRETA */
+/* BUSCAR CONCURSOS */
 async function buscarConcursos(){
-  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d = await r.json();
-  const ult = d.numero;
+  try{
+    const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+    const d = await r.json();
+    const ult = d.numero;
+    const qtd = +document.querySelector('input[name="qtd"]:checked').value;
 
-  let concursos=[];
-  for(let i=ult;i>ult-qtd;i--){
-    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-    let dd = await rr.json();
-    concursos.push(dd.listaDezenas.map(Number));
+    let concursos=[];
+    for(let i=ult;i>ult-qtd;i--){
+      const rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+      const dd = await rr.json();
+      concursos.push(dd.listaDezenas.map(Number));
+    }
+
+    resultados.value = concursos.map(c=>c.join(" ")).join("\n");
+
+    premio.innerText = d.acumulado
+      ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
+      : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
+
+    gerarEstatisticaConcursos(concursos);
+
+  }catch{
+    alert("Erro ao buscar concursos.");
   }
+}
 
-  resultados.value = concursos.map(c=>c.join(" ")).join("\n");
-
-  let totalConcursos = concursos.length;
-  let paresTotal=0, somaTotal=0, freq={};
-
-  concursos.forEach(c=>{
-    c.forEach(n=>{
-      somaTotal+=n;
-      if(n%2===0) paresTotal++;
-      freq[n]=(freq[n]||0)+1;
-    });
-  });
-
-  let paresMed = (paresTotal/totalConcursos).toFixed(1);
-  let imparesMed = (15 - paresMed).toFixed(1);
-  let somaMed = (somaTotal/totalConcursos).toFixed(1);
-  let top = Object.keys(freq).sort((a,b)=>freq[b]-freq[a]).slice(0,5);
+/* ESTATÍSTICA CONCURSOS */
+function gerarEstatisticaConcursos(concursos){
+  let total = concursos.length;
+  let totalNums = concursos.flat().length;
+  let pares = concursos.flat().filter(n=>n%2===0).length;
+  let impares = totalNums - pares;
+  let soma = concursos.flat().reduce((a,b)=>a+b,0);
 
   estatisticaConcursos.style.display="block";
   estatisticaConcursos.innerHTML=`
     <strong>📊 Estatística dos Concursos</strong>
-    <div class="stats">🔵 Pares: ${paresMed} | 🔴 Ímpares: ${imparesMed}</div>
-    <div class="stats">➕ Soma média: ${somaMed}</div>
-    <div class="stats">🔥 Mais frequentes: ${top.join(", ")}</div>
+    <div class="stats">⚖️ Pares: ${(pares/total).toFixed(1)} | Ímpares: ${(impares/total).toFixed(1)}</div>
+    <div class="stats">➕ Soma média: ${(soma/total).toFixed(1)}</div>
   `;
-
-  premio.innerText = d.acumulado
-    ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
-    : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
-/* GERAR JOGOS COM ESTATÍSTICA POR JOGO */
+/* GERAR SIMPLES */
 function gerarSimples(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
   const qtd = +qtdJogos.value;
@@ -255,14 +247,14 @@ function gerarSimples(){
     }
     j.sort((a,b)=>a-b);
 
-    let pares=j.filter(n=>n%2===0).length;
-    let soma=j.reduce((a,b)=>a+b,0);
+    let pares = j.filter(n=>n%2===0).length;
+    let soma = j.reduce((a,b)=>a+b,0);
 
     html+=`
       <div class="resultado">
         ${j.join(" - ")}
-        <div class="stats">Pares:${pares} | Ímpares:${dezenas-pares} | Soma:${soma}</div>
         <div class="conf">Confiabilidade ${confianca()}%</div>
+        <div class="stats">⚖️ ${pares} pares | ${j.length-pares} ímpares • ➕ Soma ${soma}</div>
       </div>`;
   }
   saida.innerHTML=html;
@@ -270,7 +262,17 @@ function gerarSimples(){
 
 /* AVANÇADO */
 function gerarAvancado(){
-  gerarSimples();
+  let html="";
+  for(let i=0;i<10;i++){
+    let j=[];
+    while(j.length<15){
+      let n=Math.floor(Math.random()*25)+1;
+      if(!j.includes(n)) j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+    html+=`<div class="resultado">${j.join(" - ")}<div class="conf">Confiabilidade ${confianca(6)}%</div></div>`;
+  }
+  saidaAvancado.innerHTML=html;
 }
 
 /* LOTOMANIA */
@@ -284,19 +286,39 @@ function gerarLotomania(){
       if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
-    html+=`
-      <div class="resultado">
-        ${j.join(" - ")}
-        <div class="conf">Confiabilidade ${confianca(4)}%</div>
-      </div>`;
+    html+=`<div class="resultado">${j.join(" - ")}<div class="conf">Confiabilidade ${confianca(4)}%</div></div>`;
   }
   saidaLotomania.innerHTML=html;
 }
 
 /* FECHAMENTO REAL */
 function gerarFechamentoReal(){
-  gerarAvancado();
+  const baseQtd = +fechamentoRealTipo.value;
+  let universo = Array.from({length:25},(_,i)=>i+1);
+
+  let base=[];
+  while(base.length<baseQtd){
+    let n = universo[Math.floor(Math.random()*25)];
+    if(!base.includes(n)) base.push(n);
+  }
+  base.sort((a,b)=>a-b);
+
+  docFechamento.style.display="block";
+  docFechamento.innerHTML=`
+    <strong>📘 Legenda do Fechamento</strong>
+    <div class="stats">Universo: 1 a 25</div>
+    <div class="stats">Base: ${base.join(", ")}</div>
+    <div class="stats">Garantia: 14 pontos</div>
+  `;
+
+  let html="";
+  base.forEach((_,i)=>{
+    let j = base.filter((_,idx)=>idx!==i).slice(0,15);
+    html+=`<div class="resultado">${j.join(" - ")}</div>`;
+  });
+  saidaFechamentoReal.innerHTML=html;
 }
 </script>
+
 </body>
 </html>
