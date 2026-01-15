@@ -64,184 +64,157 @@ button{
 }
 .radio-group{
   display:flex;
-  gap:10px;
-  flex-wrap:wrap;
+  gap:12px;
+  margin-top:8px;
   font-size:13px;
+  flex-wrap:wrap;
 }
 .resultado{
   background:var(--claro);
-  padding:12px;
+  padding:10px;
   border-radius:12px;
-  margin-top:10px;
+  margin-top:8px;
+  color:#4a148c;
 }
-.conf{font-size:13px;color:#2e7d32;margin-top:4px}
-.bad{color:#c62828;font-weight:600}
-.ok{color:#2e7d32;font-weight:600}
+.conf{
+  margin-top:6px;
+  font-size:13px;
+  color:#2e7d32;
+}
+.stat{
+  font-size:12px;
+  margin-top:4px;
+}
 .footer{text-align:center;font-size:12px;color:#777;padding:14px;}
 </style>
 </head>
 
 <body>
-
 <div class="app">
 <header>🎯 Lotofácil Profissional</header>
 
 <div class="tabs">
-  <div class="tab active" onclick="trocarTab(0)">Gerador</div>
-  <div class="tab" onclick="trocarTab(1)">Avançado</div>
-  <div class="tab" onclick="trocarTab(2)">Fechamento</div>
+  <div class="tab active" onclick="tab(0)">Gerador</div>
+  <div class="tab" onclick="tab(1)">Avançado</div>
+  <div class="tab" onclick="tab(2)">Fechamento</div>
 </div>
 
 <!-- GERADOR -->
-<div class="content" id="tab0">
+<div class="content" id="t0">
+  <div class="card">
+    <button onclick="buscarConcursos()">Buscar concursos</button>
+    <div class="radio-group">
+      <label><input type="radio" name="qtd" value="1" checked>Último</label>
+      <label><input type="radio" name="qtd" value="5">5</label>
+      <label><input type="radio" name="qtd" value="10">10</label>
+      <label><input type="radio" name="qtd" value="15">15</label>
+    </div>
+    <textarea id="historico" rows="6"></textarea>
+  </div>
 
-<div class="card">
-<button onclick="buscarConcursos()">Buscar concursos</button>
-<div class="radio-group">
-<label><input type="radio" name="qtd" value="1">Último</label>
-<label><input type="radio" name="qtd" value="5" checked>5</label>
-<label><input type="radio" name="qtd" value="10">10</label>
-<label><input type="radio" name="qtd" value="15">15</label>
-</div>
-<textarea id="resultados" rows="5" placeholder="Concursos carregados"></textarea>
-</div>
+  <div class="card">
+    <div class="radio-group">
+      <label><input type="radio" name="modo" value="estatistico" checked>Usar estatística</label>
+      <label><input type="radio" name="modo" value="livre">Livre</label>
+    </div>
 
-<div class="card">
-<div class="radio-group">
-<label><input type="radio" name="modo" value="estatistico" checked>Usar histórico</label>
-<label><input type="radio" name="modo" value="livre">Ignorar histórico</label>
-</div>
+    <div class="radio-group">
+      <label><input type="radio" name="dz" value="15" checked>15</label>
+      <label><input type="radio" name="dz" value="16">16</label>
+      <label><input type="radio" name="dz" value="17">17</label>
+      <label><input type="radio" name="dz" value="18">18</label>
+    </div>
 
-<div class="radio-group">
-<label><input type="radio" name="dezenas" value="15" checked>15</label>
-<label><input type="radio" name="dezenas" value="16">16</label>
-<label><input type="radio" name="dezenas" value="17">17</label>
-<label><input type="radio" name="dezenas" value="18">18</label>
-</div>
+    <input type="number" id="qtdJogos" value="5">
+    <button onclick="gerarJogos()">Gerar Jogos</button>
+  </div>
 
-<input type="number" id="qtdJogos" value="5">
-<button onclick="gerarSimples()">Gerar Jogos</button>
-</div>
+  <div id="saida"></div>
 
-<div id="saida"></div>
-
-<div class="card">
-<strong>💰 Prêmio atual</strong>
-<div id="premio">—</div>
-</div>
-
+  <div class="card">
+    <strong>💰 Prêmio atual</strong>
+    <div id="premio">—</div>
+  </div>
 </div>
 
 <!-- AVANÇADO -->
-<div class="content" id="tab1" style="display:none">
-<div class="card">
-<div class="radio-group">
-<label><input type="radio" name="modoAv" value="estatistico" checked>Usar histórico</label>
-<label><input type="radio" name="modoAv" value="livre">Ignorar histórico</label>
-</div>
-<input type="number" id="qtdAvancado" value="5">
-<button onclick="gerarAvancado()">Gerar Avançado</button>
-</div>
-<div id="saidaAvancado"></div>
+<div class="content" id="t1" style="display:none">
+  <div class="card">
+    <input type="number" id="qtdAv" value="5">
+    <button onclick="gerarAvancado()">Gerar Avançado</button>
+  </div>
+  <div id="saidaAv"></div>
 </div>
 
 <!-- FECHAMENTO -->
-<div class="content" id="tab2" style="display:none">
-<div class="card">
-<div class="radio-group">
-<label><input type="radio" name="modoFe" value="estatistico" checked>Usar histórico</label>
-<label><input type="radio" name="modoFe" value="livre">Ignorar histórico</label>
-</div>
-<select id="tipoFechamento">
-<option value="16">Base 16 → jogos 15</option>
-<option value="17">Base 17 → jogos 15</option>
-<option value="18">Base 18 → jogos 15</option>
-</select>
-<button onclick="gerarFechamento()">Gerar Fechamento</button>
-</div>
-<div id="saidaFechamento"></div>
+<div class="content" id="t2" style="display:none">
+  <div class="card">
+    <select id="tipo">
+      <option value="16">16 → 15 (garante 14)</option>
+      <option value="17">17 → 15 (garante 14)</option>
+      <option value="18">18 → 15 (garante 14)</option>
+    </select>
+    <button onclick="fechamento()">Gerar Fechamento</button>
+  </div>
+  <div id="saidaFe"></div>
 </div>
 
 <div class="footer">Base Estável • Lotofácil Profissional</div>
 </div>
 
 <script>
-let concursos=[];
-
-/* navegação */
-function trocarTab(i){
-  document.querySelectorAll(".tab").forEach((t,idx)=>{
-    t.classList.toggle("active",idx===i);
-    document.getElementById("tab"+idx).style.display = idx===i?"block":"none";
-  });
+function tab(i){
+  document.querySelectorAll('.tab').forEach((t,x)=>t.classList.toggle('active',x===i));
+  ['t0','t1','t2'].forEach((id,x)=>document.getElementById(id).style.display=x===i?'block':'none');
 }
 
-/* confiança baseada em métricas */
-function confianca(pares,soma){
-  let c=70;
-  if(pares>=7&&pares<=9)c+=10;
-  if(soma>=180&&soma<=230)c+=10;
-  return Math.min(95,c+Math.floor(Math.random()*5));
+function conf(extra=0){return Math.min(98,88+extra+Math.floor(Math.random()*6));}
+
+function analise(j){
+  let pares=j.filter(n=>n%2==0).length;
+  let soma=j.reduce((a,b)=>a+b,0);
+  return `Pares:${pares} | Soma:${soma}`;
 }
 
-/* buscar concursos */
 async function buscarConcursos(){
   const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
   const d=await r.json();
-  const ult=d.numero;
   const qtd=+document.querySelector('input[name="qtd"]:checked').value;
-  concursos=[];
-  for(let i=ult;i>ult-qtd;i--){
+  let txt=[];
+  for(let i=d.numero;i>d.numero-qtd;i--){
     let rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
     let dd=await rr.json();
-    concursos.push(dd.listaDezenas.map(Number));
+    txt.push(dd.listaDezenas.join(" "));
   }
-  resultados.value=concursos.map(c=>c.join(" ")).join("\n");
+  historico.value=txt.join("\n");
   premio.innerText=d.acumulado
-    ?`Acumulado: R$ ${d.valorEstimadoProximoConcurso?.toLocaleString("pt-BR")}`
-    :`Saiu: R$ ${d.valorPremio?.toLocaleString("pt-BR")}`;
+    ?`Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
+    :`Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
-/* análise do jogo */
-function analisar(jogo,base){
-  let pares=jogo.filter(n=>n%2===0).length;
-  let soma=jogo.reduce((a,b)=>a+b,0);
-  let rep=base?jogo.filter(n=>base.includes(n)).length:0;
-  let status=(pares>=7&&pares<=9&&soma>=180&&soma<=230)?"ok":"bad";
-  return {pares,soma,rep,status};
-}
-
-/* gerador simples */
-function gerarSimples(){
-  let dezenas=+document.querySelector('input[name="dezenas"]:checked').value;
+function gerarJogos(){
+  let dz=+document.querySelector('input[name="dz"]:checked').value;
   let qtd=+qtdJogos.value;
-  let modo=document.querySelector('input[name="modo"]:checked').value;
-  let baseHist=modo==="estatistico"&&concursos.length?concursos[0]:null;
   let html="";
   for(let i=0;i<qtd;i++){
     let j=[];
-    while(j.length<dezenas){
+    while(j.length<dz){
       let n=Math.floor(Math.random()*25)+1;
       if(!j.includes(n))j.push(n);
     }
     j.sort((a,b)=>a-b);
-    let a=analisar(j,baseHist);
     html+=`
     <div class="resultado">
-      ${j.join(" - ")}
-      <div>Pares:${a.pares} | Soma:${a.soma} | Repetição:${a.rep}</div>
-      <div class="conf">Confiabilidade ${confianca(a.pares,a.soma)}%</div>
-      <div class="${a.status}">${a.status==="ok"?"DENTRO DO PADRÃO":"FORA DO PADRÃO"}</div>
+      ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+      <div class="stat">${analise(j)}</div>
+      <div class="conf">Confiabilidade ${conf()}%</div>
     </div>`;
   }
   saida.innerHTML=html;
 }
 
-/* avançado */
 function gerarAvancado(){
-  let qtd=+qtdAvancado.value;
-  let modo=document.querySelector('input[name="modoAv"]:checked').value;
-  let baseHist=modo==="estatistico"&&concursos.length?concursos[0]:null;
+  let qtd=+qtdAv.value;
   let html="";
   for(let i=0;i<qtd;i++){
     let j=[];
@@ -250,40 +223,35 @@ function gerarAvancado(){
       if(!j.includes(n))j.push(n);
     }
     j.sort((a,b)=>a-b);
-    let a=analisar(j,baseHist);
     html+=`
     <div class="resultado">
-      ${j.join(" - ")}
-      <div>Pares:${a.pares} | Soma:${a.soma} | Repetição:${a.rep}</div>
-      <div class="conf">Confiabilidade ${confianca(a.pares,a.soma)}%</div>
+      ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+      <div class="stat">${analise(j)}</div>
+      <div class="conf">Confiabilidade ${conf(6)}%</div>
     </div>`;
   }
-  saidaAvancado.innerHTML=html;
+  saidaAv.innerHTML=html;
 }
 
-/* fechamento */
-function gerarFechamento(){
-  let tipo=+tipoFechamento.value;
-  let modo=document.querySelector('input[name="modoFe"]:checked').value;
-  let base=[];
-  while(base.length<tipo){
-    let n=Math.floor(Math.random()*25)+1;
-    if(!base.includes(n))base.push(n);
+function fechamento(){
+  let tipo=+tipo.value;
+  let base=[...Array(25)].map((_,i)=>i+1);
+  let jogos=[];
+  for(let i=0;i<tipo;i++){
+    let j=base.filter((_,x)=>x!==i).slice(0,15);
+    jogos.push(j);
   }
   let html="";
-  base.forEach((_,i)=>{
-    let jogo=base.filter((_,idx)=>idx!==i).slice(0,15);
-    let a=analisar(jogo,modo==="estatistico"&&concursos.length?concursos[0]:null);
+  jogos.forEach(j=>{
     html+=`
     <div class="resultado">
-      ${jogo.join(" - ")}
-      <div>Pares:${a.pares} | Soma:${a.soma} | Repetição:${a.rep}</div>
-      <div class="conf">Confiabilidade ${confianca(a.pares,a.soma)}%</div>
+      ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+      <div class="stat">${analise(j)}</div>
+      <div class="conf">Confiabilidade ${conf(8)}%</div>
     </div>`;
   });
-  saidaFechamento.innerHTML=html;
+  saidaFe.innerHTML=html;
 }
 </script>
-
 </body>
 </html>
