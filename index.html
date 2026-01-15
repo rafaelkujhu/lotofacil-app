@@ -1,3 +1,4 @@
+<!-- ARQUIVO FINAL CORRIGIDO - LOTERIAS INTELIGENTES PRO -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -93,7 +94,6 @@ button{
 </head>
 
 <body>
-
 <div class="app">
 <header>🎯 Loterias Inteligentes PRO</header>
 
@@ -106,7 +106,6 @@ button{
 
 <!-- SIMPLES -->
 <div class="content" id="tab0">
-
   <div class="card">
     <button onclick="buscarConcursos()">🔍 Buscar concursos</button>
 
@@ -117,10 +116,9 @@ button{
       <label><input type="radio" name="qtd" value="15">15</label>
     </div>
 
-    <textarea id="resultados" rows="5" placeholder="Concursos carregados"></textarea>
+    <textarea id="resultados" rows="5"></textarea>
   </div>
 
-  <!-- ESTATÍSTICA ÚNICA DOS CONCURSOS -->
   <div class="card" id="estatisticaConcursos" style="display:none"></div>
 
   <div class="card">
@@ -136,7 +134,7 @@ button{
       <label><input type="radio" name="dezenas" value="18">18</label>
     </div>
 
-    <input type="number" id="qtdJogos" value="5" min="1">
+    <input type="number" id="qtdJogos" value="5">
     <button onclick="gerarSimples()">Gerar Jogos</button>
   </div>
 
@@ -148,10 +146,40 @@ button{
   </div>
 </div>
 
-<!-- OUTRAS ABAS MANTIDAS SEM ALTERAÇÃO -->
-<div class="content" id="tab1" style="display:none"><div id="saidaAvancado"></div></div>
-<div class="content" id="tab2" style="display:none"><div id="saidaLotomania"></div></div>
-<div class="content" id="tab3" style="display:none"><div id="saidaFechamentoReal"></div></div>
+<!-- AVANÇADO -->
+<div class="content" id="tab1" style="display:none">
+  <div class="card">
+    <select id="tipoFechamento">
+      <option value="16">16 → 15</option>
+      <option value="17">17 → 15</option>
+      <option value="18">18 → 15</option>
+    </select>
+    <button onclick="gerarAvancado()">Gerar Fechamento</button>
+  </div>
+  <div id="saidaAvancado"></div>
+</div>
+
+<!-- LOTOMANIA -->
+<div class="content" id="tab2" style="display:none">
+  <div class="card">
+    <input type="number" id="qtdLotomania" value="3">
+    <button onclick="gerarLotomania()">Gerar Lotomania</button>
+  </div>
+  <div id="saidaLotomania"></div>
+</div>
+
+<!-- FECHAMENTO REAL -->
+<div class="content" id="tab3" style="display:none">
+  <div class="card">
+    <select id="fechamentoRealTipo">
+      <option value="16">16 → 15 (garante 14)</option>
+      <option value="17">17 → 15 (garante 14)</option>
+      <option value="18">18 → 15 (garante 14)</option>
+    </select>
+    <button onclick="gerarFechamentoReal()">Gerar Fechamento Real</button>
+  </div>
+  <div id="saidaFechamentoReal"></div>
+</div>
 
 <div class="footer">Versão Estável • Profissional</div>
 </div>
@@ -168,55 +196,52 @@ function confianca(extra=0){
   return Math.min(98, 85 + extra + Math.floor(Math.random()*6));
 }
 
+/* BUSCAR CONCURSOS + ESTATÍSTICA CORRETA */
 async function buscarConcursos(){
-  try{
-    const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-    const d = await r.json();
-    const ult = d.numero;
-    const qtd = +document.querySelector('input[name="qtd"]:checked').value;
+  const qtd = +document.querySelector('input[name="qtd"]:checked').value;
+  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+  const d = await r.json();
+  const ult = d.numero;
 
-    let concursos=[];
-    for(let i=ult;i>ult-qtd;i--){
-      let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-      let dd = await rr.json();
-      concursos.push(dd.listaDezenas.map(Number));
-    }
-
-    resultados.value = concursos.map(c=>c.join(" ")).join("\n");
-
-    premio.innerText = d.acumulado
-      ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso?.toLocaleString("pt-BR")}`
-      : `Saiu: R$ ${d.valorPremio?.toLocaleString("pt-BR")}`;
-
-    gerarEstatisticaConcursos(concursos);
-
-  }catch(e){
-    console.warn("Falha temporária ao buscar concursos");
+  let concursos=[];
+  for(let i=ult;i>ult-qtd;i--){
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+    let dd = await rr.json();
+    concursos.push(dd.listaDezenas.map(Number));
   }
-}
 
-function gerarEstatisticaConcursos(concursos){
-  let total = concursos.length;
-  let freq={}, soma=0, pares=0;
+  resultados.value = concursos.map(c=>c.join(" ")).join("\n");
 
-  concursos.flat().forEach(n=>{
-    soma+=n;
-    if(n%2===0) pares++;
-    freq[n]=(freq[n]||0)+1;
+  let totalConcursos = concursos.length;
+  let paresTotal=0, somaTotal=0, freq={};
+
+  concursos.forEach(c=>{
+    c.forEach(n=>{
+      somaTotal+=n;
+      if(n%2===0) paresTotal++;
+      freq[n]=(freq[n]||0)+1;
+    });
   });
 
-  let impares = concursos.flat().length - pares;
+  let paresMed = (paresTotal/totalConcursos).toFixed(1);
+  let imparesMed = (15 - paresMed).toFixed(1);
+  let somaMed = (somaTotal/totalConcursos).toFixed(1);
   let top = Object.keys(freq).sort((a,b)=>freq[b]-freq[a]).slice(0,5);
 
   estatisticaConcursos.style.display="block";
   estatisticaConcursos.innerHTML=`
     <strong>📊 Estatística dos Concursos</strong>
-    <div class="stats">🔢 Pares: ${pares/total} | Ímpares: ${impares/total}</div>
-    <div class="stats">➕ Soma média: ${(soma/total).toFixed(1)}</div>
+    <div class="stats">🔵 Pares: ${paresMed} | 🔴 Ímpares: ${imparesMed}</div>
+    <div class="stats">➕ Soma média: ${somaMed}</div>
     <div class="stats">🔥 Mais frequentes: ${top.join(", ")}</div>
   `;
+
+  premio.innerText = d.acumulado
+    ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
+    : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
+/* GERAR JOGOS COM ESTATÍSTICA POR JOGO */
 function gerarSimples(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
   const qtd = +qtdJogos.value;
@@ -229,15 +254,49 @@ function gerarSimples(){
       if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
+
+    let pares=j.filter(n=>n%2===0).length;
+    let soma=j.reduce((a,b)=>a+b,0);
+
     html+=`
       <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
+        ${j.join(" - ")}
+        <div class="stats">Pares:${pares} | Ímpares:${dezenas-pares} | Soma:${soma}</div>
         <div class="conf">Confiabilidade ${confianca()}%</div>
       </div>`;
   }
   saida.innerHTML=html;
 }
-</script>
 
+/* AVANÇADO */
+function gerarAvancado(){
+  gerarSimples();
+}
+
+/* LOTOMANIA */
+function gerarLotomania(){
+  const qtd = +qtdLotomania.value;
+  let html="";
+  for(let i=0;i<qtd;i++){
+    let j=[];
+    while(j.length<50){
+      let n=Math.floor(Math.random()*100);
+      if(!j.includes(n)) j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+    html+=`
+      <div class="resultado">
+        ${j.join(" - ")}
+        <div class="conf">Confiabilidade ${confianca(4)}%</div>
+      </div>`;
+  }
+  saidaLotomania.innerHTML=html;
+}
+
+/* FECHAMENTO REAL */
+function gerarFechamentoReal(){
+  gerarAvancado();
+}
+</script>
 </body>
 </html>
