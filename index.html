@@ -202,20 +202,12 @@ button{
 <!-- ================= LOTOMANIA ================= -->
 <div class="content" id="tab2" style="display:none">
 <div class="card">
-
-  <select id="modoLotomania">
-    <option value="equilibrado">🎯 Equilibrado</option>
-    <option value="zero">🔵 Modo 0 Pontos</option>
-    <option value="vinte">🔴 Modo 20 Pontos</option>
-  </select>
-
-  <input type="number" id="qtdLotomania" value="3" min="1">
-
-  <button onclick="executarSeguro(gerarLotomania,'Lotomania')">
-    Gerar Lotomania
-  </button>
-
+<input type="number" id="qtdLotomania" value="3" min="1">
+<button onclick="executarSeguro(gerarLotomania,'Lotomania')">
+  Gerar Lotomania
+</button>
 </div>
+
 <div id="saidaLotomania"></div>
 </div>
 
@@ -300,13 +292,6 @@ function trocarTab(i){
 
 function confianca(extra=0){
   return Math.min(98,88+extra+Math.floor(Math.random()*6));
-}
-
-// ===== OPÇÃO 2: ÚLTIMO CONCURSO DA LOTOMANIA =====
-function obterUltimoConcursoLotomania(){
-  // FUTURO: integrar com API da Caixa
-  // Por enquanto, retorna vazio (não quebra nada)
-  return [];
 }
 
 // ===== BASE DETERMINÍSTICA (SEM ALEATORIEDADE) =====
@@ -395,14 +380,6 @@ function gerarEstatisticasConcursos(concursos){
   `;
 }
 
-  .ss-extremo{
-   border-left: 5px solid #ef6c00;
-}
-
-  .ss-ousado{
-  border-left: 5px solid #6a1b9a;
-}
-
 /* ===== ANÁLISE HISTÓRICA (ÚLTIMO ANO) ===== */
 function analisarHistoricoUltimoAno(concursos){
   let dentro = 0;
@@ -437,36 +414,16 @@ function gerarSuperSete(){
   for(let i = 0; i < qtd; i++){
     let jogo = [];
 
-    // gera 1 número por coluna
     for(let col = 0; col < 7; col++){
-      jogo.push(Math.floor(Math.random() * 10));
-    }
-
-    const soma = jogo.reduce((a,b)=>a+b,0);
-    const pares = jogo.filter(n => n % 2 === 0).length;
-
-    let perfil = "🎯 Perfil equilibrado";
-    let classe = "";
-
-    // soma fora do padrão
-    if(soma < 21 || soma > 42){
-      perfil = "⚠️ Perfil extremo";
-      classe = "ss-extremo";
-    }
-
-    // pares extremos
-    if(pares <= 1 || pares >= 6){
-      perfil = "🧪 Perfil ousado";
-      classe = "ss-ousado";
+      let n = Math.floor(Math.random() * 10);
+      jogo.push(n);
     }
 
     html += `
-      <div class="resultado ${classe}">
+      <div class="resultado">
         ${jogo.join(" | ")}
         <div class="stats">
-          Soma: ${soma}<br>
-          Pares: ${pares} | Ímpares: ${7 - pares}<br>
-          <strong>${perfil}</strong>
+          Soma: ${jogo.reduce((a,b)=>a+b,0)}
         </div>
       </div>
     `;
@@ -531,66 +488,31 @@ function gerarAvancado(){
 /* ===== LOTOMANIA ===== */
 function gerarLotomania(){
   const qtd = +document.getElementById("qtdLotomania").value || 1;
-  const modo = document.getElementById("modoLotomania").value;
-  const ultimo = obterUltimoConcursoLotomania(); // array (pode estar vazio)
-
   let html = "";
 
   for(let i = 0; i < qtd; i++){
     let jogo = [];
     let tentativas = 0;
 
-    let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
-
-    // 🔴 MODO 20 PONTOS: pré-incluir parte do último concurso
-    if(modo === "vinte" && ultimo.length){
-      let alvo = 15; // quantidade inicial de coincidências (controlada)
-      while(jogo.length < alvo){
-        let n = ultimo[Math.floor(Math.random() * ultimo.length)];
-        if(!jogo.includes(n)) jogo.push(n);
-      }
-    }
-
-    while(jogo.length < 50 && tentativas < 15000){
+    while(jogo.length < 50 && tentativas < 5000){
       tentativas++;
       let n = Math.floor(Math.random() * 100);
       if(jogo.includes(n)) continue;
 
-      // 🔵 MODO 0 PONTOS: evita último concurso
-      if(modo === "zero" && ultimo.includes(n)) continue;
-
-      // controle de pares
+      // controle simples de pares
       let pares = jogo.filter(x => x % 2 === 0).length;
-      let impares = jogo.length - pares;
       if(n % 2 === 0 && pares >= 26) continue;
-      if(n % 2 !== 0 && impares >= 26) continue;
+      if(n % 2 !== 0 && (jogo.length - pares) >= 26) continue;
 
-      // controle de faixas
-      let faixa;
-      if(n <= 19) faixa = "f1";
-      else if(n <= 39) faixa = "f2";
-      else if(n <= 59) faixa = "f3";
-      else if(n <= 79) faixa = "f4";
-      else faixa = "f5";
-      if(faixas[faixa] >= 12) continue;
-
-      faixas[faixa]++;
       jogo.push(n);
     }
 
     jogo.sort((a,b)=>a-b);
 
-    // análise de coincidência
-    let coinc = ultimo.length
-      ? jogo.filter(n => ultimo.includes(n)).length
-      : "—";
-
     html += `
       <div class="resultado">
         ${jogo.join(" - ")}
         <div class="stats">
-          Modo: ${modo.toUpperCase()}<br>
-          Coincidências c/ último: ${coinc}<br>
           Pares: ${jogo.filter(n=>n%2===0).length} |
           Ímpares: ${jogo.filter(n=>n%2!==0).length}
         </div>
