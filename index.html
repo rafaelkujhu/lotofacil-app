@@ -135,6 +135,19 @@ button{
 <div class="card" id="estatConcursos" style="display:none"></div>
 
 <div class="card">
+  <div class="radio-group">
+    <label>
+      <input type="radio" name="modo" value="estatistico" checked>
+      📊 Estatístico
+    </label>
+    <label>
+      <input type="radio" name="modo" value="livre">
+      🎲 Livre
+    </label>
+  </div>
+</div>
+
+<div class="card">
 <div class="radio-group">
   <label><input type="radio" name="dezenas" value="15" checked>15</label>
   <label><input type="radio" name="dezenas" value="16">16</label>
@@ -265,19 +278,39 @@ function gerarEstatisticasConcursos(concursos){
 
 /* ===== LOTOFÁCIL ===== */
 function gerarLotofacil(){
-  const dezenas=+document.querySelector('input[name="dezenas"]:checked').value;
-  const qtd=+qtdJogos.value;
+  const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
+  const qtd = +qtdJogos.value;
+  const modo = document.querySelector('input[name="modo"]:checked').value;
+
+  let universo = Array.from({length:25},(_,i)=>i+1);
+
+  // Se for estatístico, usa base dos concursos
+  let baseNumeros = universo;
+  if(modo === "estatistico" && concursos.length){
+    let freq = {};
+    concursos.flat().forEach(n=>{
+      freq[n] = (freq[n] || 0) + 1;
+    });
+    baseNumeros = Object.keys(freq).map(Number);
+  }
+
   let html="";
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<dezenas){
-      let n=Math.floor(Math.random()*25)+1;
-      if(!j.includes(n))j.push(n);
+      let n = baseNumeros[Math.floor(Math.random()*baseNumeros.length)];
+      if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
-    html+=`<div class="resultado">${j.join(" - ")}${analisar(j)}</div>`;
+
+    html+=`
+      <div class="resultado">
+        ${j.join(" - ")}
+        ${analisar(j)}
+      </div>
+    `;
   }
-  saida.innerHTML=html;
+  saida.innerHTML = html;
 }
 
 /* ===== AVANÇADO ===== */
