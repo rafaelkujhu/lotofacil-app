@@ -349,28 +349,7 @@ function gerarFechamento(){
   saidaFechamento.innerHTML=html;
 }
 
-<script>
-/* ===== ANÁLISE INTELIGENTE POR JOGO ===== */
-function analisarJogo(jogo){
-  let pares = jogo.filter(n=>n%2===0).length;
-  let impares = jogo.length - pares;
-  let soma = jogo.reduce((a,b)=>a+b,0);
-  let faixa = { f1:0, f2:0, f3:0, f4:0 };
-  jogo.forEach(n=>{
-    if(n<=6) faixa.f1++;
-    else if(n<=12) faixa.f2++;
-    else if(n<=18) faixa.f3++;
-    else faixa.f4++;
-  });
 
-  return `
-    <div class="stats">
-      🔢 ${pares}P / ${impares}I • ➕ Soma ${soma}<br>
-      📐 Faixa: ${faixa.f1}-${faixa.f2}-${faixa.f3}-${faixa.f4}
-    </div>
-  `;
-}
-</script>
 
 </body>
 </html>
