@@ -32,12 +32,21 @@ header{
   font-size:18px;
   font-weight:600;
 }
-.tabs{display:flex;background:#eee;flex-wrap:wrap;}
+.tabs{
+  display:flex;
+  background:#eee;
+  flex-wrap:wrap;
+}
 .tab{
-  flex:1;padding:12px;text-align:center;font-weight:600;cursor:pointer;
+  flex:1;
+  padding:12px;
+  text-align:center;
+  font-weight:600;
+  cursor:pointer;
 }
 .tab.active{
-  background:#fff;color:var(--roxo);
+  background:#fff;
+  color:var(--roxo);
   border-bottom:3px solid var(--roxo);
 }
 .content{padding:16px;}
@@ -89,7 +98,12 @@ button{
   margin-top:6px;
   color:#333;
 }
-.footer{text-align:center;font-size:12px;color:#777;padding:14px;}
+.footer{
+  text-align:center;
+  font-size:12px;
+  color:#777;
+  padding:14px;
+}
 </style>
 </head>
 
@@ -104,6 +118,7 @@ button{
   <div class="tab" onclick="trocarTab(3)">📘 Fechamento Real</div>
 </div>
 
+<!-- ================= LOTOFÁCIL ================= -->
 <div class="content" id="tab0">
 
 <div class="card">
@@ -138,18 +153,20 @@ button{
 </div>
 </div>
 
+<!-- ================= AVANÇADO ================= -->
 <div class="content" id="tab1" style="display:none">
 <div class="card">
 <select id="tipoAvancado">
-  <option value="16">16 → 15</option>
-  <option value="17">17 → 15</option>
-  <option value="18">18 → 15</option>
+  <option value="16">16 → 15 (garante 14)</option>
+  <option value="17">17 → 15 (garante 14)</option>
+  <option value="18">18 → 15 (garante 14)</option>
 </select>
 <button onclick="gerarAvancado()">Gerar Jogos Avançados</button>
 </div>
 <div id="saidaAvancado"></div>
 </div>
 
+<!-- ================= LOTOMANIA ================= -->
 <div class="content" id="tab2" style="display:none">
 <div class="card">
 <input type="number" id="qtdLotomania" value="3" min="1">
@@ -158,13 +175,17 @@ button{
 <div id="saidaLotomania"></div>
 </div>
 
+<!-- ================= FECHAMENTO REAL ================= -->
 <div class="content" id="tab3" style="display:none">
 <div class="card">
 <strong>📘 Fechamento Matemático Documentado</strong>
+<p style="font-size:13px;color:#555">
+Universo fixo 1 a 25. Garantia válida se as dezenas sorteadas estiverem dentro da base.
+</p>
 <select id="tipoFechamento">
-  <option value="16">16 → 15</option>
-  <option value="17">17 → 15</option>
-  <option value="18">18 → 15</option>
+  <option value="16">16 → 15 (garante 14)</option>
+  <option value="17">17 → 15 (garante 14)</option>
+  <option value="18">18 → 15 (garante 14)</option>
 </select>
 <button onclick="gerarFechamento()">Gerar Fechamento</button>
 </div>
@@ -173,7 +194,7 @@ button{
 <div id="saidaFechamento"></div>
 </div>
 
-<div class="footer">Base Congelada V1 • Estável</div>
+<div class="footer">Base Congelada V.1 • Estável</div>
 </div>
 
 <script>
@@ -190,20 +211,57 @@ function confianca(extra=0){
   return Math.min(98,88+extra+Math.floor(Math.random()*6));
 }
 
+/* ===== BUSCAR CONCURSOS ===== */
 async function buscarConcursos(){
   const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
   const d=await r.json();
   const ult=d.numero;
   const qtd=+document.querySelector('input[name="qtd"]:checked').value;
-  concursos=[];
+  
+let concursos=[];
   for(let i=ult;i>ult-qtd;i--){
     let rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
     let dd=await rr.json();
     concursos.push(dd.listaDezenas.map(Number));
   }
-  resultados.value=concursos.map(c=>c.join(" ")).join("\n");
+
+ resultados.value=concursos.map(c=>c.join(" ")).join("\n");
+
+ gerarEstatisticasConcursos(concursos);
+
+  premio.innerText = d.acumulado
+    ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
+    : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
+/* ===== ESTATÍSTICAS CONCURSOS ===== */
+function gerarEstatisticasConcursos(concursos){
+  let nums = concursos.flat();
+  let pares = nums.filter(n=>n%2===0).length;
+  let impares = nums.length - pares;
+  let soma = nums.reduce((a,b)=>a+b,0);
+  let media = (soma / concursos.length).toFixed(1);
+  let faixa = { f1:0, f2:0, f3:0, f4:0 };
+  nums.forEach(n=>{
+    if(n<=6) faixa.f1++;
+    else if(n<=12) faixa.f2++;
+    else if(n<=18) faixa.f3++;
+    else faixa.f4++;
+  });
+
+  estatConcursos.style.display="block";
+  estatConcursos.innerHTML=`
+  <strong>📊 Estatísticas dos Concursos</strong>
+  <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
+  <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
+  <div class="stats">📐 Faixas: 
+      1–6: ${faixa.f1} |
+      7–12: ${faixa.f2} |
+      13–18: ${faixa.f3} |
+      19–25: ${faixa.f4}
+  <div class="stats">Concursos analisados: ${concursos.length}</div>`;
+
+/* ===== ANALISAR JOGOS ===== */
 function analisar(jogo){
   let pares=jogo.filter(n=>n%2===0).length;
   let soma=jogo.reduce((a,b)=>a+b,0);
@@ -217,6 +275,7 @@ function analisar(jogo){
   return `<div class="stats">Pares:${pares} | Soma:${soma} | Rep:${rep}<br>${selo}</div>`;
 }
 
+/* ===== LOTOFÁCIL ===== */
 function gerarLotofacil(){
   const dezenas=+document.querySelector('input[name="dezenas"]:checked').value;
   const qtd=+qtdJogos.value;
@@ -233,6 +292,7 @@ function gerarLotofacil(){
   saida.innerHTML=html;
 }
 
+/* ===== AVANÇADO ===== */
 function gerarAvancado(){
   let html="";
   for(let i=0;i<10;i++){
@@ -247,6 +307,7 @@ function gerarAvancado(){
   saidaAvancado.innerHTML=html;
 }
 
+/* ===== LOTOMANIA ===== */
 function gerarLotomania(){
   let html="";
   for(let i=0;i<3;i++){
@@ -261,6 +322,7 @@ function gerarLotomania(){
   saidaLotomania.innerHTML=html;
 }
 
+/* ===== FECHAMENTO REAL ===== */
 function gerarFechamento(){
   const baseQtd=+tipoFechamento.value;
   let base=[];
