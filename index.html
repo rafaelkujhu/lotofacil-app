@@ -198,7 +198,7 @@ Universo fixo 1 a 25. Garantia válida se as dezenas sorteadas estiverem dentro 
 </div>
 
 <script>
-let concursos=[];
+concursos=[];
 
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
@@ -218,7 +218,7 @@ async function buscarConcursos(){
   const ult=d.numero;
   const qtd=+document.querySelector('input[name="qtd"]:checked').value;
   
-let concursos=[];
+concursos=[];
   for(let i=ult;i>ult-qtd;i--){
     let rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
     let dd=await rr.json();
@@ -259,20 +259,8 @@ function gerarEstatisticasConcursos(concursos){
       7–12: ${faixa.f2} |
       13–18: ${faixa.f3} |
       19–25: ${faixa.f4}
+  </div>
   <div class="stats">Concursos analisados: ${concursos.length}</div>`;
-
-/* ===== ANALISAR JOGOS ===== */
-function analisar(jogo){
-  let pares=jogo.filter(n=>n%2===0).length;
-  let soma=jogo.reduce((a,b)=>a+b,0);
-  let base=concursos[0]||[];
-  let rep=jogo.filter(n=>base.includes(n)).length;
-  let score=0;
-  if(pares===7||pares===8)score++;
-  if(soma>=180&&soma<=220)score++;
-  if(rep>=6&&rep<=10)score++;
-  let selo=score===3?"🟢 EXCELENTE":score===2?"🟡 REGULAR":"🔴 FORA";
-  return `<div class="stats">Pares:${pares} | Soma:${soma} | Rep:${rep}<br>${selo}</div>`;
 }
 
 /* ===== LOTOFÁCIL ===== */
@@ -338,6 +326,33 @@ function gerarFechamento(){
   });
   saidaFechamento.innerHTML=html;
 }
+
+/* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
+function analisar(jogo){
+  let pares = jogo.filter(n => n % 2 === 0).length;
+  let soma = jogo.reduce((a,b)=>a+b,0);
+  let base = concursos[0] || [];
+  let rep = jogo.filter(n => base.includes(n)).length;
+
+  let score = 0;
+  if(pares === 7 || pares === 8) score++;
+  if(soma >= 180 && soma <= 220) score++;
+  if(rep >= 6 && rep <= 10) score++;
+
+  let selo =
+    score === 3 ? "🟢 EXCELENTE" :
+    score === 2 ? "🟡 REGULAR" :
+                  "🔴 FORA DO PADRÃO";
+
+  return `
+    <div class="stats">
+      Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
+      <div class="conf">Confiabilidade ${confianca()}%</div>
+      <strong>${selo}</strong>
+    </div>
+  `;
+}
+
 </script>
 </body>
 </html>
