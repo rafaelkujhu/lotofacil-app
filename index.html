@@ -202,12 +202,20 @@ button{
 <!-- ================= LOTOMANIA ================= -->
 <div class="content" id="tab2" style="display:none">
 <div class="card">
-<input type="number" id="qtdLotomania" value="3" min="1">
-<button onclick="executarSeguro(gerarLotomania,'Lotomania')">
-  Gerar Lotomania
-</button>
-</div>
 
+  <select id="modoLotomania">
+    <option value="equilibrado">🎯 Equilibrado</option>
+    <option value="zero">🔵 Modo 0 Pontos</option>
+    <option value="vinte">🔴 Modo 20 Pontos</option>
+  </select>
+
+  <input type="number" id="qtdLotomania" value="3" min="1">
+
+  <button onclick="executarSeguro(gerarLotomania,'Lotomania')">
+    Gerar Lotomania
+  </button>
+
+</div>
 <div id="saidaLotomania"></div>
 </div>
 
@@ -292,6 +300,13 @@ function trocarTab(i){
 
 function confianca(extra=0){
   return Math.min(98,88+extra+Math.floor(Math.random()*6));
+}
+
+// ===== OPÇÃO 2: ÚLTIMO CONCURSO DA LOTOMANIA =====
+function obterUltimoConcursoLotomania(){
+  // FUTURO: integrar com API da Caixa
+  // Por enquanto, retorna vazio (não quebra nada)
+  return [];
 }
 
 // ===== BASE DETERMINÍSTICA (SEM ALEATORIEDADE) =====
@@ -488,31 +503,66 @@ function gerarAvancado(){
 /* ===== LOTOMANIA ===== */
 function gerarLotomania(){
   const qtd = +document.getElementById("qtdLotomania").value || 1;
+  const modo = document.getElementById("modoLotomania").value;
+  const ultimo = obterUltimoConcursoLotomania(); // array (pode estar vazio)
+
   let html = "";
 
   for(let i = 0; i < qtd; i++){
     let jogo = [];
     let tentativas = 0;
 
-    while(jogo.length < 50 && tentativas < 5000){
+    let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+
+    // 🔴 MODO 20 PONTOS: pré-incluir parte do último concurso
+    if(modo === "vinte" && ultimo.length){
+      let alvo = 15; // quantidade inicial de coincidências (controlada)
+      while(jogo.length < alvo){
+        let n = ultimo[Math.floor(Math.random() * ultimo.length)];
+        if(!jogo.includes(n)) jogo.push(n);
+      }
+    }
+
+    while(jogo.length < 50 && tentativas < 15000){
       tentativas++;
       let n = Math.floor(Math.random() * 100);
       if(jogo.includes(n)) continue;
 
-      // controle simples de pares
-      let pares = jogo.filter(x => x % 2 === 0).length;
-      if(n % 2 === 0 && pares >= 26) continue;
-      if(n % 2 !== 0 && (jogo.length - pares) >= 26) continue;
+      // 🔵 MODO 0 PONTOS: evita último concurso
+      if(modo === "zero" && ultimo.includes(n)) continue;
 
+      // controle de pares
+      let pares = jogo.filter(x => x % 2 === 0).length;
+      let impares = jogo.length - pares;
+      if(n % 2 === 0 && pares >= 26) continue;
+      if(n % 2 !== 0 && impares >= 26) continue;
+
+      // controle de faixas
+      let faixa;
+      if(n <= 19) faixa = "f1";
+      else if(n <= 39) faixa = "f2";
+      else if(n <= 59) faixa = "f3";
+      else if(n <= 79) faixa = "f4";
+      else faixa = "f5";
+      if(faixas[faixa] >= 12) continue;
+
+      faixas[faixa]++;
       jogo.push(n);
     }
 
     jogo.sort((a,b)=>a-b);
 
+    // análise de coincidência
+    let coinc = ultimo.length
+      ? jogo.filter(n => ultimo.includes(n)).length
+      : "—";
+
     html += `
       <div class="resultado">
         ${jogo.join(" - ")}
         <div class="stats">
+          Modo: ${modo.toUpperCase()}<br>
+          Coincidências c/ último: ${coinc}<br>
           Pares: ${jogo.filter(n=>n%2===0).length} |
           Ímpares: ${jogo.filter(n=>n%2!==0).length}
         </div>
@@ -580,27 +630,22 @@ function gerarFechamento(){
   }
 
   /* ===== 4️⃣ SAÍDA ===== */
-  let html = `
-    <div class="card">
-      <strong>📘 Fechamento com Base Única</strong>
-      <div class="stats">
-        <strong>Base fixa (${base.length} dezenas)</strong><br>
-        ${base.join(" - ")}
-      </div>
-      <hr>
-      <div class="stats">Jogos gerados: ${jogos.length}</div>
+ let html = `
+  <div class="card">
+    <strong>📘 Fechamento com Base Única</strong>
+
+    <div class="stats">
+      <strong>Base fixa (${base.length} dezenas)</strong><br>
+      ${base.join(" - ")}
     </div>
-  `;
 
-  jogos.forEach(j=>{
-    html += `
-      <div class="resultado">
-        ${j.join(" - ")}
-        ${analisar(j).html}
-      </div>
-    `;
-  });
+    <hr>
 
+    <div class="stats">
+      Jogos gerados: ${jogos.length}
+    </div>
+  </div>
+`;
   saidaFechamento.innerHTML = html;
 }
 
