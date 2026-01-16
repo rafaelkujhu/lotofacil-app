@@ -396,21 +396,58 @@ function gerarLotomania(){
   saidaLotomania.innerHTML=html;
 }
 
-/* ===== FECHAMENTO REAL ===== */
+/* ===== FECHAMENTO REAL (CORRIGIDO) ===== */
 function gerarFechamento(){
-  const baseQtd=+tipoFechamento.value;
-  let base=[];
-  while(base.length<baseQtd){
-    let n=Math.floor(Math.random()*25)+1;
-    if(!base.includes(n))base.push(n);
+  const baseQtd = +tipoFechamento.value;
+  const qtdJogos = baseQtd; // regra simples e estável
+
+  // gera universo base
+  let base = [];
+  while(base.length < baseQtd){
+    let n = Math.floor(Math.random()*25)+1;
+    if(!base.includes(n)) base.push(n);
   }
   base.sort((a,b)=>a-b);
-  let html="";
-  base.forEach((_,i)=>{
-    let j=base.filter((_,idx)=>idx!==i).slice(0,15);
-    html+=`<div class="resultado">${j.join(" - ")}${analisar(j).html}</div>`;
+
+  let jogos = [];
+  let tentativas = 0;
+
+  while(jogos.length < qtdJogos && tentativas < 500){
+    tentativas++;
+
+    let j = [];
+    while(j.length < 15){
+      let n = base[Math.floor(Math.random()*base.length)];
+      if(!j.includes(n)) j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+
+    // evita jogos duplicados
+    if(!jogos.some(x => x.join() === j.join())){
+      jogos.push(j);
+    }
+  }
+
+  let html = `
+    <div class="card">
+      <strong>📘 Fechamento Real</strong>
+      <div class="stats">
+        Universo base: ${base.join(" - ")}<br>
+        Jogos gerados: ${jogos.length}
+      </div>
+    </div>
+  `;
+
+  jogos.forEach(j=>{
+    html += `
+      <div class="resultado">
+        ${j.join(" - ")}
+        ${analisar(j).html}
+      </div>
+    `;
   });
-  saidaFechamento.innerHTML=html;
+
+  saidaFechamento.innerHTML = html;
 }
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
