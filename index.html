@@ -201,22 +201,31 @@ button{
 </div>
 
 <!-- ================= FECHAMENTO REAL ================= -->
-<div class="content" id="tab3" style="display:none">
-<div class="card">
-<strong>📘 Fechamento Matemático Documentado</strong>
-<p style="font-size:13px;color:#555">
-Universo fixo 1 a 25. Garantia válida se as dezenas sorteadas estiverem dentro da base.
-</p>
-<select id="tipoFechamento">
-  <option value="16">16 → 15 (garante 14)</option>
-  <option value="17">17 → 15 (garante 14)</option>
-  <option value="18">18 → 15 (garante 14)</option>
-</select>
-<button onclick="gerarFechamento()">Gerar Fechamento</button>
-</div>
+<div class="content" id="tab1" style="display:none">
 
-<div class="card" id="docFechamento" style="display:none"></div>
-<div id="saidaFechamento"></div>
+  <div class="card">
+    <select id="tipoAvancado">
+      <option value="16">16 → 15 (garante 14)</option>
+      <option value="17">17 → 15 (garante 14)</option>
+      <option value="18">18 → 15 (garante 14)</option>
+    </select>
+
+    <input type="number" id="qtdAvancado" value="10" min="1">
+    <button onclick="gerarAvancado()">Gerar Jogos Avançados</button>
+  </div>
+
+  <div class="card">
+    <strong>📘 Como funciona o Avançado</strong>
+    <div class="stats">
+      • Gera jogos com filtros reais<br>
+      • Evita padrões estatisticamente fracos<br>
+      • Usa soma, pares e repetição<br>
+      • Não promete prêmio, reduz risco
+    </div>
+  </div>
+
+  <div id="saidaAvancado"></div>
+
 </div>
 
 <div class="footer">Base Congelada V.1 • Estável</div>
