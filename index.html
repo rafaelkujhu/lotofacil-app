@@ -348,7 +348,7 @@ function analisarHistoricoUltimoAno(concursos){
 /* ===== LOTOFÁCIL ===== */
 function gerarLotofacil(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
-  const qtd = +qtdJogos.value;
+  const qtd = +document.getElementById("qtdJogos").value;
   const modo = document.querySelector('input[name="modo"]:checked').value;
 
   let universo = Array.from({length:25},(_,i)=>i+1);
