@@ -464,10 +464,11 @@ function gerarFechamento(){
       </div>
     `;
   });
-
   saidaFechamento.innerHTML = html;
-  document.getElementById("tab3").style.display = "block";
-}
+
+  // 🔥 ATIVA A ABA FECHAMENTO REAL
+  trocarTab(3);
+  }
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
 function calcularRepeticaoMedia(jogo, concursosBase){
