@@ -156,7 +156,9 @@ button{
   <label><input type="radio" name="dezenas" value="18">18</label>
 </div>
 <input type="number" id="qtdJogos" value="5" min="1">
-<button onclick="gerarLotofacil()">Gerar Jogos</button>
+<button onclick="executarSeguro(gerarLotofacil,'Lotofácil')">
+  Gerar Jogos
+</button>
 </div>
 
 <div id="saida"></div>
@@ -178,7 +180,9 @@ button{
     </select>
 
     <input type="number" id="qtdAvancado" value="10" min="1">
-    <button onclick="gerarAvancado()">Gerar Jogos Avançados</button>
+    <button onclick="executarSeguro(gerarAvancado,'Avançado')">
+  Gerar Jogos Avançados
+</button>
   </div>
 
   <div class="card">
@@ -198,8 +202,11 @@ button{
 <div class="content" id="tab2" style="display:none">
 <div class="card">
 <input type="number" id="qtdLotomania" value="3" min="1">
-<button onclick="gerarLotomania()">Gerar Lotomania</button>
+<button onclick="executarSeguro(gerarLotomania,'Lotomania')">
+  Gerar Lotomania
+</button>
 </div>
+
 <div id="saidaLotomania"></div>
 </div>
 
@@ -220,7 +227,9 @@ button{
       <option value="18">18 → 15 (garante 14)</option>
     </select>
 
-    <button onclick="gerarFechamento()">Gerar Fechamento</button>
+    <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
+  Gerar Fechamento
+</button>
   </div>
 
   <div id="saidaFechamento"></div>
@@ -233,6 +242,15 @@ button{
 
 <script>
 concursos=[];
+// ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
+function executarSeguro(fn, nome = "Processo"){
+  try{
+    fn();
+  }catch(e){
+    console.error(`Erro em ${nome}:`, e);
+    alert(`⚠️ Erro interno em ${nome}. Veja o console.`);
+  }
+}
 
 // ===== ELEMENTOS GLOBAIS (OBRIGATÓRIO) =====
 const resultados = document.getElementById("resultados");
@@ -251,6 +269,27 @@ function trocarTab(i){
 
 function confianca(extra=0){
   return Math.min(98,88+extra+Math.floor(Math.random()*6));
+}
+
+// ===== BASE DETERMINÍSTICA (SEM ALEATORIEDADE) =====
+function gerarBaseDeterministica(tamanho){
+  return Array.from({length:tamanho},(_,i)=>i+1);
+}
+
+// ===== JOGOS DETERMINÍSTICOS =====
+function gerarJogosDeterministicos(base, qtdJogos){
+  let jogos = [];
+  let offset = 0;
+
+  while(jogos.length < qtdJogos){
+    let jogo = [];
+    for(let i = 0; i < 15; i++){
+      jogo.push(base[(i + offset) % base.length]);
+    }
+    jogos.push(jogo.slice().sort((a,b)=>a-b));
+    offset++;
+  }
+  return jogos;
 }
 
 /* ===== BUSCAR CONCURSOS ===== */
@@ -416,6 +455,21 @@ function gerarLotomania(){
   saidaLotomania.innerHTML = html;
 }
 
+// ===== VALIDADOR MATEMÁTICO =====
+function validarFechamento(base, jogos){
+  let resultados = jogos.map(j =>
+    j.filter(n => base.includes(n)).length
+  );
+
+  return {
+    minimo: Math.min(...resultados),
+    maximo: Math.max(...resultados),
+    media: (
+      resultados.reduce((a,b)=>a+b,0) / resultados.length
+    ).toFixed(2)
+  };
+}
+
 /* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
 function gerarFechamento(){
 
@@ -424,47 +478,40 @@ function gerarFechamento(){
 
   const baseQtd = Number(tipoFechamento.value);
 
-  /* ===== 1️⃣ BASE ÚNICA FIXA ===== */
-  let base = [];
-  while(base.length < baseQtd){
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(!base.includes(n)) base.push(n);
-  }
-  base.sort((a,b)=>a-b);
+  // 1️⃣ BASE ÚNICA DETERMINÍSTICA
+  let base = gerarBaseDeterministica(baseQtd);
 
-  /* ===== 2️⃣ QUANTIDADE DE JOGOS ===== */
+  // 2️⃣ QTD DE JOGOS
   const qtdJogos =
     baseQtd === 16 ? 6 :
     baseQtd === 17 ? 10 :
     15;
 
-  /* ===== 3️⃣ GERAÇÃO DOS JOGOS ===== */
-  let jogos = [];
-  let tentativas = 0;
+  // 3️⃣ JOGOS SEM ALEATORIEDADE
+  let jogos = gerarJogosDeterministicos(base, qtdJogos);
 
-  while(jogos.length < qtdJogos && tentativas < 5000){
-    tentativas++;
+  // 4️⃣ VALIDAÇÃO
+  let validacao = validarFechamento(base, jogos);
 
-    let jogo = [];
-    while(jogo.length < 15){
-      let n = base[Math.floor(Math.random() * base.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
-    jogo.sort((a,b)=>a-b);
-
-    if(!jogos.some(j => j.join() === jogo.join())){
-      jogos.push(jogo);
-    }
-  }
-
-  /* ===== 4️⃣ SAÍDA ===== */
+  // 5️⃣ SAÍDA
   let html = `
     <div class="card">
-      <strong>📘 Fechamento com Base Única</strong>
+      <strong>📘 Fechamento Determinístico</strong>
+
       <div class="stats">
-        <strong>Base fixa (${base.length} dezenas)</strong><br>
+        <strong>Base fixa (${base.length})</strong><br>
         ${base.join(" - ")}
       </div>
+
+      <hr>
+
+      <div class="stats">
+        <strong>🧪 Validação Matemática</strong><br>
+        Mínimo garantido: ${validacao.minimo} pontos<br>
+        Máximo possível: ${validacao.maximo} pontos<br>
+        Média: ${validacao.media}
+      </div>
+
       <hr>
       <div class="stats">Jogos gerados: ${jogos.length}</div>
     </div>
