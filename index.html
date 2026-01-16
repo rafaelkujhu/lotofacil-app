@@ -306,7 +306,7 @@ function gerarLotofacil(){
     html+=`
       <div class="resultado">
         ${j.join(" - ")}
-        ${analisar(j)}
+        ${analisar(j).html}
       </div>
     `;
   }
@@ -323,7 +323,7 @@ function gerarAvancado(){
       if(!j.includes(n))j.push(n);
     }
     j.sort((a,b)=>a-b);
-    html+=`<div class="resultado">${j.join(" - ")}${analisar(j)}</div>`;
+    html+=`<div class="resultado">${j.join(" - ")}${analisar(j).html}</div>`;
   }
   saidaAvancado.innerHTML=html;
 }
@@ -355,7 +355,7 @@ function gerarFechamento(){
   let html="";
   base.forEach((_,i)=>{
     let j=base.filter((_,idx)=>idx!==i).slice(0,15);
-    html+=`<div class="resultado">${j.join(" - ")}${analisar(j)}</div>`;
+    html+=`<div class="resultado">${j.join(" - ")}${analisar(j).html}</div>`;
   });
   saidaFechamento.innerHTML=html;
 }
