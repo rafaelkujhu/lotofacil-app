@@ -266,14 +266,40 @@ concursos=[];
 
 /* ===== ESTATÍSTICAS CONCURSOS ===== */
 function gerarEstatisticasConcursos(concursos){
-const resumoPadrao = analisarHistoricoUltimoAno(concursos);
+  const resumoPadrao = analisarHistoricoUltimoAno(concursos);
 
-estatConcursos.innerHTML += `
-  <hr>
-  <strong>🧠 Padrão Estatístico (últimos concursos)</strong>
-  <div class="stats">🟢 Dentro do padrão: ${resumoPadrao.dentro}</div>
-  <div class="stats">🔴 Fora do padrão: ${resumoPadrao.fora}</div>
-`;
+  let nums = concursos.flat();
+  let pares = nums.filter(n=>n%2===0).length;
+  let impares = nums.length - pares;
+  let soma = nums.reduce((a,b)=>a+b,0);
+
+  let faixa = { f1:0, f2:0, f3:0, f4:0 };
+  nums.forEach(n=>{
+    if(n<=6) faixa.f1++;
+    else if(n<=12) faixa.f2++;
+    else if(n<=18) faixa.f3++;
+    else faixa.f4++;
+  });
+
+  estatConcursos.style.display = "block";
+  estatConcursos.innerHTML = `
+    <strong>📊 Estatísticas dos Concursos</strong>
+    <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
+    <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
+    <div class="stats">📐 Faixas:
+      1–6: ${faixa.f1} |
+      7–12: ${faixa.f2} |
+      13–18: ${faixa.f3} |
+      19–25: ${faixa.f4}
+    </div>
+    <div class="stats">Concursos analisados: ${concursos.length}</div>
+
+    <hr>
+    <strong>🧠 Padrão Estatístico</strong>
+    <div class="stats">🟢 Dentro do padrão: ${resumoPadrao.dentro}</div>
+    <div class="stats">🔴 Fora do padrão: ${resumoPadrao.fora}</div>
+  `;
+}
 
 /* ===== ANÁLISE HISTÓRICA (ÚLTIMO ANO) ===== */
 function analisarHistoricoUltimoAno(concursos){
@@ -300,33 +326,8 @@ function analisarHistoricoUltimoAno(concursos){
     fora
   };
 }
-  let nums = concursos.flat();
-  let pares = nums.filter(n=>n%2===0).length;
-  let impares = nums.length - pares;
-  let soma = nums.reduce((a,b)=>a+b,0);
-  let media = (soma / concursos.length).toFixed(1);
-  let faixa = { f1:0, f2:0, f3:0, f4:0 };
-  nums.forEach(n=>{
-    if(n<=6) faixa.f1++;
-    else if(n<=12) faixa.f2++;
-    else if(n<=18) faixa.f3++;
-    else faixa.f4++;
-  });
-
-  estatConcursos.style.display="block";
-  estatConcursos.innerHTML=`
-  <strong>📊 Estatísticas dos Concursos</strong>
-  <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
-  <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
-  <div class="stats">📐 Faixas: 
-      1–6: ${faixa.f1} |
-      7–12: ${faixa.f2} |
-      13–18: ${faixa.f3} |
-      19–25: ${faixa.f4}
-  </div>
-  <div class="stats">Concursos analisados: ${concursos.length}</div>`;
-}
-
+ 
+ 
 /* ===== LOTOFÁCIL ===== */
 function gerarLotofacil(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
@@ -368,7 +369,7 @@ function gerarLotofacil(){
 function gerarAvancado(){
   const qtd = +document.getElementById("qtdAvancado").value;
   let html="";
-  for(let i=0;i<10;i++){
+  for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<15){
       let n=Math.floor(Math.random()*25)+1;
@@ -413,11 +414,25 @@ function gerarFechamento(){
 }
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
+function calcularRepeticaoMedia(jogo, concursosBase){
+  if(!concursosBase.length) return 0;
+
+  let totalRep = 0;
+
+  concursosBase.forEach(concurso=>{
+    totalRep += jogo.filter(n => concurso.includes(n)).length;
+  });
+
+  return Math.round(totalRep / concursosBase.length);
+}
+
 function analisar(jogo){
   let pares = jogo.filter(n => n % 2 === 0).length;
   let soma = jogo.reduce((a,b)=>a+b,0);
-  let base = concursos[0] || [];
-  let rep = jogo.filter(n => base.includes(n)).length;
+
+   // usa os últimos X concursos (ex: 5)
+  let baseAnalise = concursos.slice(0,5); 
+  let rep = calcularRepeticaoMedia(jogo, baseAnalise);
 
   let score = 0;
   if(pares === 7 || pares === 8) score++;
