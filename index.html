@@ -238,12 +238,25 @@ function gerarEstatisticasConcursos(concursos){
   let pares = nums.filter(n=>n%2===0).length;
   let impares = nums.length - pares;
   let soma = nums.reduce((a,b)=>a+b,0);
+  let media = (soma / concursos.length).toFixed(1);
+  let faixa = { f1:0, f2:0, f3:0, f4:0 };
+  nums.forEach(n=>{
+    if(n<=6) faixa.f1++;
+    else if(n<=12) faixa.f2++;
+    else if(n<=18) faixa.f3++;
+    else faixa.f4++;
+  });
 
   estatConcursos.style.display="block";
   estatConcursos.innerHTML=`
   <strong>📊 Estatísticas dos Concursos</strong>
-  <div class="stats">Pares: ${pares} | Ímpares: ${impares}</div>
-  <div class="stats">Soma média: ${(soma/concursos.length).toFixed(1)}</div>
+  <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
+  <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
+  <div class="stats">📐 Faixas: 
+      1–6: ${faixa.f1} |
+      7–12: ${faixa.f2} |
+      13–18: ${faixa.f3} |
+      19–25: ${faixa.f4}
   <div class="stats">Concursos analisados: ${concursos.length}</div>`;
 }
 
