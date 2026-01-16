@@ -233,6 +233,14 @@ concursos=[];
 const tipoFechamento = document.getElementById("tipoFechamento");
 const saidaFechamento = document.getElementById("saidaFechamento");
 
+// ===== ELEMENTOS GLOBAIS (OBRIGATÓRIO) =====
+const resultados = document.getElementById("resultados");
+const premio = document.getElementById("premio");
+const estatConcursos = document.getElementById("estatConcursos");
+const saida = document.getElementById("saida");
+const saidaAvancado = document.getElementById("saidaAvancado");
+const saidaLotomania = document.getElementById("saidaLotomania");
+
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
     t.classList.toggle('active',idx===i);
