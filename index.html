@@ -284,7 +284,7 @@ function gerarLotofacil(){
 
   let universo = Array.from({length:25},(_,i)=>i+1);
 
-  // Se for estatístico, usa base dos concursos
+  // base estatística ou livre
   let baseNumeros = universo;
   if(modo === "estatistico" && concursos.length){
     let freq = {};
@@ -294,7 +294,8 @@ function gerarLotofacil(){
     baseNumeros = Object.keys(freq).map(Number);
   }
 
-  let html="";
+  let jogosGerados = [];
+
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<dezenas){
@@ -303,13 +304,29 @@ function gerarLotofacil(){
     }
     j.sort((a,b)=>a-b);
 
-    html+=`
+    let analise = analisar(j);
+
+    jogosGerados.push({
+      jogo: j,
+      analise
+    });
+  }
+
+  // ranking automático (🟢 → 🟡 → 🔴)
+  jogosGerados = classificarJogos(jogosGerados);
+
+  // renderização
+  let html = resumoInteligente(jogosGerados);
+
+  jogosGerados.forEach(obj=>{
+    html += `
       <div class="resultado">
-        ${j.join(" - ")}
-        ${analisar(j)}
+        ${obj.jogo.join(" - ")}
+        ${obj.analise.html}
       </div>
     `;
-  }
+  });
+
   saida.innerHTML = html;
 }
 
@@ -361,6 +378,25 @@ function gerarFechamento(){
 }
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
+function classificarJogos(jogos){
+  return jogos.sort((a,b)=>b.analise.score - a.analise.score);
+}
+
+function resumoInteligente(jogos){
+  let exc = jogos.filter(j=>j.analise.score===3).length;
+  let reg = jogos.filter(j=>j.analise.score===2).length;
+  let fora = jogos.filter(j=>j.analise.score<=1).length;
+
+  return `
+    <div class="card">
+      <strong>🧠 Análise Inteligente</strong>
+      <div class="stats">🟢 Excelentes: ${exc}</div>
+      <div class="stats">🟡 Regulares: ${reg}</div>
+      <div class="stats">🔴 Fora do padrão: ${fora}</div>
+    </div>
+  `;
+}
+
 function analisar(jogo){
   let pares = jogo.filter(n => n % 2 === 0).length;
   let soma = jogo.reduce((a,b)=>a+b,0);
@@ -377,14 +413,20 @@ function analisar(jogo){
     score === 2 ? "🟡 REGULAR" :
                   "🔴 FORA DO PADRÃO";
 
-  return `
+ return {
+  pares,
+  soma,
+  rep,
+  score,
+  selo,
+  html: `
     <div class="stats">
       Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
       <div class="conf">Confiabilidade ${confianca()}%</div>
       <strong>${selo}</strong>
     </div>
-  `;
-}
+  `
+};
 
 </script>
 </body>
