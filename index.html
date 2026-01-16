@@ -128,6 +128,7 @@ button{
   <label><input type="radio" name="qtd" value="5">5</label>
   <label><input type="radio" name="qtd" value="10">10</label>
   <label><input type="radio" name="qtd" value="15">15</label>
+  <input type="number" id="qtdLivre" placeholder="Qtd personalizada (ex: 50)">
 </div>
 <textarea id="resultados" rows="5"></textarea>
 </div>
@@ -175,7 +176,18 @@ button{
   <option value="18">18 → 15 (garante 14)</option>
 </select>
 <button onclick="gerarAvancado()">Gerar Jogos Avançados</button>
+<input type="number" id="qtdAvancado" value="10" min="1">
+
+<div class="card">
+  <strong>📘 Como funciona o Avançado</strong>
+  <div class="stats">
+    • Gera jogos com filtros reais<br>
+    • Evita padrões estatisticamente fracos<br>
+    • Usa soma, pares e repetição<br>
+    • Não promete prêmio, reduz risco
+  </div>
 </div>
+
 <div id="saidaAvancado"></div>
 </div>
 
@@ -229,7 +241,12 @@ async function buscarConcursos(){
   const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
   const d=await r.json();
   const ult=d.numero;
-  const qtd=+document.querySelector('input[name="qtd"]:checked').value;
+  let qtdRadio = document.querySelector('input[name="qtd"]:checked');
+  let qtdLivre = document.getElementById("qtdLivre")?.value;
+
+const qtd = qtdLivre && qtdLivre > 0
+  ? Number(qtdLivre)
+  : Number(qtdRadio.value);
   
 concursos=[];
   for(let i=ult;i>ult-qtd;i--){
@@ -249,6 +266,40 @@ concursos=[];
 
 /* ===== ESTATÍSTICAS CONCURSOS ===== */
 function gerarEstatisticasConcursos(concursos){
+const resumoPadrao = analisarHistoricoUltimoAno(concursos);
+
+estatConcursos.innerHTML += `
+  <hr>
+  <strong>🧠 Padrão Estatístico (últimos concursos)</strong>
+  <div class="stats">🟢 Dentro do padrão: ${resumoPadrao.dentro}</div>
+  <div class="stats">🔴 Fora do padrão: ${resumoPadrao.fora}</div>
+`;
+
+/* ===== ANÁLISE HISTÓRICA (ÚLTIMO ANO) ===== */
+function analisarHistoricoUltimoAno(concursos){
+  let dentro = 0;
+  let fora = 0;
+
+  concursos.forEach(jogo=>{
+    let pares = jogo.filter(n=>n%2===0).length;
+    let soma  = jogo.reduce((a,b)=>a+b,0);
+
+    let okPares = (pares === 7 || pares === 8);
+    let okSoma  = (soma >= 180 && soma <= 220);
+
+    if(okPares && okSoma){
+      dentro++;
+    } else {
+      fora++;
+    }
+  });
+
+  return {
+    total: concursos.length,
+    dentro,
+    fora
+  };
+}
   let nums = concursos.flat();
   let pares = nums.filter(n=>n%2===0).length;
   let impares = nums.length - pares;
@@ -315,6 +366,7 @@ function gerarLotofacil(){
 
 /* ===== AVANÇADO ===== */
 function gerarAvancado(){
+  const qtd = +document.getElementById("qtdAvancado").value;
   let html="";
   for(let i=0;i<10;i++){
     let j=[];
