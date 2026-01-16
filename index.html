@@ -397,35 +397,31 @@ function gerarAvancado(){
 
 /* ===== LOTOMANIA ===== */
 function gerarLotomania(){
-  let html="";
-  for(let i=0;i<3;i++){
-    let j=[];
-    while(j.length<50){
-      let n=Math.floor(Math.random()*100);
-      if(!j.includes(n))j.push(n);
+  const qtd = +document.getElementById("qtdLotomania").value || 1;
+  let html = "";
+
+  for(let i = 0; i < qtd; i++){
+    let j = [];
+    while(j.length < 50){
+      let n = Math.floor(Math.random() * 100);
+      if(!j.includes(n)) j.push(n);
     }
     j.sort((a,b)=>a-b);
-    html+=`<div class="resultado">${j.join(" - ")}</div>`;
+    html += `<div class="resultado">${j.join(" - ")}</div>`;
   }
-  saidaLotomania.innerHTML=html;
+
+  saidaLotomania.innerHTML = html;
 }
 
 /* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
 function gerarFechamento(){
 
-  trocarTab(3);
-
   const tipoFechamento = document.getElementById("tipoFechamento");
   const saidaFechamento = document.getElementById("saidaFechamento");
 
-  if(!tipoFechamento || !saidaFechamento){
-    alert("Erro: elementos do Fechamento não encontrados");
-    return;
-  }
-
   const baseQtd = Number(tipoFechamento.value);
 
-  // BASE FIXA
+  /* ===== 1️⃣ BASE ÚNICA FIXA ===== */
   let base = [];
   while(base.length < baseQtd){
     let n = Math.floor(Math.random() * 25) + 1;
@@ -433,11 +429,17 @@ function gerarFechamento(){
   }
   base.sort((a,b)=>a-b);
 
-  // JOGOS
+  /* ===== 2️⃣ QUANTIDADE DE JOGOS ===== */
+  const qtdJogos =
+    baseQtd === 16 ? 6 :
+    baseQtd === 17 ? 10 :
+    15;
+
+  /* ===== 3️⃣ GERAÇÃO DOS JOGOS ===== */
   let jogos = [];
   let tentativas = 0;
 
-  while(jogos.length < baseQtd && tentativas < 1000){
+  while(jogos.length < qtdJogos && tentativas < 5000){
     tentativas++;
 
     let jogo = [];
@@ -452,25 +454,14 @@ function gerarFechamento(){
     }
   }
 
+  /* ===== 4️⃣ SAÍDA ===== */
   let html = `
     <div class="card">
-      <strong>📘 Fechamento Real</strong>
-
+      <strong>📘 Fechamento com Base Única</strong>
       <div class="stats">
-        <strong>Universo base (${base.length})</strong><br>
+        <strong>Base fixa (${base.length} dezenas)</strong><br>
         ${base.join(" - ")}
       </div>
-
-      <hr>
-
-      <div class="stats">
-        <strong>Legenda</strong><br>
-        • Jogos com 15 dezenas<br>
-        • Base fixa<br>
-        • Garantia válida se o sorteio estiver dentro da base<br>
-        • Não garante prêmio
-      </div>
-
       <hr>
       <div class="stats">Jogos gerados: ${jogos.length}</div>
     </div>
