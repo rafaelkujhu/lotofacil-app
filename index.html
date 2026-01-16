@@ -169,26 +169,29 @@ button{
 
 <!-- ================= AVANÇADO ================= -->
 <div class="content" id="tab1" style="display:none">
-<div class="card">
-<select id="tipoAvancado">
-  <option value="16">16 → 15 (garante 14)</option>
-  <option value="17">17 → 15 (garante 14)</option>
-  <option value="18">18 → 15 (garante 14)</option>
-</select>
-<button onclick="gerarAvancado()">Gerar Jogos Avançados</button>
-<input type="number" id="qtdAvancado" value="10" min="1">
 
-<div class="card">
-  <strong>📘 Como funciona o Avançado</strong>
-  <div class="stats">
-    • Gera jogos com filtros reais<br>
-    • Evita padrões estatisticamente fracos<br>
-    • Usa soma, pares e repetição<br>
-    • Não promete prêmio, reduz risco
+  <div class="card">
+    <select id="tipoAvancado">
+      <option value="16">16 → 15 (garante 14)</option>
+      <option value="17">17 → 15 (garante 14)</option>
+      <option value="18">18 → 15 (garante 14)</option>
+    </select>
+
+    <input type="number" id="qtdAvancado" value="10" min="1">
+    <button onclick="gerarAvancado()">Gerar Jogos Avançados</button>
   </div>
-</div>
 
-<div id="saidaAvancado"></div>
+  <div class="card">
+    <strong>📘 Como funciona o Avançado</strong>
+    <div class="stats">
+      • Gera jogos com filtros reais<br>
+      • Evita padrões estatisticamente fracos<br>
+      • Usa soma, pares e repetição<br>
+      • Não promete prêmio, reduz risco
+    </div>
+  </div>
+
+  <div id="saidaAvancado"></div>
 </div>
 
 <!-- ================= LOTOMANIA ================= -->
