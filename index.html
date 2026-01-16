@@ -224,6 +224,8 @@ Universo fixo 1 a 25. Garantia válida se as dezenas sorteadas estiverem dentro 
 
 <script>
 concursos=[];
+const tipoFechamento = document.getElementById("tipoFechamento");
+const saidaFechamento = document.getElementById("saidaFechamento");
 
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
@@ -396,12 +398,11 @@ function gerarLotomania(){
   saidaLotomania.innerHTML=html;
 }
 
-/* ===== FECHAMENTO REAL (CORRIGIDO) ===== */
+/* ===== FECHAMENTO REAL (ESTÁVEL) ===== */
 function gerarFechamento(){
   const baseQtd = +tipoFechamento.value;
-  const qtdJogos = baseQtd; // regra simples e estável
+  const qtdJogos = baseQtd;
 
-  // gera universo base
   let base = [];
   while(base.length < baseQtd){
     let n = Math.floor(Math.random()*25)+1;
@@ -422,13 +423,11 @@ function gerarFechamento(){
     }
     j.sort((a,b)=>a-b);
 
-    // evita jogos duplicados
     if(!jogos.some(x => x.join() === j.join())){
       jogos.push(j);
     }
   }
 
-  // 🔹 HEADER + LEGENDA + BASE
   let html = `
     <div class="card">
       <strong>📘 Fechamento Real</strong>
@@ -443,9 +442,9 @@ function gerarFechamento(){
       <div class="stats">
         <strong>Legenda</strong><br>
         • Jogos com 15 dezenas<br>
-        • Base fixa (não muda durante a geração)<br>
-        • Garantia válida somente se o sorteio estiver dentro da base<br>
-        • Redução de padrões estatisticamente fracos<br>
+        • Base fixa<br>
+        • Garantia válida se o sorteio estiver dentro da base<br>
+        • Evita padrões estatisticamente fracos<br>
         • Não garante prêmio
       </div>
 
@@ -457,7 +456,6 @@ function gerarFechamento(){
     </div>
   `;
 
-  // 🔹 JOGOS GERADOS
   jogos.forEach(j=>{
     html += `
       <div class="resultado">
@@ -468,6 +466,7 @@ function gerarFechamento(){
   });
 
   saidaFechamento.innerHTML = html;
+  document.getElementById("tab3").style.display = "block";
 }
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
@@ -488,7 +487,7 @@ function analisar(jogo){
   let soma = jogo.reduce((a,b)=>a+b,0);
 
    // usa os últimos X concursos (ex: 5)
-  let baseAnalise = concursos.slice(0,5); 
+  let baseAnalise = concursos.length ? concursos.slice(0,5) : []; 
   let rep = calcularRepeticaoMedia(jogo, baseAnalise);
 
   let score = 0;
