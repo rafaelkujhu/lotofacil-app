@@ -412,36 +412,42 @@ function gerarLotomania(){
   saidaLotomania.innerHTML=html;
 }
 
-/* ===== FECHAMENTO REAL (ESTÁVEL) ===== */
+/* ===== FECHAMENTO REAL (VERSÃO FINAL ESTÁVEL) ===== */
 function gerarFechamento(){
-  const baseQtd = +tipoFechamento.value;
-  const qtdJogos = baseQtd;
 
+  // garante que a aba correta esteja visível
+  trocarTab(3);
+
+  const baseQtd = Number(tipoFechamento.value);
+
+  // 1️⃣ GERA BASE FIXA
   let base = [];
   while(base.length < baseQtd){
-    let n = Math.floor(Math.random()*25)+1;
+    let n = Math.floor(Math.random() * 25) + 1;
     if(!base.includes(n)) base.push(n);
   }
   base.sort((a,b)=>a-b);
 
+  // 2️⃣ GERA JOGOS ÚNICOS DE 15 DEZENAS
   let jogos = [];
   let tentativas = 0;
 
-  while(jogos.length < qtdJogos && tentativas < 500){
+  while(jogos.length < baseQtd && tentativas < 1000){
     tentativas++;
 
-    let j = [];
-    while(j.length < 15){
-      let n = base[Math.floor(Math.random()*base.length)];
-      if(!j.includes(n)) j.push(n);
+    let jogo = [];
+    while(jogo.length < 15){
+      let n = base[Math.floor(Math.random() * base.length)];
+      if(!jogo.includes(n)) jogo.push(n);
     }
-    j.sort((a,b)=>a-b);
+    jogo.sort((a,b)=>a-b);
 
-    if(!jogos.some(x => x.join() === j.join())){
-      jogos.push(j);
+    if(!jogos.some(j => j.join() === jogo.join())){
+      jogos.push(jogo);
     }
   }
 
+  // 3️⃣ MONTA HEADER + BASE + LEGENDA
   let html = `
     <div class="card">
       <strong>📘 Fechamento Real</strong>
@@ -456,9 +462,9 @@ function gerarFechamento(){
       <div class="stats">
         <strong>Legenda</strong><br>
         • Jogos com 15 dezenas<br>
-        • Base fixa<br>
-        • Garantia válida se o sorteio estiver dentro da base<br>
-        • Evita padrões estatisticamente fracos<br>
+        • Base fixa (não muda durante a geração)<br>
+        • Garantia válida somente se o sorteio estiver dentro da base<br>
+        • Redução de padrões estatisticamente fracos<br>
         • Não garante prêmio
       </div>
 
@@ -470,19 +476,19 @@ function gerarFechamento(){
     </div>
   `;
 
-  jogos.forEach(j=>{
+  // 4️⃣ LISTA OS JOGOS
+  jogos.forEach(jogo=>{
     html += `
       <div class="resultado">
-        ${j.join(" - ")}
-        ${analisar(j).html}
+        ${jogo.join(" - ")}
+        ${analisar(jogo).html}
       </div>
     `;
   });
-  saidaFechamento.innerHTML = html;
 
-  // 🔥 ATIVA A ABA FECHAMENTO REAL
-  trocarTab(3);
-  }
+  // 5️⃣ RENDERIZA
+  saidaFechamento.innerHTML = html;
+}
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
 function calcularRepeticaoMedia(jogo, concursosBase){
