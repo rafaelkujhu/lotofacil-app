@@ -116,6 +116,7 @@ button{
   <div class="tab" onclick="trocarTab(1)">Avançado</div>
   <div class="tab" onclick="trocarTab(2)">Lotomania</div>
   <div class="tab" onclick="trocarTab(3)">📘 Fechamento Real</div>
+  <div class="tab" onclick="trocarTab(4)">🎯 Super Sete</div>
 </div>
 
 <!-- ================= LOTOFÁCIL ================= -->
@@ -240,6 +241,27 @@ button{
 <div class="footer">Base Congelada V.1 • Estável</div>
 </div>
 
+<!-- ================= SUPER SETE ================= -->
+<div class="content" id="tab4" style="display:none">
+
+  <div class="card">
+    <strong>🎯 Super Sete</strong>
+
+    <p class="stats">
+      7 colunas (0 a 9)<br>
+      Uma escolha por coluna
+    </p>
+
+    <input type="number" id="qtdSuperSete" value="5" min="1">
+
+    <button onclick="executarSeguro(gerarSuperSete,'Super Sete')">
+      Gerar Super Sete
+    </button>
+  </div>
+
+  <div id="saidaSuperSete"></div>
+</div>
+
 <script>
 concursos=[];
 // ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
@@ -259,6 +281,7 @@ const estatConcursos = document.getElementById("estatConcursos");
 const saida = document.getElementById("saida");
 const saidaAvancado = document.getElementById("saidaAvancado");
 const saidaLotomania = document.getElementById("saidaLotomania");
+const saidaSuperSete = document.getElementById("saidaSuperSete");
 
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
@@ -383,6 +406,31 @@ function analisarHistoricoUltimoAno(concursos){
   };
 }
  
+/* ===== SUPERSETE ===== */
+function gerarSuperSete(){
+  const qtd = +document.getElementById("qtdSuperSete").value || 1;
+  let html = "";
+
+  for(let i = 0; i < qtd; i++){
+    let jogo = [];
+
+    for(let col = 0; col < 7; col++){
+      let n = Math.floor(Math.random() * 10);
+      jogo.push(n);
+    }
+
+    html += `
+      <div class="resultado">
+        ${jogo.join(" | ")}
+        <div class="stats">
+          Soma: ${jogo.reduce((a,b)=>a+b,0)}
+        </div>
+      </div>
+    `;
+  }
+
+  saidaSuperSete.innerHTML = html;
+}
  
 /* ===== LOTOFÁCIL ===== */
 function gerarLotofacil(){
@@ -443,13 +491,33 @@ function gerarLotomania(){
   let html = "";
 
   for(let i = 0; i < qtd; i++){
-    let j = [];
-    while(j.length < 50){
+    let jogo = [];
+    let tentativas = 0;
+
+    while(jogo.length < 50 && tentativas < 5000){
+      tentativas++;
       let n = Math.floor(Math.random() * 100);
-      if(!j.includes(n)) j.push(n);
+      if(jogo.includes(n)) continue;
+
+      // controle simples de pares
+      let pares = jogo.filter(x => x % 2 === 0).length;
+      if(n % 2 === 0 && pares >= 26) continue;
+      if(n % 2 !== 0 && (jogo.length - pares) >= 26) continue;
+
+      jogo.push(n);
     }
-    j.sort((a,b)=>a-b);
-    html += `<div class="resultado">${j.join(" - ")}</div>`;
+
+    jogo.sort((a,b)=>a-b);
+
+    html += `
+      <div class="resultado">
+        ${jogo.join(" - ")}
+        <div class="stats">
+          Pares: ${jogo.filter(n=>n%2===0).length} |
+          Ímpares: ${jogo.filter(n=>n%2!==0).length}
+        </div>
+      </div>
+    `;
   }
 
   saidaLotomania.innerHTML = html;
@@ -478,40 +546,47 @@ function gerarFechamento(){
 
   const baseQtd = Number(tipoFechamento.value);
 
-  // 1️⃣ BASE ÚNICA DETERMINÍSTICA
-  let base = gerarBaseDeterministica(baseQtd);
+  /* ===== 1️⃣ BASE ÚNICA FIXA ===== */
+  let base = [];
+  while(base.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!base.includes(n)) base.push(n);
+  }
+  base.sort((a,b)=>a-b);
 
-  // 2️⃣ QTD DE JOGOS
+  /* ===== 2️⃣ QUANTIDADE DE JOGOS ===== */
   const qtdJogos =
     baseQtd === 16 ? 6 :
     baseQtd === 17 ? 10 :
     15;
 
-  // 3️⃣ JOGOS SEM ALEATORIEDADE
-  let jogos = gerarJogosDeterministicos(base, qtdJogos);
+  /* ===== 3️⃣ GERAÇÃO DOS JOGOS ===== */
+  let jogos = [];
+  let tentativas = 0;
 
-  // 4️⃣ VALIDAÇÃO
-  let validacao = validarFechamento(base, jogos);
+  while(jogos.length < qtdJogos && tentativas < 5000){
+    tentativas++;
 
-  // 5️⃣ SAÍDA
+    let jogo = [];
+    while(jogo.length < 15){
+      let n = base[Math.floor(Math.random() * base.length)];
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+    jogo.sort((a,b)=>a-b);
+
+    if(!jogos.some(j => j.join() === jogo.join())){
+      jogos.push(jogo);
+    }
+  }
+
+  /* ===== 4️⃣ SAÍDA ===== */
   let html = `
     <div class="card">
-      <strong>📘 Fechamento Determinístico</strong>
-
+      <strong>📘 Fechamento com Base Única</strong>
       <div class="stats">
-        <strong>Base fixa (${base.length})</strong><br>
+        <strong>Base fixa (${base.length} dezenas)</strong><br>
         ${base.join(" - ")}
       </div>
-
-      <hr>
-
-      <div class="stats">
-        <strong>🧪 Validação Matemática</strong><br>
-        Mínimo garantido: ${validacao.minimo} pontos<br>
-        Máximo possível: ${validacao.maximo} pontos<br>
-        Média: ${validacao.media}
-      </div>
-
       <hr>
       <div class="stats">Jogos gerados: ${jogos.length}</div>
     </div>
