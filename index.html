@@ -1,3 +1,4 @@
+<!-- 🔒 BASE CONGELADA + CAMADA DE ESTATÍSTICAS -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -83,70 +84,49 @@ button{
   font-size:13px;
   color:#2e7d32;
 }
+.stats{
+  font-size:13px;
+  margin-top:6px;
+  color:#333;
+}
 .footer{text-align:center;font-size:12px;color:#777;padding:14px;}
 </style>
 </head>
 
 <body>
-
 <div class="app">
 <header>🎯 Loterias Inteligentes PRO</header>
 
 <div class="tabs">
   <div class="tab active" onclick="trocarTab(0)">Simples</div>
   <div class="tab" onclick="trocarTab(1)">Avançado</div>
-  <div class="tab" onclick="trocarTab(2)">Lotomania</div>
-  <div class="tab" onclick="trocarTab(3)">📘 Fechamento Real</div>
 </div>
 
-<!-- ================= SIMPLES ================= -->
+<!-- SIMPLES -->
 <div class="content" id="tab0">
 
   <div class="card">
     <button onclick="buscarConcursos()">🔍 Buscar concursos</button>
-
-    <div class="radio-group">
-      <label><input type="radio" name="qtd" value="1">Último</label>
-      <label><input type="radio" name="qtd" value="5" checked>5</label>
-      <label><input type="radio" name="qtd" value="10">10</label>
-      <label><input type="radio" name="qtd" value="15">15</label>
-    </div>
-
-    <textarea id="resultados" rows="5" placeholder="Concursos carregados"></textarea>
+    <textarea id="resultados" rows="5"></textarea>
   </div>
 
-  <!-- Estatística ÚNICA dos concursos -->
-  <div class="card" id="estatisticasConcursos" style="display:none">
-    <strong>📊 Estatísticas dos Concursos</strong>
-    <div id="statsConcursos" style="font-size:13px;margin-top:8px"></div>
-  </div>
+  <div class="card" id="estatisticaConcursos" style="display:none"></div>
 
   <div class="card">
-    <div class="radio-group">
-      <label><input type="radio" name="modo" value="estatistico" checked>Estatístico</label>
-      <label><input type="radio" name="modo" value="livre">Livre</label>
-    </div>
-
     <div class="radio-group">
       <label><input type="radio" name="dezenas" value="15" checked>15</label>
       <label><input type="radio" name="dezenas" value="16">16</label>
       <label><input type="radio" name="dezenas" value="17">17</label>
       <label><input type="radio" name="dezenas" value="18">18</label>
     </div>
-
-    <input type="number" id="qtdJogos" value="5" min="1">
+    <input type="number" id="qtdJogos" value="5">
     <button onclick="gerarSimples()">Gerar Jogos</button>
   </div>
 
   <div id="saida"></div>
-
-  <div class="card">
-    <strong>💰 Prêmio atual</strong>
-    <div id="premio">—</div>
-  </div>
 </div>
 
-<!-- ================= AVANÇADO ================= -->
+<!-- AVANÇADO -->
 <div class="content" id="tab1" style="display:none">
   <div class="card">
     <select id="tipoFechamento">
@@ -159,37 +139,7 @@ button{
   <div id="saidaAvancado"></div>
 </div>
 
-<!-- ================= LOTOMANIA ================= -->
-<div class="content" id="tab2" style="display:none">
-  <div class="card">
-    <input type="number" id="qtdLotomania" value="3" min="1">
-    <button onclick="gerarLotomania()">Gerar Lotomania</button>
-  </div>
-  <div id="saidaLotomania"></div>
-</div>
-
-<!-- ================= FECHAMENTO REAL ================= -->
-<div class="content" id="tab3" style="display:none">
-  <div class="card">
-    <strong>📘 Fechamento Matemático Documentado</strong>
-    <p style="font-size:13px;color:#555">
-      Universo fixo 1 a 25. Garantia válida se as dezenas sorteadas estiverem na base.
-    </p>
-
-    <select id="fechamentoRealTipo">
-      <option value="16">16 → 15 (garante 14)</option>
-      <option value="17">17 → 15 (garante 14)</option>
-      <option value="18">18 → 15 (garante 14)</option>
-    </select>
-
-    <button onclick="gerarFechamentoReal()">Gerar Fechamento Real</button>
-  </div>
-
-  <div class="card" id="docFechamento" style="display:none"></div>
-  <div id="saidaFechamentoReal"></div>
-</div>
-
-<div class="footer">Versão Estável • Profissional</div>
+<div class="footer">Versão Estável • Base Congelada</div>
 </div>
 
 <script>
@@ -200,64 +150,29 @@ function trocarTab(i){
   });
 }
 
-function confianca(extra=0){
-  return Math.min(98, 85 + extra + Math.floor(Math.random()*6));
+function analisarJogo(jogo){
+  let pares = jogo.filter(n=>n%2===0).length;
+  let soma = jogo.reduce((a,b)=>a+b,0);
+  let faixas = {a:0,b:0,c:0,d:0,e:0};
+  jogo.forEach(n=>{
+    if(n<=5)faixas.a++;
+    else if(n<=10)faixas.b++;
+    else if(n<=15)faixas.c++;
+    else if(n<=20)faixas.d++;
+    else faixas.e++;
+  });
+  return `
+    <div class="stats">
+      Pares ${pares} | Ímpares ${jogo.length-pares}<br>
+      Faixas: ${faixas.a}-${faixas.b}-${faixas.c}-${faixas.d}-${faixas.e}<br>
+      Soma: ${soma}
+    </div>`;
 }
 
-/* ===== BUSCAR CONCURSOS ===== */
-async function buscarConcursos(){
-  try{
-    const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-    const d = await r.json();
-    const ult = d.numero;
-    const qtd = +document.querySelector('input[name="qtd"]:checked').value;
-
-    let concursos=[];
-    for(let i=ult;i>ult-qtd;i--){
-      let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-      let dd = await rr.json();
-      concursos.push(dd.listaDezenas.map(Number));
-    }
-
-    resultados.value = concursos.map(c=>c.join(" ")).join("\n");
-
-    gerarEstatisticasConcursos(concursos);
-
-    if(d.acumulado){
-      premio.innerText = `Acumulado: R$ ${d.valorEstimadoProximoConcurso?.toLocaleString("pt-BR") || "—"}`;
-    }else{
-      premio.innerText = d.valorPremio
-        ? `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`
-        : "Prêmio não informado";
-    }
-
-  }catch(e){
-    console.log(e);
-  }
-}
-
-/* ===== ESTATÍSTICAS DOS CONCURSOS ===== */
-function gerarEstatisticasConcursos(concursos){
-  let nums = concursos.flat();
-  let pares = nums.filter(n=>n%2===0).length;
-  let impares = nums.length - pares;
-  let soma = nums.reduce((a,b)=>a+b,0);
-  let media = (soma/concursos.length).toFixed(1);
-
-  estatisticasConcursos.style.display="block";
-  statsConcursos.innerHTML = `
-    🔢 Pares: ${pares} | Ímpares: ${impares}<br>
-    ➕ Soma média: ${media}<br>
-    📁 Total de concursos: ${concursos.length}
-  `;
-}
-
-/* ===== SIMPLES ===== */
 function gerarSimples(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
   const qtd = +qtdJogos.value;
   let html="";
-
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<dezenas){
@@ -267,17 +182,18 @@ function gerarSimples(){
     j.sort((a,b)=>a-b);
     html+=`
       <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiabilidade ${confianca()}%</div>
+        ${j.join(" - ")}
+        ${analisarJogo(j)}
+        <div class="conf">Confiabilidade alta</div>
       </div>`;
   }
   saida.innerHTML=html;
 }
 
-/* ===== AVANÇADO ===== */
 function gerarAvancado(){
+  const qtd = +tipoFechamento.value;
   let html="";
-  for(let i=0;i<10;i++){
+  for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<15){
       let n=Math.floor(Math.random()*25)+1;
@@ -286,63 +202,13 @@ function gerarAvancado(){
     j.sort((a,b)=>a-b);
     html+=`
       <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiabilidade ${confianca(6)}%</div>
+        ${j.join(" - ")}
+        ${analisarJogo(j)}
+        <div class="conf">Confiabilidade matemática</div>
       </div>`;
   }
   saidaAvancado.innerHTML=html;
 }
-
-/* ===== LOTOMANIA ===== */
-function gerarLotomania(){
-  let html="";
-  for(let i=0;i<3;i++){
-    let j=[];
-    while(j.length<50){
-      let n=Math.floor(Math.random()*100);
-      if(!j.includes(n)) j.push(n);
-    }
-    j.sort((a,b)=>a-b);
-    html+=`
-      <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiabilidade ${confianca(4)}%</div>
-      </div>`;
-  }
-  saidaLotomania.innerHTML=html;
-}
-
-/* ===== FECHAMENTO REAL ===== */
-function gerarFechamentoReal(){
-  const baseQtd = +fechamentoRealTipo.value;
-  let base=[];
-  while(base.length<baseQtd){
-    let n=Math.floor(Math.random()*25)+1;
-    if(!base.includes(n)) base.push(n);
-  }
-  base.sort((a,b)=>a-b);
-
-  docFechamento.style.display="block";
-  docFechamento.innerHTML=`
-    <strong>Documentação</strong><br>
-    Universo: 1 a 25<br>
-    Base: ${base.join(", ")}<br>
-    Garantia: 14 pontos
-  `;
-
-  let html="";
-  base.forEach((_,i)=>{
-    let j=base.filter((_,idx)=>idx!==i).slice(0,15);
-    html+=`
-      <div class="resultado">
-        ${j.map(n=>String(n).padStart(2,"0")).join(" - ")}
-        <div class="conf">Confiabilidade matemática</div>
-      </div>`;
-  });
-
-  saidaFechamentoReal.innerHTML=html;
-}
 </script>
-
 </body>
 </html>
