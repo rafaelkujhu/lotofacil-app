@@ -230,8 +230,6 @@ button{
 
 <script>
 concursos=[];
-const tipoFechamento = document.getElementById("tipoFechamento");
-const saidaFechamento = document.getElementById("saidaFechamento");
 
 // ===== ELEMENTOS GLOBAIS (OBRIGATÓRIO) =====
 const resultados = document.getElementById("resultados");
@@ -412,15 +410,22 @@ function gerarLotomania(){
   saidaLotomania.innerHTML=html;
 }
 
-/* ===== FECHAMENTO REAL (VERSÃO FINAL ESTÁVEL) ===== */
+/* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
 function gerarFechamento(){
 
-  // garante que a aba correta esteja visível
   trocarTab(3);
+
+  const tipoFechamento = document.getElementById("tipoFechamento");
+  const saidaFechamento = document.getElementById("saidaFechamento");
+
+  if(!tipoFechamento || !saidaFechamento){
+    alert("Erro: elementos do Fechamento não encontrados");
+    return;
+  }
 
   const baseQtd = Number(tipoFechamento.value);
 
-  // 1️⃣ GERA BASE FIXA
+  // BASE FIXA
   let base = [];
   while(base.length < baseQtd){
     let n = Math.floor(Math.random() * 25) + 1;
@@ -428,7 +433,7 @@ function gerarFechamento(){
   }
   base.sort((a,b)=>a-b);
 
-  // 2️⃣ GERA JOGOS ÚNICOS DE 15 DEZENAS
+  // JOGOS
   let jogos = [];
   let tentativas = 0;
 
@@ -447,13 +452,12 @@ function gerarFechamento(){
     }
   }
 
-  // 3️⃣ MONTA HEADER + BASE + LEGENDA
   let html = `
     <div class="card">
       <strong>📘 Fechamento Real</strong>
 
       <div class="stats">
-        <strong>Universo base (${base.length} dezenas)</strong><br>
+        <strong>Universo base (${base.length})</strong><br>
         ${base.join(" - ")}
       </div>
 
@@ -462,31 +466,25 @@ function gerarFechamento(){
       <div class="stats">
         <strong>Legenda</strong><br>
         • Jogos com 15 dezenas<br>
-        • Base fixa (não muda durante a geração)<br>
-        • Garantia válida somente se o sorteio estiver dentro da base<br>
-        • Redução de padrões estatisticamente fracos<br>
+        • Base fixa<br>
+        • Garantia válida se o sorteio estiver dentro da base<br>
         • Não garante prêmio
       </div>
 
       <hr>
-
-      <div class="stats">
-        Jogos gerados: ${jogos.length}
-      </div>
+      <div class="stats">Jogos gerados: ${jogos.length}</div>
     </div>
   `;
 
-  // 4️⃣ LISTA OS JOGOS
-  jogos.forEach(jogo=>{
+  jogos.forEach(j=>{
     html += `
       <div class="resultado">
-        ${jogo.join(" - ")}
-        ${analisar(jogo).html}
+        ${j.join(" - ")}
+        ${analisar(j).html}
       </div>
     `;
   });
 
-  // 5️⃣ RENDERIZA
   saidaFechamento.innerHTML = html;
 }
 
