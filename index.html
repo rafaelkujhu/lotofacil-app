@@ -232,6 +232,30 @@ async function buscarConcursos(){
     : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
+/* ===== Análise do jogo ===== */
+function analisar(jogo){
+  let pares=jogo.filter(n=>n%2===0).length;
+  let soma=jogo.reduce((a,b)=>a+b,0);
+  let base=concursos[simulacaoSelect.value]||[];
+  let rep=jogo.filter(n=>base.includes(n)).length;
+
+  let score=0;
+  if(pares===7||pares===8)score++;
+  if(soma>=180&&soma<=220)score++;
+  if(rep>=6&&rep<=10)score++;
+
+  let selo=score===3?"🟢 EXCELENTE":score===2?"🟡 REGULAR":"🔴 FORA DO PADRÃO";
+
+  return `
+    <div class="analise">
+      Pares:${pares} | Soma:${soma} | Repetição:${rep}<br>
+      Confiabilidade ${confianca()}%<br>
+      <div class="selo">${selo}</div>
+      <button onclick='simular(${JSON.stringify(jogo)})'>🔍 Simular resultado</button>
+      <div class="simulacao" id="sim-${jogo.join("")}"></div>
+    </div>`;
+}
+
 /* ===== ESTATÍSTICAS CONCURSOS ===== */
 function gerarEstatisticasConcursos(concursos){
   let nums = concursos.flat();
@@ -348,7 +372,8 @@ function gerarFechamento(){
   });
   saidaFechamento.innerHTML=html;
 }
-</script>
+
+
 
 </body>
 </html>
