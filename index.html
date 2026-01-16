@@ -395,6 +395,14 @@ function gerarEstatisticasConcursos(concursos){
   `;
 }
 
+  .ss-extremo{
+   border-left: 5px solid #ef6c00;
+}
+
+  .ss-ousado{
+  border-left: 5px solid #6a1b9a;
+}
+
 /* ===== ANÁLISE HISTÓRICA (ÚLTIMO ANO) ===== */
 function analisarHistoricoUltimoAno(concursos){
   let dentro = 0;
@@ -429,16 +437,36 @@ function gerarSuperSete(){
   for(let i = 0; i < qtd; i++){
     let jogo = [];
 
+    // gera 1 número por coluna
     for(let col = 0; col < 7; col++){
-      let n = Math.floor(Math.random() * 10);
-      jogo.push(n);
+      jogo.push(Math.floor(Math.random() * 10));
+    }
+
+    const soma = jogo.reduce((a,b)=>a+b,0);
+    const pares = jogo.filter(n => n % 2 === 0).length;
+
+    let perfil = "🎯 Perfil equilibrado";
+    let classe = "";
+
+    // soma fora do padrão
+    if(soma < 21 || soma > 42){
+      perfil = "⚠️ Perfil extremo";
+      classe = "ss-extremo";
+    }
+
+    // pares extremos
+    if(pares <= 1 || pares >= 6){
+      perfil = "🧪 Perfil ousado";
+      classe = "ss-ousado";
     }
 
     html += `
-      <div class="resultado">
+      <div class="resultado ${classe}">
         ${jogo.join(" | ")}
         <div class="stats">
-          Soma: ${jogo.reduce((a,b)=>a+b,0)}
+          Soma: ${soma}<br>
+          Pares: ${pares} | Ímpares: ${7 - pares}<br>
+          <strong>${perfil}</strong>
         </div>
       </div>
     `;
@@ -630,22 +658,27 @@ function gerarFechamento(){
   }
 
   /* ===== 4️⃣ SAÍDA ===== */
- let html = `
-  <div class="card">
-    <strong>📘 Fechamento com Base Única</strong>
-
-    <div class="stats">
-      <strong>Base fixa (${base.length} dezenas)</strong><br>
-      ${base.join(" - ")}
+  let html = `
+    <div class="card">
+      <strong>📘 Fechamento com Base Única</strong>
+      <div class="stats">
+        <strong>Base fixa (${base.length} dezenas)</strong><br>
+        ${base.join(" - ")}
+      </div>
+      <hr>
+      <div class="stats">Jogos gerados: ${jogos.length}</div>
     </div>
+  `;
 
-    <hr>
+  jogos.forEach(j=>{
+    html += `
+      <div class="resultado">
+        ${j.join(" - ")}
+        ${analisar(j).html}
+      </div>
+    `;
+  });
 
-    <div class="stats">
-      Jogos gerados: ${jogos.length}
-    </div>
-  </div>
-`;
   saidaFechamento.innerHTML = html;
 }
 
