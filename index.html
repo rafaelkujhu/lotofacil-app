@@ -284,7 +284,7 @@ function gerarLotofacil(){
 
   let universo = Array.from({length:25},(_,i)=>i+1);
 
-  // base estatística ou livre
+  // Se for estatístico, usa base dos concursos
   let baseNumeros = universo;
   if(modo === "estatistico" && concursos.length){
     let freq = {};
@@ -294,8 +294,7 @@ function gerarLotofacil(){
     baseNumeros = Object.keys(freq).map(Number);
   }
 
-  let jogosGerados = [];
-
+  let html="";
   for(let i=0;i<qtd;i++){
     let j=[];
     while(j.length<dezenas){
@@ -304,29 +303,13 @@ function gerarLotofacil(){
     }
     j.sort((a,b)=>a-b);
 
-    let analise = analisar(j);
-
-    jogosGerados.push({
-      jogo: j,
-      analise
-    });
-  }
-
-  // ranking automático (🟢 → 🟡 → 🔴)
-  jogosGerados = classificarJogos(jogosGerados);
-
-  // renderização
-  let html = resumoInteligente(jogosGerados);
-
-  jogosGerados.forEach(obj=>{
-    html += `
+    html+=`
       <div class="resultado">
-        ${obj.jogo.join(" - ")}
-        ${obj.analise.html}
+        ${j.join(" - ")}
+        ${analisar(j)}
       </div>
     `;
-  });
-
+  }
   saida.innerHTML = html;
 }
 
@@ -378,25 +361,6 @@ function gerarFechamento(){
 }
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
-function classificarJogos(jogos){
-  return jogos.sort((a,b)=>b.analise.score - a.analise.score);
-}
-
-function resumoInteligente(jogos){
-  let exc = jogos.filter(j=>j.analise.score===3).length;
-  let reg = jogos.filter(j=>j.analise.score===2).length;
-  let fora = jogos.filter(j=>j.analise.score<=1).length;
-
-  return `
-    <div class="card">
-      <strong>🧠 Análise Inteligente</strong>
-      <div class="stats">🟢 Excelentes: ${exc}</div>
-      <div class="stats">🟡 Regulares: ${reg}</div>
-      <div class="stats">🔴 Fora do padrão: ${fora}</div>
-    </div>
-  `;
-}
-
 function analisar(jogo){
   let pares = jogo.filter(n => n % 2 === 0).length;
   let soma = jogo.reduce((a,b)=>a+b,0);
