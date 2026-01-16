@@ -428,16 +428,36 @@ function gerarFechamento(){
     }
   }
 
+  // 🔹 HEADER + LEGENDA + BASE
   let html = `
     <div class="card">
       <strong>📘 Fechamento Real</strong>
+
       <div class="stats">
-        Universo base: ${base.join(" - ")}<br>
+        <strong>Universo base (${base.length} dezenas)</strong><br>
+        ${base.join(" - ")}
+      </div>
+
+      <hr>
+
+      <div class="stats">
+        <strong>Legenda</strong><br>
+        • Jogos com 15 dezenas<br>
+        • Base fixa (não muda durante a geração)<br>
+        • Garantia válida somente se o sorteio estiver dentro da base<br>
+        • Redução de padrões estatisticamente fracos<br>
+        • Não garante prêmio
+      </div>
+
+      <hr>
+
+      <div class="stats">
         Jogos gerados: ${jogos.length}
       </div>
     </div>
   `;
 
+  // 🔹 JOGOS GERADOS
   jogos.forEach(j=>{
     html += `
       <div class="resultado">
