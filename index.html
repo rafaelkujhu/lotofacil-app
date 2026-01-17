@@ -754,12 +754,11 @@ function gerarFechamento(){
   const baseQtd = Number(document.getElementById("tipoFechamento").value);
   const usarPro = document.getElementById("usarFiltroPro")?.checked;
 
-  /* ===== 1️⃣ GERAR BASE ===== */
+  /* ===== 1️⃣ BASE ===== */
   let base = [];
   let tentativasBase = 0;
 
   if(usarPro){
-    // 🔥 BASE VINDO DO LOTOFÁCIL PRO
     let dezenas = new Set();
 
     while(dezenas.size < baseQtd && tentativasBase < 600){
@@ -776,10 +775,10 @@ function gerarFechamento(){
       }
     }
 
-    base = Array.from(dezenas).slice(0, baseQtd).sort((a,b)=>a-b);
+    base = Array.from(dezenas).slice(0, baseQtd);
   }
 
-  // 🔁 FALLBACK SE PRO NÃO GERAR BASE SUFICIENTE
+  // fallback seguro
   while(base.length < baseQtd){
     let n = Math.floor(Math.random() * 25) + 1;
     if(!base.includes(n)) base.push(n);
@@ -787,13 +786,13 @@ function gerarFechamento(){
 
   base.sort((a,b)=>a-b);
 
-  /* ===== 2️⃣ QUANTIDADE DE JOGOS ===== */
+  /* ===== 2️⃣ QTD JOGOS ===== */
   const qtdJogos =
     baseQtd === 16 ? 6 :
     baseQtd === 17 ? 10 :
     15;
 
-  /* ===== 3️⃣ GERAÇÃO DOS JOGOS ===== */
+  /* ===== 3️⃣ GERAR JOGOS ===== */
   let jogos = [];
   let tentativas = 0;
 
@@ -808,7 +807,6 @@ function gerarFechamento(){
 
     jogo.sort((a,b)=>a-b);
 
-    // 🔥 FILTRO PRO NA ENTRADA DO FECHAMENTO
     if(usarPro){
       let score = calcularScoreLotofacil(jogo);
       let sim = simularPontuacaoLotofacil(jogo);
@@ -825,16 +823,16 @@ function gerarFechamento(){
   /* ===== 4️⃣ SAÍDA ===== */
   let html = `
     <div class="card">
-      <strong>📘 Fechamento ${usarPro ? "com PRO Ativo" : "Tradicional"}</strong>
+      <strong>📘 Fechamento ${usarPro ? "com PRO Ativo 🔥" : "Tradicional"}</strong>
 
       <div class="stats">
-        <strong>Base fixa (${base.length} dezenas)</strong><br>
+        Base (${base.length} dezenas):<br>
         ${base.join(" - ")}
       </div>
 
       <div class="stats">
         Jogos gerados: ${jogos.length}<br>
-        Filtro PRO: ${usarPro ? "ATIVO 🔥" : "DESATIVADO"}
+        Filtro PRO: ${usarPro ? "ATIVADO" : "DESATIVADO"}
       </div>
     </div>
   `;
