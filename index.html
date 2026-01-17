@@ -297,30 +297,28 @@ button{
 <div class="content" id="tab5" style="display:none">
 
   <div class="card">
-    <strong>🔥 Lotofácil PRO</strong>
+  <strong>🔥 Lotofácil PRO</strong>
 
-    <p class="stats">
-      Sistema avançado com score de risco e simulação real.<br>
-      Não promete prêmios — analisa probabilidades.
-    </p>
+  <p class="stats">
+    Sistema avançado com score de risco e simulação real.<br>
+    Não promete prêmios — analisa probabilidades.
+  </p>
 
-    <select id="modoLotofacilPro">
-      <option value="equilibrado">🎯 Equilibrado</option>
-      <option value="conservador">🟢 Conservador</option>
-      <option value="ousado">🔴 Ousado</option>
-    </select>
+  <select id="modoLotofacilPro">
+    <option value="equilibrado">🎯 Equilibrado</option>
+    <option value="conservador">🟢 Conservador</option>
+    <option value="ousado">🔴 Ousado</option>
+  </select>
 
-    <input type="number" id="qtdLotofacilPro" value="5" min="1">
+  <input type="number" id="qtdLotofacilPro" value="5" min="1">
 
-    <button onclick="executarSeguro(gerarLotofacilPro,'Lotofácil PRO')">
-      Gerar Lotofácil PRO
-    </button>
-
-
-  <div id="saidaLotofacilPro"></div>
+  <button onclick="executarSeguro(gerarLotofacilPro,'Lotofácil PRO')">
+    Gerar Lotofácil PRO
+  </button>
 </div>
 
-</div>
+<!-- ✅ RESULTADOS ABAIXO DO CARD, IGUAL AS OUTRAS ABAS -->
+<div id="saidaLotofacilPro"></div>
 
 <script>
 concursos=[];
