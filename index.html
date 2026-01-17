@@ -853,21 +853,21 @@ function validarFechamento(base, jogos){
 
 
 // ===== BASE VIA LOTOFÁCIL PRO (ÚNICA, FINAL E ESTÁVEL) =====
-function gerarBaseViaLotofacilPro(baseQtd, preset = "equilibrado"){
+function gerarBaseViaLotofacilPro(baseQtd){
   let numeros = [];
   let tentativas = 0;
 
   while(numeros.length < baseQtd && tentativas < 600){
     tentativas++;
 
-    let jogo = gerarJogoLotofacilBase(preset);
+    let jogo = gerarJogoLotofacilBase("equilibrado");
     if(!jogo) continue;
 
     let score = calcularScoreLotofacil(jogo);
     let sim = simularPontuacaoLotofacil(jogo);
 
     if(score < 70) continue;
-    if(parseFloat(sim[13]) < 1.5) continue;
+    if(parseFloat(sim["13"]) < 1.5) continue;
 
     jogo.forEach(n=>{
       if(!numeros.includes(n) && numeros.length < baseQtd){
@@ -876,7 +876,6 @@ function gerarBaseViaLotofacilPro(baseQtd, preset = "equilibrado"){
     });
   }
 
-  // fallback seguro
   while(numeros.length < baseQtd){
     let n = Math.floor(Math.random() * 25) + 1;
     if(!numeros.includes(n)) numeros.push(n);
@@ -885,7 +884,6 @@ function gerarBaseViaLotofacilPro(baseQtd, preset = "equilibrado"){
   return numeros.sort((a,b)=>a-b);
 }
 
-
 function gerarFechamento(){
 
   const baseQtd = Number(
@@ -893,7 +891,7 @@ function gerarFechamento(){
   );
 
   const usarPro = document.getElementById("usarProFechamento")?.checked;
-  const preset = document.getElementById("presetFechamento")?.value || "equilibrado";
+  const preset = "equilibrado";
 
   // 1️⃣ BASE
   let base = usarPro
