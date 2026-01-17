@@ -96,7 +96,13 @@ button{
   text-align:center;
   font-weight:600;
   color:#4a148c;
+
+/* 🔧 evita estourar fora do card */
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
+
 .conf{
   margin-top:6px;
   font-size:13px;
@@ -548,15 +554,29 @@ function gerarLotofacil(){
     }
     j.sort((a,b)=>a-b);
 
-    html+=`
-      <div class="resultado">
-        ${j.join(" - ")}
-        ${analisar(j).html}
-      </div>
-    `;
-  }
-  saida.innerHTML = html;
-}
+   const validacao = validarJogoLotofacil(j);
+
+html+=`
+  <div class="resultado">
+    ${j.join(" - ")}
+    ${analisar(j).html}
+
+    ${
+      !validacao.valido
+        ? `<div class="stats" style="color:#c62828">
+             ⚠️ Jogo fora do padrão<br>
+             ${validacao.erros.join("<br>")}
+           </div>`
+        : `<div class="stats" style="color:#2e7d32">
+             ✔ Jogo matematicamente válido
+           </div>`
+    }
+  </div>
+`;
+   }
+    saidaAvancado.innerHTML=html;
+ }
+
 
 /* ===== AVANÇADO ===== */
 function gerarAvancado(){
@@ -934,7 +954,119 @@ function gerarLotofacilPro(){
 
   document.getElementById("saidaLotofacilPro").innerHTML = html;
 }
+
+/* ===== ALERTA AUTOMÁTICO DE SAÚDE DO CÓDIGO ===== */
+(function diagnosticoAutomatico(){
+
+  let erros = [];
+
+  /* 🔍 1. FUNÇÕES DUPLICADAS */
+  const funcoes = {};
+  document.querySelectorAll("script").forEach(script=>{
+    const texto = script.innerText;
+    const regex = /function\s+([a-zA-Z0-9_]+)/g;
+    let match;
+
+    while((match = regex.exec(texto)) !== null){
+      const nome = match[1];
+      funcoes[nome] = (funcoes[nome] || 0) + 1;
+    }
+  });
+
+  Object.entries(funcoes).forEach(([nome,qtd])=>{
+    if(qtd > 1){
+      erros.push(`⚠️ Função duplicada: ${nome} (${qtd}x)`);
+    }
+  });
+
+  /* 🔍 2. IDS DUPLICADOS */
+  const ids = {};
+  document.querySelectorAll("[id]").forEach(el=>{
+    ids[el.id] = (ids[el.id] || 0) + 1;
+  });
+
+  Object.entries(ids).forEach(([id,qtd])=>{
+    if(qtd > 1){
+      erros.push(`⚠️ ID duplicado no HTML: #${id}`);
+    }
+  });
+
+  /* 🔍 3. CONTAINERS ESSENCIAIS */
+  const containersObrigatorios = [
+    "saida",
+    "saidaAvancado",
+    "saidaLotomania",
+    "saidaSuperSete",
+    "saidaLotofacilPro"
+  ];
+
+  containersObrigatorios.forEach(id=>{
+    if(!document.getElementById(id)){
+      erros.push(`⚠️ Container ausente: #${id}`);
+    }
+  });
+
+  /* 🔍 4. RESULTADO */
+  if(erros.length){
+    console.group("🚨 Diagnóstico automático do sistema");
+    erros.forEach(e => console.warn(e));
+    console.groupEnd();
+    alert(
+      "⚠️ Atenção: foram encontrados problemas no código.\n\n" +
+      erros.join("\n") +
+      "\n\nVeja o console para detalhes."
+    );
+  }else{
+    console.info("✅ Diagnóstico automático: sistema íntegro");
+  }
+
+})();
    
+/* ===== VALIDADOR MATEMÁTICO ===== */
+function validarJogoLotofacil(jogo){
+
+  let erros = [];
+
+  /* 🔢 Quantidade */
+  if(jogo.length !== 15){
+    erros.push(`Quantidade inválida: ${jogo.length}`);
+  }
+
+  /* ⚖️ Pares / Ímpares */
+  const pares = jogo.filter(n => n % 2 === 0).length;
+  const impares = 15 - pares;
+
+  if(pares < 6 || pares > 9){
+    erros.push(`Pares fora do padrão: ${pares}`);
+  }
+
+  /* ➕ Soma */
+  const soma = jogo.reduce((a,b)=>a+b,0);
+  if(soma < 170 || soma > 240){
+    erros.push(`Soma fora do padrão: ${soma}`);
+  }
+
+  /* 📊 Faixas */
+  let faixas = [0,0,0,0];
+  jogo.forEach(n=>{
+    if(n<=6) faixas[0]++;
+    else if(n<=12) faixas[1]++;
+    else if(n<=18) faixas[2]++;
+    else faixas[3]++;
+  });
+
+  faixas.forEach((qtd,i)=>{
+    if(qtd < 2 || qtd > 6){
+      erros.push(`Faixa ${i+1} desequilibrada: ${qtd}`);
+    }
+  });
+
+  return {
+    valido: erros.length === 0,
+    erros
+  };
+}
+
 </script>
 </body>
 </html>
