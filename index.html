@@ -13,14 +13,11 @@
   --ok:#2e7d32;
 }
 
-.ss-extremo{
-  border-left: 5px solid #ef6c00;
-}
+/* ===== SUPER SETE ===== */
+.ss-extremo{ border-left:5px solid #ef6c00; }
+.ss-ousado{ border-left:5px solid #6a1b9a; }
 
-.ss-ousado{
-  border-left: 5px solid #6a1b9a;
-}
-
+/* ===== LAYOUT ===== */
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
@@ -41,23 +38,9 @@ header{
   font-size:18px;
   font-weight:600;
 }
-.tabs{
-  display:flex;
-  background:#eee;
-  flex-wrap:wrap;
-}
-.tab{
-  flex:1;
-  padding:12px;
-  text-align:center;
-  font-weight:600;
-  cursor:pointer;
-}
-.tab.active{
-  background:#fff;
-  color:var(--roxo);
-  border-bottom:3px solid var(--roxo);
-}
+.tabs{display:flex;background:#eee;flex-wrap:wrap;}
+.tab{flex:1;padding:12px;text-align:center;font-weight:600;cursor:pointer;}
+.tab.active{background:#fff;color:var(--roxo);border-bottom:3px solid var(--roxo);}
 .content{padding:16px;}
 .card{
   background:#fff;
@@ -66,69 +49,27 @@ header{
   margin-bottom:14px;
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
-textarea,input,button,select{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:12px;
-  border:1px solid #ccc;
-  font-size:14px;
-}
-button{
-  background:linear-gradient(135deg,var(--roxo),var(--roxo2));
-  color:#fff;
-  font-weight:600;
-  border:none;
-  cursor:pointer;
-}
-.radio-group{
+
+/* ===== RESULTADOS INTERNOS ===== */
+.saida-interna{
+  margin-top:12px;
   display:flex;
-  gap:12px;
-  margin-top:8px;
-  font-size:13px;
-  flex-wrap:wrap;
+  flex-direction:column;
+  gap:10px;
 }
+
 .resultado{
   background:var(--claro);
   padding:10px;
   border-radius:12px;
-  margin-top:8px;
   text-align:center;
   font-weight:600;
   color:#4a148c;
-
-/* 🔧 evita estourar fora do card */
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
 }
-
-.conf{
-  margin-top:6px;
-  font-size:13px;
-  color:var(--ok);
-}
-.stats{
-  font-size:13px;
-  margin-top:6px;
-  color:#333;
-}
-.footer{
-  text-align:center;
-  font-size:12px;
-  color:#777;
-  padding:14px;
-}
-
-/* ===== CONTAINER DE RESULTADOS INTERNOS ===== */
-.saida-interna{
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+.stats{font-size:13px;margin-top:6px;color:#333;}
+.conf{font-size:13px;color:var(--ok);}
 </style>
+
 </head>
 
 <body>
