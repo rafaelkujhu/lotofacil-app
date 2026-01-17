@@ -720,6 +720,76 @@ function gerarLotomania(){
   saidaLotomania.innerHTML = html;
 }
 
+/* ===== BASE VIA LOTOFÁCIL PRO ===== */
+function gerarBaseViaLotofacilPro(baseQtd){
+  let numeros = [];
+  let tentativas = 0;
+
+  while(numeros.length < baseQtd && tentativas < 500){
+    tentativas++;
+
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    if(score < 70) continue;
+    if(parseFloat(sim[13]) < 1.5) continue;
+
+    jogo.forEach(n=>{
+      if(!numeros.includes(n) && numeros.length < baseQtd){
+        numeros.push(n);
+      }
+    });
+  }
+
+  while(numeros.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!numeros.includes(n)) numeros.push(n);
+  }
+
+  return numeros.sort((a,b)=>a-b);
+}
+
+/* ===== BASE AUTOMÁTICA (PRO INTELIGENTE) ===== */
+function gerarBaseAutomatica(baseQtd){
+  let candidatos = [];
+  let tentativas = 0;
+
+  while(candidatos.length < 30 && tentativas < 800){
+    tentativas++;
+
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    if(score >= 75 && parseFloat(sim[13]) >= 2.0){
+      candidatos.push({ jogo, score });
+    }
+  }
+
+  candidatos.sort((a,b)=>b.score - a.score);
+
+  let base = [];
+  candidatos.forEach(c=>{
+    c.jogo.forEach(n=>{
+      if(!base.includes(n) && base.length < baseQtd){
+        base.push(n);
+      }
+    });
+  });
+
+  while(base.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!base.includes(n)) base.push(n);
+  }
+
+  return base.sort((a,b)=>a-b);
+}
+
 // ===== VALIDADOR MATEMÁTICO =====
 function validarFechamento(base, jogos){
   let resultados = jogos.map(j =>
@@ -738,31 +808,29 @@ function validarFechamento(base, jogos){
 /* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
 function gerarFechamento(){
 
-  const tipoFechamento = document.getElementById("tipoFechamento");
-  
-  const baseQtd = Number(tipoFechamento.value);
+  const baseQtd = Number(document.getElementById("tipoFechamento").value);
+  const usarPro = document.getElementById("usarProFechamento")?.checked;
+  const modoAuto = document.getElementById("modoAutomaticoFechamento")?.checked;
 
-  /* ===== 1️⃣ BASE ÚNICA FIXA ===== */
- const usarPro = document.getElementById("usarProFechamento")?.checked;
+  let base;
 
-let base = usarPro
-  ? gerarBaseViaLotofacilPro(baseQtd)
-  : (() => {
-      let b = [];
-      while(b.length < baseQtd){
-        let n = Math.floor(Math.random() * 25) + 1;
-        if(!b.includes(n)) b.push(n);
-      }
-      return b.sort((a,b)=>a-b);
-    })();
+  if(modoAuto){
+    base = gerarBaseAutomatica(baseQtd);
+  }else if(usarPro){
+    base = gerarBaseViaLotofacilPro(baseQtd);
+  }else{
+    base = [];
+    while(base.length < baseQtd){
+      let n = Math.floor(Math.random() * 25) + 1;
+      if(!base.includes(n)) base.push(n);
+    }
+    base.sort((a,b)=>a-b);
+  }
 
-  /* ===== 2️⃣ QUANTIDADE DE JOGOS ===== */
   const qtdJogos =
     baseQtd === 16 ? 6 :
-    baseQtd === 17 ? 10 :
-    15;
+    baseQtd === 17 ? 10 : 15;
 
-  /* ===== 3️⃣ GERAÇÃO DOS JOGOS ===== */
   let jogos = [];
   let tentativas = 0;
 
@@ -774,6 +842,7 @@ let base = usarPro
       let n = base[Math.floor(Math.random() * base.length)];
       if(!jogo.includes(n)) jogo.push(n);
     }
+
     jogo.sort((a,b)=>a-b);
 
     if(!jogos.some(j => j.join() === jogo.join())){
@@ -781,16 +850,13 @@ let base = usarPro
     }
   }
 
-  /* ===== 4️⃣ SAÍDA ===== */
   let html = `
     <div class="card">
-      <strong>📘 Fechamento com Base Única</strong>
+      <strong>📘 Fechamento com Base Inteligente</strong>
       <div class="stats">
-        <strong>Base fixa (${base.length} dezenas)</strong><br>
+        Base (${base.length} dezenas):<br>
         ${base.join(" - ")}
       </div>
-      <hr>
-      <div class="stats">Jogos gerados: ${jogos.length}</div>
     </div>
   `;
 
