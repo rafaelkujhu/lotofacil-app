@@ -304,6 +304,30 @@ button{
     <option value="18">18 → 15 (garante 14)</option>
   </select>
 
+<div class="card">
+  <strong>ℹ️ Como funciona o Fechamento PRO</strong>
+
+  <div class="stats">
+    • O Fechamento trabalha com uma <strong>base fixa</strong> de dezenas.<br><br>
+
+    • Quando a estratégia é <strong>Aleatória</strong>, a base é escolhida
+    sem filtros estatísticos.<br><br>
+
+    • Quando a estratégia é <strong>PRO</strong>, a base é formada apenas por
+    dezenas vindas de jogos com bom score estatístico.<br><br>
+
+    • No modo <strong>Automático</strong>, o sistema combina:
+    score estatístico + simulação + equilíbrio matemático
+    para selecionar a melhor base possível.<br><br>
+
+    • O <strong>perfil (Conservador / PRO / Ousado)</strong> define o nível de
+    risco aceito na seleção da base.<br><br>
+
+    ⚠️ O Fechamento <strong>não garante prêmio</strong>.
+    Ele reduz jogos matematicamente fracos e melhora a qualidade das combinações.
+  </div>
+</div>
+
   <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
     Gerar Fechamento
   </button>
@@ -895,6 +919,40 @@ function validarFechamento(base, jogos){
       resultados.reduce((a,b)=>a+b,0) / resultados.length
     ).toFixed(2)
   };
+}
+
+// ===== BASE VIA LOTOFÁCIL PRO (ESTÁVEL) =====
+function gerarBaseViaLotofacilPro(baseQtd){
+  let numeros = [];
+  let tentativas = 0;
+
+  while(numeros.length < baseQtd && tentativas < 500){
+    tentativas++;
+
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    // filtros seguros (não agressivos)
+    if(score < 70) continue;
+    if(parseFloat(sim[13]) < 1.5) continue;
+
+    jogo.forEach(n=>{
+      if(!numeros.includes(n) && numeros.length < baseQtd){
+        numeros.push(n);
+      }
+    });
+  }
+
+  // fallback de segurança
+  while(numeros.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!numeros.includes(n)) numeros.push(n);
+  }
+
+  return numeros.sort((a,b)=>a-b);
 }
 
 /* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
