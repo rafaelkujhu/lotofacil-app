@@ -129,7 +129,6 @@ button{
 <div class="app">
 <header>🎯 Loterias Inteligentes PRO</header>
 
-}
 
 <div class="tabs">
   <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
@@ -267,9 +266,6 @@ button{
 </div>
 
 
-<div class="footer">Base Congelada V.1 • Estável</div>
-</div>
-
 <!-- ================= SUPER SETE ================= -->
 <div class="content" id="tab4" style="display:none">
 
@@ -322,6 +318,9 @@ button{
 
 </div>
 
+<div class="footer">Base Congelada V.1 • Estável</div>
+</div>
+
 <script>
 
 concursos=[];
@@ -343,6 +342,8 @@ const saida = document.getElementById("saida");
 const saidaAvancado = document.getElementById("saidaAvancado");
 const saidaLotomania = document.getElementById("saidaLotomania");
 const saidaSuperSete = document.getElementById("saidaSuperSete");
+const saidaFechamento = document.getElementById("saidaFechamento");
+
 
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
@@ -558,50 +559,6 @@ function gerarLotofacil(){
 }
 
 /* ===== AVANÇADO ===== */
-function gerarJogoLotomaniaBase(modo, ultimo){
-  let jogo = [];
-  let tentativas = 0;
-  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
-
-  // pré-inclusão modo 20
-  if(modo === "vinte" && ultimo.length){
-    while(jogo.length < 15){
-      let n = ultimo[Math.floor(Math.random() * ultimo.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
-  }
-
-  while(jogo.length < 50 && tentativas < 15000){
-    tentativas++;
-    let n = Math.floor(Math.random() * 100);
-    if(jogo.includes(n)) continue;
-
-    if(modo === "zero" && ultimo.includes(n)) continue;
-
-    if(modo === "equilibrado" && ultimo.length){
-      let coinc = jogo.filter(x => ultimo.includes(x)).length;
-      if(coinc >= 12) continue;
-    }
-
-    let pares = jogo.filter(x => x % 2 === 0).length;
-    let impares = jogo.length - pares;
-    if(n % 2 === 0 && pares >= 26) continue;
-    if(n % 2 !== 0 && impares >= 26) continue;
-
-    let faixa =
-      n <= 19 ? "f1" :
-      n <= 39 ? "f2" :
-      n <= 59 ? "f3" :
-      n <= 79 ? "f4" : "f5";
-
-    if(faixas[faixa] >= 12) continue;
-
-    faixas[faixa]++;
-    jogo.push(n);
-  }
-
-  return jogo.length === 50 ? jogo.sort((a,b)=>a-b) : null;
-}
 function gerarAvancado(){
   const qtd = +document.getElementById("qtdAvancado").value;
   let html="";
@@ -766,8 +723,7 @@ function validarFechamento(base, jogos){
 function gerarFechamento(){
 
   const tipoFechamento = document.getElementById("tipoFechamento");
-  const saidaFechamento = document.getElementById("saidaFechamento");
-
+  
   const baseQtd = Number(tipoFechamento.value);
 
   /* ===== 1️⃣ BASE ÚNICA FIXA ===== */
