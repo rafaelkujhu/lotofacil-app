@@ -11,8 +11,6 @@
   --roxo2:#8e24aa;
   --claro:#f3e5f5;
   --ok:#2e7d32;
-}
-
 .ss-extremo{
   border-left: 5px solid #ef6c00;
 }
@@ -21,6 +19,7 @@
   border-left: 5px solid #6a1b9a;
 }
 
+}
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
@@ -113,15 +112,6 @@ button{
   color:#777;
   padding:14px;
 }
-
-/* ===== CONTAINER DE RESULTADOS INTERNOS ===== */
-.saida-interna{
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 </style>
 </head>
 
@@ -129,14 +119,12 @@ button{
 <div class="app">
 <header>🎯 Loterias Inteligentes PRO</header>
 
-
 <div class="tabs">
   <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
   <div class="tab" onclick="trocarTab(1)">Avançado</div>
   <div class="tab" onclick="trocarTab(2)">Lotomania</div>
-  <div class="tab" onclick="trocarTab(3)">📘 Fechamento</div>
+  <div class="tab" onclick="trocarTab(3)">📘 Fechamento Real</div>
   <div class="tab" onclick="trocarTab(4)">🎯 Super Sete</div>
-  <div class="tab" onclick="trocarTab(5)">🔥 Lotofácil PRO</div>
 </div>
 
 <!-- ================= LOTOFÁCIL ================= -->
@@ -239,7 +227,7 @@ button{
 <div id="saidaLotomania"></div>
 </div>
 
-<!-- ================= FECHAMENTO ================= -->
+<!-- ================= FECHAMENTO REAL ================= -->
 <div class="content" id="tab3" style="display:none">
 
   <div class="card">
@@ -266,6 +254,9 @@ button{
 </div>
 
 
+<div class="footer">Base Congelada V.1 • Estável</div>
+</div>
+
 <!-- ================= SUPER SETE ================= -->
 <div class="content" id="tab4" style="display:none">
 
@@ -287,42 +278,7 @@ button{
   <div id="saidaSuperSete"></div>
 </div>
 
-
-
-<!-- ================= LOTOFÁCIL PRO ================= -->
-<div class="content" id="tab5" style="display:none">
-
-  <div class="card">
-    <strong>🔥 Lotofácil PRO</strong>
-
-    <p class="stats">
-      Sistema avançado com score de risco e simulação real.<br>
-      Não promete prêmios — analisa probabilidades.
-    </p>
-
-    <select id="modoLotofacilPro">
-      <option value="equilibrado">🎯 Equilibrado</option>
-      <option value="conservador">🟢 Conservador</option>
-      <option value="ousado">🔴 Ousado</option>
-    </select>
-
-    <input type="number" id="qtdLotofacilPro" value="5" min="1">
-
-    <button onclick="executarSeguro(gerarLotofacilPro,'Lotofácil PRO')">
-      Gerar Lotofácil PRO
-    </button>
-
-      <div id="saidaLotofacilPro"></div>
-
-  </div>
-
-</div>
-
-<div class="footer">Base Congelada V.1 • Estável</div>
-</div>
-
 <script>
-
 concursos=[];
 // ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
 function executarSeguro(fn, nome = "Processo"){
@@ -342,8 +298,6 @@ const saida = document.getElementById("saida");
 const saidaAvancado = document.getElementById("saidaAvancado");
 const saidaLotomania = document.getElementById("saidaLotomania");
 const saidaSuperSete = document.getElementById("saidaSuperSete");
-const saidaFechamento = document.getElementById("saidaFechamento");
-
 
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
@@ -559,6 +513,50 @@ function gerarLotofacil(){
 }
 
 /* ===== AVANÇADO ===== */
+function gerarJogoLotomaniaBase(modo, ultimo){
+  let jogo = [];
+  let tentativas = 0;
+  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+
+  // pré-inclusão modo 20
+  if(modo === "vinte" && ultimo.length){
+    while(jogo.length < 15){
+      let n = ultimo[Math.floor(Math.random() * ultimo.length)];
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+  }
+
+  while(jogo.length < 50 && tentativas < 15000){
+    tentativas++;
+    let n = Math.floor(Math.random() * 100);
+    if(jogo.includes(n)) continue;
+
+    if(modo === "zero" && ultimo.includes(n)) continue;
+
+    if(modo === "equilibrado" && ultimo.length){
+      let coinc = jogo.filter(x => ultimo.includes(x)).length;
+      if(coinc >= 12) continue;
+    }
+
+    let pares = jogo.filter(x => x % 2 === 0).length;
+    let impares = jogo.length - pares;
+    if(n % 2 === 0 && pares >= 26) continue;
+    if(n % 2 !== 0 && impares >= 26) continue;
+
+    let faixa =
+      n <= 19 ? "f1" :
+      n <= 39 ? "f2" :
+      n <= 59 ? "f3" :
+      n <= 79 ? "f4" : "f5";
+
+    if(faixas[faixa] >= 12) continue;
+
+    faixas[faixa]++;
+    jogo.push(n);
+  }
+
+  return jogo.length === 50 ? jogo.sort((a,b)=>a-b) : null;
+}
 function gerarAvancado(){
   const qtd = +document.getElementById("qtdAvancado").value;
   let html="";
@@ -723,7 +721,8 @@ function validarFechamento(base, jogos){
 function gerarFechamento(){
 
   const tipoFechamento = document.getElementById("tipoFechamento");
-  
+  const saidaFechamento = document.getElementById("saidaFechamento");
+
   const baseQtd = Number(tipoFechamento.value);
 
   /* ===== 1️⃣ BASE ÚNICA FIXA ===== */
@@ -829,112 +828,8 @@ function analisar(jogo){
     </div>
   `
 };
-
 }
 
-  /* ===== LOTOFÁCIL PRO ===== */
-function gerarJogoLotofacilBase(modo){
-  let jogo = [];
-  let tentativas = 0;
-
-  while(jogo.length < 15 && tentativas < 3000){
-    tentativas++;
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(jogo.includes(n)) continue;
-
-    let pares = jogo.filter(x => x % 2 === 0).length;
-
-    // 🟢 CONSERVADOR: evita extremos
-    if(modo === "conservador" && pares >= 8) continue;
-
-    // 🔴 OUSADO: só força depois que o jogo já está formado
-    if(modo === "ousado" && jogo.length >= 10 && pares <= 5) continue;
-
-    jogo.push(n);
-  }
-
-  return jogo.length === 15 ? jogo.sort((a,b)=>a-b) : null;
-}
-
-function calcularScoreLotofacil(jogo){
-  let score = 100;
-
-  let pares = jogo.filter(n => n % 2 === 0).length;
-  let soma = jogo.reduce((a,b)=>a+b,0);
-
-  if(pares < 6 || pares > 9) score -= 20;
-  if(soma < 170 || soma > 240) score -= 25;
-
-  let faixas = [0,0,0,0];
-  jogo.forEach(n=>{
-    if(n<=6) faixas[0]++;
-    else if(n<=12) faixas[1]++;
-    else if(n<=18) faixas[2]++;
-    else faixas[3]++;
-  });
-
-  faixas.forEach(f=>{
-    if(f < 2 || f > 6) score -= 10;
-  });
-
-  return Math.max(0, score);
-}
-
-function simularPontuacaoLotofacil(jogo, simulacoes=1500){
-  let dist = {11:0,12:0,13:0,14:0,15:0};
-
-  for(let i=0;i<simulacoes;i++){
-    let sorteio = [];
-    while(sorteio.length < 15){
-      let n = Math.floor(Math.random() * 25) + 1;
-      if(!sorteio.includes(n)) sorteio.push(n);
-    }
-
-    let acertos = jogo.filter(n => sorteio.includes(n)).length;
-    if(acertos >= 11) dist[acertos]++;
-  }
-
-  Object.keys(dist).forEach(k=>{
-    dist[k] = ((dist[k]/simulacoes)*100).toFixed(2);
-  });
-
-  return dist;
-}
-
-function gerarLotofacilPro(){
-  const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
-  const modo = document.getElementById("modoLotofacilPro").value;
-
-  let html = "";
-
-  for(let i=0;i<qtd;i++){
-    let jogo = gerarJogoLotofacilBase(modo);
-    if(!jogo) continue;
-
-    let score = calcularScoreLotofacil(jogo);
-    let sim = simularPontuacaoLotofacil(jogo);
-
-    let perfil =
-      score >= 80 ? "🟢 Baixo risco" :
-      score >= 50 ? "🟡 Médio risco" :
-                    "🔴 Alto risco";
-
-    html += `
-      <div class="resultado">
-        ${jogo.join(" - ")}
-        <div class="stats">
-          <strong>${perfil}</strong><br>
-          Score: ${score}/100<br>
-          11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
-          13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
-        </div>
-      </div>
-    `;
-  }
-
-  document.getElementById("saidaLotofacilPro").innerHTML = html;
-}
-   
 </script>
 </body>
 </html>
