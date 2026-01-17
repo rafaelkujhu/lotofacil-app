@@ -741,25 +741,29 @@ function gerarFechamento(){
     tentativas++;
 
     let jogo = [];
-    while(jogo.length < 15){
-      let n = base[Math.floor(Math.random() * base.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
+   while(jogos.length < qtdJogos && tentativas < 5000){
+  tentativas++;
 
-    jogo.sort((a,b)=>a-b);
-
-    if(usarPro){
-      let score = calcularScoreLotofacil(jogo);
-      let sim = simularPontuacaoLotofacil(jogo);
-
-      if(score < 70) continue;
-      if(parseFloat(sim[13]) < 2.0) continue;
-    }
-
-    if(!jogos.some(j => j.join() === jogo.join())){
-      jogos.push(jogo);
-    }
+  let jogo = [];
+  while(jogo.length < 15){
+    let n = base[Math.floor(Math.random() * base.length)];
+    if(!jogo.includes(n)) jogo.push(n);
   }
+
+  jogo.sort((a,b)=>a-b);
+
+  if(usarPro){
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    if(score < 70) continue;
+    if(parseFloat(sim[13]) < 2.0) continue;
+  }
+
+  if(!jogos.some(j => j.join() === jogo.join())){
+    jogos.push(jogo);
+  }
+}
 
   /* ===== 4️⃣ SAÍDA ===== */
   let html = `
