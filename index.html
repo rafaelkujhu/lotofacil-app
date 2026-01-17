@@ -177,6 +177,24 @@ button{
   <label><input type="radio" name="dezenas" value="18">18</label>
 </div>
 <input type="number" id="qtdJogos" value="5" min="1">
+<div class="card">
+  <strong>🔢 Dezenas fixas (opcional)</strong>
+
+  <p class="stats">
+    Selecione as dezenas que devem aparecer em todos os jogos.
+  </p>
+
+  <input
+    type="text"
+    id="dezenasFixas"
+    placeholder="Ex: 3 7 10 14"
+  >
+
+  <p class="stats">
+    Separe por espaço ou vírgula.
+  </p>
+</div>
+
 <button onclick="executarSeguro(gerarLotofacil,'Lotofácil')">
   Gerar Jogos
 </button>
@@ -592,6 +610,19 @@ function gerarSuperSete(){
 }
  
 /* ===== LOTOFÁCIL ===== */
+function obterDezenasFixas(){
+  const input = document.getElementById("dezenasFixas");
+  if(!input || !input.value.trim()) return [];
+
+  let nums = input.value
+    .replace(/,/g," ")
+    .split(" ")
+    .map(n => parseInt(n))
+    .filter(n => n >= 1 && n <= 25);
+
+  return [...new Set(nums)];
+}
+
 function gerarLotofacil(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
   const qtd = +document.getElementById("qtdJogos").value;
@@ -609,13 +640,22 @@ function gerarLotofacil(){
     baseNumeros = Object.keys(freq).map(Number);
   }
 
-  let html="";
-  for(let i=0;i<qtd;i++){
-    let j=[];
-    while(j.length<dezenas){
-      let n = baseNumeros[Math.floor(Math.random()*baseNumeros.length)];
-      if(!j.includes(n)) j.push(n);
-    }
+ let fixas = obterDezenasFixas();
+
+if(fixas.length > dezenas){
+  alert("⚠️ Você escolheu mais dezenas fixas do que o total do jogo.");
+  return;
+}
+
+let html="";
+for(let i=0;i<qtd;i++){
+  let j = [...fixas];
+
+  while(j.length < dezenas){
+    let n = baseNumeros[Math.floor(Math.random()*baseNumeros.length)];
+    if(!j.includes(n)) j.push(n);
+  }
+
     j.sort((a,b)=>a-b);
 
     html+=`
