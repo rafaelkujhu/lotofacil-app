@@ -865,15 +865,18 @@ function gerarJogoLotofacilBase(modo){
   let jogo = [];
   let tentativas = 0;
 
-  while(jogo.length < 15 && tentativas < 2000){
+  while(jogo.length < 15 && tentativas < 3000){
     tentativas++;
     let n = Math.floor(Math.random() * 25) + 1;
     if(jogo.includes(n)) continue;
 
     let pares = jogo.filter(x => x % 2 === 0).length;
 
+    // 🟢 CONSERVADOR: evita extremos
     if(modo === "conservador" && pares >= 8) continue;
-    if(modo === "ousado" && pares <= 5) continue;
+
+    // 🔴 OUSADO: só força depois que o jogo já está formado
+    if(modo === "ousado" && jogo.length >= 10 && pares <= 5) continue;
 
     jogo.push(n);
   }
@@ -950,8 +953,11 @@ function gerarLotofacilPro(){
         <div class="stats">
           <strong>${perfil}</strong><br>
           Score: ${score}/100<br>
-          11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
-          13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
+          11 pts: ${sim[11]}% |
+          12 pts: ${sim[12]}% |
+          13 pts: ${sim[13]}%<br>
+          14 pts: ${sim[14]}% |
+          15 pts: ${sim[15]}%
         </div>
       </div>
     `;
@@ -959,7 +965,7 @@ function gerarLotofacilPro(){
 
   document.getElementById("saidaLotofacilPro").innerHTML = html;
 }
-
+   
 </script>
 </body>
 </html>
