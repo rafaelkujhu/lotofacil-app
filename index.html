@@ -346,8 +346,10 @@ button{
   <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
     Gerar Fechamento
   </button>
-</div>
 
+</div>
+<div id="saidaFechamento"></div>
+</div>
 
 <!-- ================= SUPER SETE ================= -->
 <div class="content" id="tab4" style="display:none">
@@ -439,16 +441,23 @@ const saidaLotomania = document.getElementById("saidaLotomania");
 const saidaSuperSete = document.getElementById("saidaSuperSete");
 const saidaFechamento = document.getElementById("saidaFechamento");
 
-
-function trocarTab(i){
-  document.querySelectorAll('.tab').forEach((t,idx)=>{
-    t.classList.toggle('active',idx===i);
-    document.getElementById('tab'+idx).style.display=idx===i?'block':'none';
-  });
+// ===== UTILITÁRIOS GERAIS =====
+function gerarBaseDeterministica(tamanho){
+  return Array.from({length:tamanho},(_,i)=>i+1);
 }
 
 function confianca(extra=0){
-  return Math.min(98,88+extra+Math.floor(Math.random()*6));
+  return Math.min(98, 88 + extra + Math.floor(Math.random()*6));
+}
+
+function trocarTab(i){
+  document.querySelectorAll('.tab').forEach((t,idx)=>{
+    t.classList.toggle('active', idx === i);
+    const tab = document.getElementById('tab' + idx);
+    if(tab){
+      tab.style.display = idx === i ? 'block' : 'none';
+    }
+  });
 }
 
 // ===== OPÇÃO 2: ÚLTIMO CONCURSO DA LOTOMANIA =====
@@ -896,71 +905,125 @@ function gerarBaseViaLotofacilPro(baseQtd){
   }
 
   return numeros.sort((a,b)=>a-b);
+
+}// ===== VALIDADOR MATEMÁTICO REAL (GARANTIA 14) =====
+function validarGarantia14(base, jogos){
+  if(base.length !== 16){
+    return { valido:false, erro:"Base ≠ 16" };
+  }
+
+  let falhas = 0;
+
+  for(let i=0;i<base.length;i++){
+    let sorteio = base.filter((_,idx)=>idx!==i);
+    let max = 0;
+
+    jogos.forEach(j=>{
+      let acertos = j.filter(n=>sorteio.includes(n)).length;
+      if(acertos > max) max = acertos;
+    });
+
+    if(max < 14) falhas++;
+  }
+
+  return {
+    valido: falhas === 0,
+    cenarios: base.length,
+    falhas
+  };
 }
 
-/* ===== FECHAMENTO INTEGRADO ===== */
-function gerarFechamento(){
-  const baseQtd = Number(document.getElementById("tipoFechamento").value);
-  const usarPro = document.getElementById("usarProFechamento")?.checked;
+// ===== MODO AUTOMÁTICO INTELIGENTE =====
+function gerarBaseAutomatica(baseQtd, tentativas=120){
+  let melhorBase = null;
+  let melhorScore = -Infinity;
 
-  let base = usarPro
-    ? gerarBaseViaLotofacilPro(baseQtd)
-    : (() => {
-        let b = [];
-        while(b.length < baseQtd){
-          let n = Math.floor(Math.random() * 25) + 1;
-          if(!b.includes(n)) b.push(n);
-        }
-        return b.sort((a,b)=>a-b);
-      })();
+  for(let i=0;i<tentativas;i++){
+    let base = gerarBaseViaLotofacilPro(baseQtd);
 
-  const qtdJogos =
-    baseQtd === 16 ? 6 :
-    baseQtd === 17 ? 10 :
-    15;
+    let pares = base.filter(n=>n%2===0).length;
+    let soma = base.reduce((a,b)=>a+b,0);
 
-  let jogos = [];
-  let tentativas = 0;
+    let score = 0;
+    if(pares >= 7 && pares <= 9) score += 2;
+    if(soma >= 190 && soma <= 215) score += 2;
 
-  while(jogos.length < qtdJogos && tentativas < 4000){
-    tentativas++;
-
-    let jogo = [];
-    while(jogo.length < 15){
-      let n = base[Math.floor(Math.random() * base.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
-    jogo.sort((a,b)=>a-b);
-
-    if(!jogos.some(j => j.join() === jogo.join())){
-      jogos.push(jogo);
+    if(score > melhorScore){
+      melhorScore = score;
+      melhorBase = base;
     }
   }
 
+  return melhorBase;
+}
+
+// ===== FECHAMENTO =====
+function gerarFechamento(){
+
+  // 🛡️ BLINDAGEM EXTRA
+  if(!saidaFechamento){
+    throw new Error("Elemento #saidaFechamento não encontrado");
+  }
+
+  const tipoEl = document.getElementById("tipoFechamento");
+  const modoEl = document.getElementById("modoBaseFechamento");
+
+  if(!tipoEl || !modoEl){
+    throw new Error("Configurações do fechamento ausentes");
+  }
+
+  const baseQtd = Number(tipoEl.value);
+  const modoBase = modoEl.value;
+
+  // 🎯 DEFINIÇÃO DA BASE
+  let base;
+  if(modoBase === "aleatorio"){
+    base = gerarBaseDeterministica(baseQtd);
+  }else if(modoBase === "pro"){
+    base = gerarBaseViaLotofacilPro(baseQtd);
+  }else{
+    base = gerarBaseAutomatica(baseQtd);
+  }
+
+  // 🎲 QTD DE JOGOS (HONESTO)
+  let qtdJogos = baseQtd === 16 ? 6 : Math.max(12, baseQtd * 2);
+
+  let jogos = [];
+  while(jogos.length < qtdJogos){
+    let jogo = [];
+    while(jogo.length < 15){
+      let n = base[Math.floor(Math.random()*base.length)];
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+    jogo.sort((a,b)=>a-b);
+    if(!jogos.some(j=>j.join()==jogo.join())) jogos.push(jogo);
+  }
+
+  // 📐 VALIDAÇÃO
+  let validacao = baseQtd === 16 ? validarGarantia14(base, jogos) : null;
+
+  // 🖥️ SAÍDA
   let html = `
     <div class="card">
-      <strong>📘 Fechamento ${usarPro ? "PRO Inteligente" : "Padrão"}</strong>
-      <div class="stats">
-        Base (${base.length} dezenas)<br>
-        ${base.join(" - ")}
-      </div>
-      <hr>
-      <div class="stats">Jogos gerados: ${jogos.length}</div>
+      <strong>Base (${base.length})</strong><br>
+      ${base.join(" - ")}
     </div>
   `;
 
-  jogos.forEach(j=>{
+  if(validacao){
     html += `
-      <div class="resultado">
-        ${j.join(" - ")}
-        ${analisar(j).html}
+      <div class="card">
+        Garantia 14: ${validacao.valido ? "✅ CONFIRMADA" : "❌ NÃO CONFIRMADA"}
       </div>
     `;
+  }
+
+  jogos.forEach(j=>{
+    html += `<div class="resultado">${j.join(" - ")}</div>`;
   });
 
   saidaFechamento.innerHTML = html;
 }
-
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
 function calcularRepeticaoMedia(jogo, concursosBase){
