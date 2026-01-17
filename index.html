@@ -924,89 +924,6 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
 }
 
 function gerarLotofacilPro(){
-/* ===== INTEGRAÇÃO PRO → FECHAMENTO (SEGURA) ===== */
-function gerarBaseViaLotofacilPro(baseQtd){
-  let tentativas = 0;
-  let numeros = [];
-
-/* ===== MODO AUTOMÁTICO PRO + FECHAMENTO ===== */
-function gerarBaseAutomatica(baseQtd){
-  let candidatos = [];
-  let tentativas = 0;
-
-  while(candidatos.length < 30 && tentativas < 800){
-    tentativas++;
-
-    let jogo = gerarJogoLotofacilBase("equilibrado");
-    if(!jogo) continue;
-
-    let score = calcularScoreLotofacil(jogo);
-    let sim = simularPontuacaoLotofacil(jogo);
-
-    // critérios automáticos (mais exigentes)
-    if(score >= 75 && parseFloat(sim[13]) >= 2.0){
-      candidatos.push({ jogo, score });
-    }
-  }
-
-  candidatos.sort((a,b)=>b.score - a.score);
-
-  let base = [];
-  candidatos.forEach(c=>{
-    c.jogo.forEach(n=>{
-      if(!base.includes(n) && base.length < baseQtd){
-        base.push(n);
-      }
-    });
-  });
-
-const usarPro = document.getElementById("usarProFechamento")?.checked;
-const modoAuto = document.getElementById("modoAutomaticoFechamento")?.checked;
-
-let base;
-
-if(modoAuto){
-  base = gerarBaseAutomatica(baseQtd);
-}else if(usarPro){
-  base = gerarBaseViaLotofacilPro(baseQtd);
-}else{
-  base = [];
-  while(base.length < baseQtd){
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(!base.includes(n)) base.push(n);
-  }
-  base.sort((a,b)=>a-b);
-}
-
-  while(numeros.length < baseQtd && tentativas < 500){
-    tentativas++;
-
-    let jogo = gerarJogoLotofacilBase("equilibrado");
-    if(!jogo) continue;
-
-    let score = calcularScoreLotofacil(jogo);
-    let sim = simularPontuacaoLotofacil(jogo);
-
-    // filtros mínimos (conservadores)
-    if(score < 70) continue;
-    if(parseFloat(sim[13]) < 1.5) continue;
-
-    jogo.forEach(n=>{
-      if(!numeros.includes(n) && numeros.length < baseQtd){
-        numeros.push(n);
-      }
-    });
-  }
-
-  // fallback de segurança
-  while(numeros.length < baseQtd){
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(!numeros.includes(n)) numeros.push(n);
-  }
-
-  return numeros.sort((a,b)=>a-b);
-}
-
   const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
   const modo = document.getElementById("modoLotofacilPro").value;
 
@@ -1039,6 +956,7 @@ if(modoAuto){
 
   document.getElementById("saidaLotofacilPro").innerHTML = html;
 }
+
    
 </script>
 </body>
