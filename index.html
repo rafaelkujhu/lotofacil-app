@@ -733,17 +733,16 @@ function gerarFechamento(){
     baseQtd === 17 ? 10 :
     15;
 
-  /* ===== 3️⃣ GERAR JOGOS ===== */
-  let jogos = [];
-  let tentativas = 0;
+  /* ===== 3️⃣ GERAÇÃO DOS JOGOS ===== */
+let jogos = [];
+let tentativas = 0;
 
-  while(jogos.length < qtdJogos && tentativas < 5000){
-    tentativas++;
+const usarPro = document.getElementById("usarPro")?.checked;
 
-    let jogo = [];
-   while(jogos.length < qtdJogos && tentativas < 5000){
+while(jogos.length < qtdJogos && tentativas < 5000){
   tentativas++;
 
+  // 🔹 CRIA O JOGO PRIMEIRO
   let jogo = [];
   while(jogo.length < 15){
     let n = base[Math.floor(Math.random() * base.length)];
@@ -752,6 +751,7 @@ function gerarFechamento(){
 
   jogo.sort((a,b)=>a-b);
 
+  // 🔥 FILTRO LOTOFÁCIL PRO (SE ATIVADO)
   if(usarPro){
     let score = calcularScoreLotofacil(jogo);
     let sim = simularPontuacaoLotofacil(jogo);
@@ -760,6 +760,7 @@ function gerarFechamento(){
     if(parseFloat(sim[13]) < 2.0) continue;
   }
 
+  // evita duplicados
   if(!jogos.some(j => j.join() === jogo.join())){
     jogos.push(jogo);
   }
