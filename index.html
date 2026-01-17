@@ -851,8 +851,7 @@ function validarFechamento(base, jogos){
   };
 }
 
-
-// ===== BASE VIA LOTOFÁCIL PRO (ÚNICA, FINAL E ESTÁVEL) =====
+/* ===== LOTOFÁCIL PRO — BASE PARA FECHAMENTO ===== */
 function gerarBaseViaLotofacilPro(baseQtd){
   let numeros = [];
   let tentativas = 0;
@@ -884,18 +883,13 @@ function gerarBaseViaLotofacilPro(baseQtd){
   return numeros.sort((a,b)=>a-b);
 }
 
+/* ===== FECHAMENTO INTEGRADO ===== */
 function gerarFechamento(){
-
-  const baseQtd = Number(
-    document.getElementById("tipoFechamento").value
-  );
-
+  const baseQtd = Number(document.getElementById("tipoFechamento").value);
   const usarPro = document.getElementById("usarProFechamento")?.checked;
-  const preset = "equilibrado";
 
-  // 1️⃣ BASE
   let base = usarPro
-    ? gerarBaseViaLotofacilPro(baseQtd, preset)
+    ? gerarBaseViaLotofacilPro(baseQtd)
     : (() => {
         let b = [];
         while(b.length < baseQtd){
@@ -905,13 +899,11 @@ function gerarFechamento(){
         return b.sort((a,b)=>a-b);
       })();
 
-  // 2️⃣ QTD JOGOS
   const qtdJogos =
     baseQtd === 16 ? 6 :
     baseQtd === 17 ? 10 :
     15;
 
-  // 3️⃣ GERA JOGOS
   let jogos = [];
   let tentativas = 0;
 
@@ -930,12 +922,11 @@ function gerarFechamento(){
     }
   }
 
-  // 4️⃣ SAÍDA
   let html = `
     <div class="card">
-      <strong>📘 Fechamento com Base ${usarPro ? "PRO" : "Aleatória"}</strong>
+      <strong>📘 Fechamento ${usarPro ? "PRO Inteligente" : "Padrão"}</strong>
       <div class="stats">
-        Base fixa (${base.length} dezenas)<br>
+        Base (${base.length} dezenas)<br>
         ${base.join(" - ")}
       </div>
       <hr>
@@ -954,6 +945,7 @@ function gerarFechamento(){
 
   saidaFechamento.innerHTML = html;
 }
+
 
 /* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
 function calcularRepeticaoMedia(jogo, concursosBase){
