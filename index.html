@@ -261,60 +261,52 @@ button{
 <div class="content" id="tab3" style="display:none">
 
   <div class="card">
-    <strong>📘 Fechamento Matemático Documentado</strong>
+  <strong>📘 Fechamento Matemático Documentado</strong>
 
-    <p class="stats">
-<label style="display:block;margin-top:10px;font-size:13px">
-  <input type="checkbox" id="usarProFechamento">
-  🔥 Usar Lotofácil PRO como filtro inteligente
-</label>
+  <p class="stats">
+    Universo fixo 1 a 25.<br>
+    A garantia é válida apenas se o sorteio estiver dentro da base.
+  </p>
 
-<p class="stats">
-  Quando ativado, o Fechamento utiliza apenas jogos com bom score
-  estatístico e melhor desempenho simulado.<br>
-  Isso não garante prêmio, mas reduz jogos matematicamente fracos.
-</p>
+  <hr>
 
-<label style="display:block;margin-top:6px;font-size:13px">
-  <input type="checkbox" id="modoAutomaticoFechamento">
-  🤖 Modo automático (seleção inteligente da base)
-</label>
+  <strong>🧠 Estratégia da Base</strong>
 
-      Universo fixo 1 a 25.<br>
-      Garantia válida somente se o sorteio estiver dentro da base.
-    </p>
+  <select id="modoBaseFechamento">
+    <option value="aleatorio">🎲 Base Aleatória</option>
+    <option value="pro">🔥 Base via Lotofácil PRO</option>
+    <option value="automatico">🤖 Automático (PRO + filtros avançados)</option>
+  </select>
 
-<label class="stats">
-  <input type="checkbox" id="usarProFechamento">
-  🔥 Usar Lotofácil PRO como filtro inteligente
-</label>
+  <div id="configProFechamento" style="display:none">
+    <label class="stats" style="margin-top:8px">
+      Perfil do PRO:
+    </label>
 
-<select id="presetFechamento">
-  <option value="equilibrado">🎯 PRO Equilibrado</option>
-  <option value="conservador">🟢 PRO Conservador</option>
-  <option value="ousado">🔴 PRO Ousado</option>
-</select>
-
-<p class="stats">
-Quando ativado, o fechamento utiliza apenas dezenas vindas do
-Lotofácil PRO, com score estatístico e simulação favorável.
-<br>
-Não garante prêmio — reduz jogos matematicamente fracos.
-</p>
-
-    <select id="tipoFechamento">
-      <option value="16">16 → 15 (garante 14)</option>
-      <option value="17">17 → 15 (garante 14)</option>
-      <option value="18">18 → 15 (garante 14)</option>
+    <select id="perfilProFechamento">
+      <option value="conservador">🟢 Conservador</option>
+      <option value="equilibrado">🟡 PRO</option>
+      <option value="ousado">🔴 Ousado</option>
     </select>
 
-    <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
-  Gerar Fechamento
-</button>
+    <p class="stats">
+      O perfil define o nível de risco estatístico usado na seleção da base.
+    </p>
   </div>
 
-  <div id="saidaFechamento"></div>
+  <hr>
 
+  <strong>📐 Tipo de Fechamento</strong>
+
+  <select id="tipoFechamento">
+    <option value="16">16 → 15 (garante 14)</option>
+    <option value="17">17 → 15 (garante 14)</option>
+    <option value="18">18 → 15 (garante 14)</option>
+  </select>
+
+  <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
+    Gerar Fechamento
+  </button>
 </div>
 
 
@@ -380,6 +372,12 @@ Não garante prêmio — reduz jogos matematicamente fracos.
 </div>
 
 <script>
+
+document.getElementById("modoBaseFechamento").addEventListener("change", e=>{
+  const mostrar = e.target.value !== "aleatorio";
+  document.getElementById("configProFechamento").style.display =
+    mostrar ? "block" : "none";
+});
 
 concursos=[];
 // ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
