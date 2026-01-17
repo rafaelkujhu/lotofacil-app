@@ -112,19 +112,20 @@ button{
   color:#777;
   padding:14px;
 }
+
 </style>
-</head>
-
-<body>
-<div class="app">
-<header>🎯 Loterias Inteligentes PRO</header>
-
 /* ===== CONTAINER DE RESULTADOS INTERNOS ===== */
 .saida-interna{
   margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+</head>
+
+<body>
+<div class="app">
+<header>🎯 Loterias Inteligentes PRO</header>
+
 }
 
 <div class="tabs">
@@ -309,9 +310,11 @@ button{
     <button onclick="executarSeguro(gerarLotofacilPro,'Lotofácil PRO')">
       Gerar Lotofácil PRO
     </button>
-  </div>
 
-  <div id="saidaLotofacilPro"></div>
+    <!-- ✅ RESULTADOS FICAM AQUI -->
+    <div id="saidaLotofacilPro" class="saida-interna"></div>
+
+  </div>
 
 </div>
 
@@ -956,32 +959,15 @@ function gerarLotofacilPro(){
                     "🔴 Alto risco";
 
     html += `
-    <div class="content" id="tab5" style="display:none">
-  <div class="card">
-
-    <strong>🔥 Lotofácil PRO</strong>
-
-    <p class="stats">
-      Sistema avançado com score de risco e simulação real.
-    </p>
-
-    <select id="modoLotofacilPro">
-      <option value="equilibrado">🎯 Equilibrado</option>
-      <option value="conservador">🟢 Conservador</option>
-      <option value="ousado">🔴 Ousado</option>
-    </select>
-
-    <input type="number" id="qtdLotofacilPro" value="5" min="1">
-
-    <button onclick="executarSeguro(gerarLotofacilPro,'Lotofácil PRO')">
-      Gerar Lotofácil PRO
-    </button>
-
-    <!-- 🔒 CONTAINER FIXO -->
-    <div id="saidaLotofacilPro" class="saida-interna"></div>
-
-  </div>
-</div>
+      <div class="resultado">
+        ${jogo.join(" - ")}
+        <div class="stats">
+          <strong>${perfil}</strong><br>
+          Score: ${score}/100<br>
+          11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
+          13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
+        </div>
+      </div>
     `;
   }
 
