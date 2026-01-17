@@ -115,14 +115,6 @@ button{
   padding:14px;
 }
 
-</style>
-/* ===== CONTAINER DE RESULTADOS INTERNOS ===== */
-.saida-interna{
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 
 </style>
 </head>
@@ -137,7 +129,7 @@ button{
   <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
   <div class="tab" onclick="trocarTab(1)">Avançado</div>
   <div class="tab" onclick="trocarTab(2)">Lotomania</div>
-  <div class="tab" onclick="trocarTab(3)">📘 Fechamento Real</div>
+  <div class="tab" onclick="trocarTab(3)">📘 Fechamento</div>
   <div class="tab" onclick="trocarTab(4)">🎯 Super Sete</div>
   <div class="tab" onclick="trocarTab(5)">🔥 Lotofácil PRO</div>
 </div>
@@ -319,10 +311,9 @@ button{
     </button>
   </div>
 
-  <!-- ✅ RESULTADOS DENTRO DA ABA -->
   <div id="saidaLotofacilPro"></div>
 
-</div> <!-- ✅ FECHAMENTO QUE ESTAVA FALTANDO -->
+</div>
 
 <script>
 
