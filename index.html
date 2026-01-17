@@ -246,6 +246,16 @@ button{
     <strong>📘 Fechamento Matemático Documentado</strong>
 
     <p class="stats">
+<label style="display:block;margin-top:10px;font-size:13px">
+  <input type="checkbox" id="usarProFechamento">
+  🔥 Usar Lotofácil PRO como filtro inteligente
+</label>
+
+<p class="stats">
+  Quando ativado, o Fechamento utiliza apenas jogos com bom score
+  estatístico e melhor desempenho simulado.<br>
+  Isso não garante prêmio, mas reduz jogos matematicamente fracos.
+</p>
       Universo fixo 1 a 25.<br>
       Garantia válida somente se o sorteio estiver dentro da base.
     </p>
@@ -727,12 +737,18 @@ function gerarFechamento(){
   const baseQtd = Number(tipoFechamento.value);
 
   /* ===== 1️⃣ BASE ÚNICA FIXA ===== */
-  let base = [];
-  while(base.length < baseQtd){
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(!base.includes(n)) base.push(n);
-  }
-  base.sort((a,b)=>a-b);
+ const usarPro = document.getElementById("usarProFechamento")?.checked;
+
+let base = usarPro
+  ? gerarBaseViaLotofacilPro(baseQtd)
+  : (() => {
+      let b = [];
+      while(b.length < baseQtd){
+        let n = Math.floor(Math.random() * 25) + 1;
+        if(!b.includes(n)) b.push(n);
+      }
+      return b.sort((a,b)=>a-b);
+    })();
 
   /* ===== 2️⃣ QUANTIDADE DE JOGOS ===== */
   const qtdJogos =
@@ -902,6 +918,40 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
 }
 
 function gerarLotofacilPro(){
+/* ===== INTEGRAÇÃO PRO → FECHAMENTO (SEGURA) ===== */
+function gerarBaseViaLotofacilPro(baseQtd){
+  let tentativas = 0;
+  let numeros = [];
+
+  while(numeros.length < baseQtd && tentativas < 500){
+    tentativas++;
+
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    // filtros mínimos (conservadores)
+    if(score < 70) continue;
+    if(parseFloat(sim[13]) < 1.5) continue;
+
+    jogo.forEach(n=>{
+      if(!numeros.includes(n) && numeros.length < baseQtd){
+        numeros.push(n);
+      }
+    });
+  }
+
+  // fallback de segurança
+  while(numeros.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!numeros.includes(n)) numeros.push(n);
+  }
+
+  return numeros.sort((a,b)=>a-b);
+}
+
   const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
   const modo = document.getElementById("modoLotofacilPro").value;
 
