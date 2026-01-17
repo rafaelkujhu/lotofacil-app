@@ -293,6 +293,12 @@ button{
       Uma escolha por coluna
     </p>
 
+<select id="modoSuperSete">
+  <option value="equilibrado">🎯 Equilibrado</option>
+  <option value="conservador">🟢 Conservador</option>
+  <option value="ousado">🔴 Ousado</option>
+</select>
+
     <input type="number" id="qtdSuperSete" value="5" min="1">
 
     <button onclick="executarSeguro(gerarSuperSete,'Super Sete')">
@@ -492,12 +498,42 @@ function analisarHistoricoUltimoAno(concursos){
 }
  
 /* ===== SUPERSETE ===== */
+function gerarJogoSuperSeteBase(modo){
+  let jogo = [];
+  let tentativas = 0;
+
+  while(jogo.length < 7 && tentativas < 200){
+    tentativas++;
+
+    let n = Math.floor(Math.random() * 10);
+    jogo.push(n);
+
+    let soma = jogo.reduce((a,b)=>a+b,0);
+    let pares = jogo.filter(x => x % 2 === 0).length;
+
+    // 🟢 Conservador: evita extremos
+    if(modo === "conservador"){
+      if(soma > 42) { jogo.pop(); continue; }
+      if(pares >= 6) { jogo.pop(); continue; }
+    }
+
+    // 🔴 Ousado: aceita extremos (menos filtro)
+    if(modo === "ousado"){
+      // quase sem restrição
+    }
+  }
+
+  return jogo.length === 7 ? jogo : null;
+}
+
 function gerarSuperSete(){
   const qtd = +document.getElementById("qtdSuperSete").value || 1;
+  const modo = document.getElementById("modoSuperSete").value;
   let html = "";
 
   for(let i = 0; i < qtd; i++){
-    let jogo = [];
+    let jogo = gerarJogoSuperSeteBase(modo);
+    if(!jogo) continue;
 
     // gera 1 número por coluna
     for(let col = 0; col < 7; col++){
