@@ -266,6 +266,24 @@ button{
       Garantia válida somente se o sorteio estiver dentro da base.
     </p>
 
+<label class="stats">
+  <input type="checkbox" id="usarProFechamento">
+  🔥 Usar Lotofácil PRO como filtro inteligente
+</label>
+
+<select id="presetFechamento">
+  <option value="equilibrado">🎯 PRO Equilibrado</option>
+  <option value="conservador">🟢 PRO Conservador</option>
+  <option value="ousado">🔴 PRO Ousado</option>
+</select>
+
+<p class="stats">
+Quando ativado, o fechamento utiliza apenas dezenas vindas do
+Lotofácil PRO, com score estatístico e simulação favorável.
+<br>
+Não garante prêmio — reduz jogos matematicamente fracos.
+</p>
+
     <select id="tipoFechamento">
       <option value="16">16 → 15 (garante 14)</option>
       <option value="17">17 → 15 (garante 14)</option>
@@ -842,35 +860,71 @@ function validarFechamento(base, jogos){
 }
 
 /* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
-function gerarFechamento(){
+function gerarBaseViaLotofacilPro(baseQtd, preset = "equilibrado"){
+  let numeros = [];
+  let tentativas = 0;
 
-  const baseQtd = Number(document.getElementById("tipoFechamento").value);
-  const usarPro = document.getElementById("usarProFechamento")?.checked;
-  const modoAuto = document.getElementById("modoAutomaticoFechamento")?.checked;
+  while(numeros.length < baseQtd && tentativas < 600){
+    tentativas++;
 
-  let base;
+    let jogo = gerarJogoLotofacilBase(preset);
+    if(!jogo) continue;
 
-  if(modoAuto){
-    base = gerarBaseAutomatica(baseQtd);
-  }else if(usarPro){
-    base = gerarBaseViaLotofacilPro(baseQtd);
-  }else{
-    base = [];
-    while(base.length < baseQtd){
-      let n = Math.floor(Math.random() * 25) + 1;
-      if(!base.includes(n)) base.push(n);
-    }
-    base.sort((a,b)=>a-b);
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    // filtros mínimos seguros
+    if(score < 70) continue;
+    if(parseFloat(sim[13]) < 1.5) continue;
+
+    jogo.forEach(n=>{
+      if(!numeros.includes(n) && numeros.length < baseQtd){
+        numeros.push(n);
+      }
+    });
   }
 
+  // fallback de segurança
+  while(numeros.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!numeros.includes(n)) numeros.push(n);
+  }
+
+  return numeros.sort((a,b)=>a-b);
+}
+
+function gerarFechamento(){
+
+  const baseQtd = Number(
+    document.getElementById("tipoFechamento").value
+  );
+
+  const usarPro = document.getElementById("usarProFechamento")?.checked;
+  const preset = document.getElementById("presetFechamento")?.value || "equilibrado";
+
+  // 1️⃣ BASE
+  let base = usarPro
+    ? gerarBaseViaLotofacilPro(baseQtd, preset)
+    : (() => {
+        let b = [];
+        while(b.length < baseQtd){
+          let n = Math.floor(Math.random() * 25) + 1;
+          if(!b.includes(n)) b.push(n);
+        }
+        return b.sort((a,b)=>a-b);
+      })();
+
+  // 2️⃣ QTD JOGOS
   const qtdJogos =
     baseQtd === 16 ? 6 :
-    baseQtd === 17 ? 10 : 15;
+    baseQtd === 17 ? 10 :
+    15;
 
+  // 3️⃣ GERA JOGOS
   let jogos = [];
   let tentativas = 0;
 
-  while(jogos.length < qtdJogos && tentativas < 5000){
+  while(jogos.length < qtdJogos && tentativas < 4000){
     tentativas++;
 
     let jogo = [];
@@ -878,7 +932,6 @@ function gerarFechamento(){
       let n = base[Math.floor(Math.random() * base.length)];
       if(!jogo.includes(n)) jogo.push(n);
     }
-
     jogo.sort((a,b)=>a-b);
 
     if(!jogos.some(j => j.join() === jogo.join())){
@@ -886,13 +939,16 @@ function gerarFechamento(){
     }
   }
 
+  // 4️⃣ SAÍDA
   let html = `
     <div class="card">
-      <strong>📘 Fechamento com Base Inteligente</strong>
+      <strong>📘 Fechamento com Base ${usarPro ? "PRO" : "Aleatória"}</strong>
       <div class="stats">
-        Base (${base.length} dezenas):<br>
+        Base fixa (${base.length} dezenas)<br>
         ${base.join(" - ")}
       </div>
+      <hr>
+      <div class="stats">Jogos gerados: ${jogos.length}</div>
     </div>
   `;
 
