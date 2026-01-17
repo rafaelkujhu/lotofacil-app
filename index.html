@@ -955,6 +955,38 @@ function gerarBaseViaLotofacilPro(baseQtd){
   return numeros.sort((a,b)=>a-b);
 }
 
+// ===== BASE VIA LOTOFÁCIL PRO (GLOBAL E ESTÁVEL) =====
+function gerarBaseViaLotofacilPro(baseQtd){
+  let numeros = [];
+  let tentativas = 0;
+
+  while(numeros.length < baseQtd && tentativas < 500){
+    tentativas++;
+
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    if(score < 70) continue;
+    if(parseFloat(sim[13]) < 1.5) continue;
+
+    jogo.forEach(n=>{
+      if(!numeros.includes(n) && numeros.length < baseQtd){
+        numeros.push(n);
+      }
+    });
+  }
+
+  while(numeros.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!numeros.includes(n)) numeros.push(n);
+  }
+
+  return numeros.sort((a,b)=>a-b);
+}
+
 /* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
 function gerarBaseViaLotofacilPro(baseQtd, preset = "equilibrado"){
   let numeros = [];
