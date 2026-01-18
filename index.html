@@ -6,9 +6,23 @@
 <title>Loterias Inteligentes PRO</title>
 
 <style>
+.loader{
+  display:none;
+  text-align:center;
+  margin-top:12px;
+  font-size:14px;
+  color:#6a1b9a;
+  font-weight:600;
+}
+button:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
 :root{
   --roxo:#6a1b9a;
   --roxo2:#8e24aa;
+
   --claro:#f3e5f5;
   --ok:#2e7d32;
 }
@@ -195,10 +209,14 @@ button{
   </p>
 </div>
 
-<button onclick="executarSeguro(gerarLotofacil,'Lotofácil')">
+<button id="btnLotofacil" onclick="executarSeguro(() => gerarComUX(gerarLotofacil, 'btnLotofacil', 'loaderLotofacil'),'Lotofácil')">
   Gerar Jogos
 </button>
+
+<div class="loader" id="loaderLotofacil">
+  ⏳ Processando...
 </div>
+
 
 <div id="saida"></div>
 
@@ -420,7 +438,8 @@ document.getElementById("modoBaseFechamento").addEventListener("change", e=>{
     mostrar ? "block" : "none";
 });
 
-concursos=[];
+let concursos = [];
+
 // ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
 function executarSeguro(fn, nome = "Processo"){
   try{
@@ -442,6 +461,23 @@ const saidaSuperSete = document.getElementById("saidaSuperSete");
 const saidaFechamento = document.getElementById("saidaFechamento");
 
 // ===== UTILITÁRIOS GERAIS =====
+function gerarComUX(fn, btnId, loaderId){
+  const btn = document.getElementById(btnId);
+  const loader = document.getElementById(loaderId);
+
+  if(btn) btn.disabled = true;
+  if(loader) loader.style.display = "block";
+
+  setTimeout(()=>{
+    try{
+      fn();
+    }finally{
+      if(loader) loader.style.display = "none";
+      if(btn) btn.disabled = false;
+    }
+  }, 50);
+}
+
 function gerarBaseDeterministica(tamanho){
   return Array.from({length:tamanho},(_,i)=>i+1);
 }
@@ -468,9 +504,7 @@ function obterUltimoConcursoLotomania(){
 }
 
 // ===== BASE DETERMINÍSTICA (SEM ALEATORIEDADE) =====
-function gerarBaseDeterministica(tamanho){
-  return Array.from({length:tamanho},(_,i)=>i+1);
-}
+
 
 // ===== JOGOS DETERMINÍSTICOS =====
 function gerarJogosDeterministicos(base, qtdJogos){
@@ -490,8 +524,14 @@ function gerarJogosDeterministicos(base, qtdJogos){
 
 /* ===== BUSCAR CONCURSOS ===== */
 async function buscarConcursos(){
-  const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d=await r.json();
+const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+
+if(!r.ok){
+  throw new Error("Falha ao acessar API da Caixa");
+}
+
+const d = await r.json();
+
   const ult=d.numero;
   let qtdRadio = document.querySelector('input[name="qtd"]:checked');
   let qtdLivre = document.getElementById("qtdLivre")?.value;
@@ -525,7 +565,7 @@ function gerarEstatisticasConcursos(concursos){
   let impares = nums.length - pares;
   let soma = nums.reduce((a,b)=>a+b,0);
 
-  let faixa = { f1:0, f2:0, f3:0, f4:0 };
+  let faixa = { f1:0, f2:0, f3:0, f4:0, f5:0 };
   nums.forEach(n=>{
     if(n<=6) faixa.f1++;
     else if(n<=12) faixa.f2++;
@@ -619,9 +659,7 @@ function gerarSuperSete(){
     if(!jogo) continue;
 
     // gera 1 número por coluna
-    for(let col = 0; col < 7; col++){
-      jogo.push(Math.floor(Math.random() * 10));
-    }
+ 
 
     const soma = jogo.reduce((a,b)=>a+b,0);
     const pares = jogo.filter(n => n % 2 === 0).length;
@@ -678,7 +716,11 @@ function gerarLotofacil(){
   let universo = Array.from({length:25},(_,i)=>i+1);
 
   // Se for estatístico, usa base dos concursos
-  let baseNumeros = universo;
+  baseNumeros = Object.entries(freq)
+  .sort((a,b)=>b[1]-a[1])   // mais frequentes primeiro
+  .slice(0,18)             // top 18 dezenas
+  .map(e=>Number(e[0]));
+
   if(modo === "estatistico" && concursos.length){
     let freq = {};
     concursos.flat().forEach(n=>{
@@ -1066,7 +1108,8 @@ function analisar(jogo){
   html: `
     <div class="stats">
       Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
-      <div class="conf">Confiabilidade ${confianca()}%</div>
+     <div class="conf">Indicador interno ${confianca()}%</div>
+
       <strong>${selo}</strong>
     </div>
   `
