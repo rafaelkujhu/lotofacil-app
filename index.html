@@ -875,36 +875,36 @@ function validarFechamento(base, jogos){
   };
 }
 
-/* ===== LOTOFÁCIL PRO — BASE PARA FECHAMENTO ===== */
-function gerarBaseViaLotofacilPro(baseQtd){
-  let numeros = [];
-  let tentativas = 0;
+}// ===== LOTOFACIL PRO =====
+function gerarBaseViaLotofacilPro(qtd){
+  let base=[];
+  let tentativas=0;
+  const LIMITE = 120; // 🔥 antes era 500+
 
-  while(numeros.length < baseQtd && tentativas < 600){
+  while(base.length<qtd && tentativas<LIMITE){
     tentativas++;
 
     let jogo = gerarJogoLotofacilBase("equilibrado");
     if(!jogo) continue;
 
     let score = calcularScoreLotofacil(jogo);
-    let sim = simularPontuacaoLotofacil(jogo);
-
-    if(score < 70) continue;
-    if(parseFloat(sim["13"]) < 1.5) continue;
+    if(score < 65) continue;
 
     jogo.forEach(n=>{
-      if(!numeros.includes(n) && numeros.length < baseQtd){
-        numeros.push(n);
+      if(!base.includes(n) && base.length<qtd){
+        base.push(n);
       }
     });
   }
 
-  while(numeros.length < baseQtd){
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(!numeros.includes(n)) numeros.push(n);
+  // fallback seguro
+  while(base.length<qtd){
+    let n=Math.floor(Math.random()*25)+1;
+    if(!base.includes(n)) base.push(n);
   }
 
-  return numeros.sort((a,b)=>a-b);
+  return base.sort((a,b)=>a-b);
+}
 
 }// ===== VALIDADOR MATEMÁTICO REAL (GARANTIA 14) =====
 function validarGarantia14(base, jogos){
@@ -934,27 +934,27 @@ function validarGarantia14(base, jogos){
 }
 
 // ===== MODO AUTOMÁTICO INTELIGENTE =====
-function gerarBaseAutomatica(baseQtd, tentativas=120){
-  let melhorBase = null;
+function gerarBaseAutomatica(qtd){
+  let melhor = null;
   let melhorScore = -Infinity;
 
-  for(let i=0;i<tentativas;i++){
-    let base = gerarBaseViaLotofacilPro(baseQtd);
+  for(let i=0; i < 20; i++){ // 🔥 limite seguro
+    let base = gerarBaseViaLotofacilPro(qtd);
 
-    let pares = base.filter(n=>n%2===0).length;
-    let soma = base.reduce((a,b)=>a+b,0);
+    let pares = base.filter(n => n % 2 === 0).length;
+    let soma  = base.reduce((a,b) => a + b, 0);
 
     let score = 0;
-    if(pares >= 7 && pares <= 9) score += 2;
-    if(soma >= 190 && soma <= 215) score += 2;
+    if(pares >= 7 && pares <= 9) score++;
+    if(soma  >= 190 && soma <= 215) score++;
 
     if(score > melhorScore){
       melhorScore = score;
-      melhorBase = base;
+      melhor = base;
     }
   }
 
-  return melhorBase;
+  return melhor;
 }
 
 // ===== FECHAMENTO =====
