@@ -432,7 +432,6 @@ function executarSeguro(fn, nome = "Processo"){
 
 // ===== ELEMENTOS GLOBAIS (OBRIGATÓRIO) =====
 const resultados = document.getElementById("resultados");
-const premio = document.getElementById("premio");
 const estatConcursos = document.getElementById("estatConcursos");
 const saida = document.getElementById("saida");
 const saidaAvancado = document.getElementById("saidaAvancado");
@@ -505,9 +504,6 @@ concursos=[];
 
  gerarEstatisticasConcursos(concursos);
 
-  premio.innerText = d.acumulado
-    ? `Acumulado: R$ ${d.valorEstimadoProximoConcurso.toLocaleString("pt-BR")}`
-    : `Saiu: R$ ${d.valorPremio.toLocaleString("pt-BR")}`;
 }
 
 /* ===== ESTATÍSTICAS CONCURSOS ===== */
@@ -957,6 +953,15 @@ function gerarBaseAutomatica(baseQtd, tentativas=120){
 }
 
 // ===== FECHAMENTO =====
+function gerarBaseAleatoriaLotofacil(tamanho){
+  let base = [];
+  while(base.length < tamanho){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!base.includes(n)) base.push(n);
+  }
+  return base.sort((a,b)=>a-b);
+}
+
 function gerarFechamento(){
 
   // 🛡️ BLINDAGEM EXTRA (PRIMEIRAS LINHAS)
@@ -977,7 +982,7 @@ function gerarFechamento(){
   // 🎯 DEFINIÇÃO DA BASE
   let base;
   if(modoBase === "aleatorio"){
-    base = gerarBaseDeterministica(baseQtd);
+  base = gerarBaseAleatoriaLotofacil(baseQtd);
   }else if(modoBase === "pro"){
     base = gerarBaseViaLotofacilPro(baseQtd);
   }else{
