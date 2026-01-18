@@ -6,23 +6,9 @@
 <title>Loterias Inteligentes PRO</title>
 
 <style>
-.loader{
-  display:none;
-  text-align:center;
-  margin-top:12px;
-  font-size:14px;
-  color:#6a1b9a;
-  font-weight:600;
-}
-button:disabled{
-  opacity:0.6;
-  cursor:not-allowed;
-}
-
 :root{
   --roxo:#6a1b9a;
   --roxo2:#8e24aa;
-
   --claro:#f3e5f5;
   --ok:#2e7d32;
 }
@@ -191,34 +177,18 @@ button{
   <label><input type="radio" name="dezenas" value="18">18</label>
 </div>
 <input type="number" id="qtdJogos" value="5" min="1">
-<div class="card">
-  <strong>🔢 Dezenas fixas (opcional)</strong>
-
-  <p class="stats">
-    Selecione as dezenas que devem aparecer em todos os jogos.
-  </p>
-
-  <input
-    type="text"
-    id="dezenasFixas"
-    placeholder="Ex: 3 7 10 14"
-  >
-
-  <p class="stats">
-    Separe por espaço ou vírgula.
-  </p>
-</div>
-
-<button id="btnLotofacil"
-onclick="executarComUX(gerarLotofacil,'btnLotofacil','loaderLotofacil')">
-Gerar Jogos
+<button onclick="executarSeguro(gerarLotofacil,'Lotofácil')">
+  Gerar Jogos
 </button>
-
-<div class="loader" id="loaderLotofacil">⏳ Processando...</div>
+</div>
 
 <div id="saida"></div>
-</div>
 
+<div class="card">
+<strong>💰 Prêmio atual</strong>
+<div id="premio">—</div>
+</div>
+</div>
 
 <!-- ================= AVANÇADO ================= -->
 <div class="content" id="tab1" style="display:none">
@@ -273,95 +243,44 @@ Gerar Jogos
 <div class="content" id="tab3" style="display:none">
 
   <div class="card">
-  <strong>📘 Fechamento Matemático Documentado</strong>
-  <div class="radio-group">
-
-  <label>
-    <input type="checkbox" id="usarProFechamento">
-    🔥 Usar Lotofácil PRO como filtro inteligente
-  </label>
-
-</div>
-
-<p class="stats">
-  Quando ativado, o fechamento utiliza apenas dezenas vindas
-  do Lotofácil PRO, com melhor score estatístico e simulação.
-  <br>
-  <strong>Não garante prêmio — reduz jogos matematicamente fracos.</strong>
-</p>
-
-  <p class="stats">
-    Universo fixo 1 a 25.<br>
-    A garantia é válida apenas se o sorteio estiver dentro da base.
-  </p>
-
-  <hr>
-
-  <strong>🧠 Estratégia da Base</strong>
-
-  <select id="modoBaseFechamento">
-    <option value="aleatorio">🎲 Base Aleatória</option>
-    <option value="pro">🔥 Base via Lotofácil PRO</option>
-    <option value="automatico">🤖 Automático (PRO + filtros avançados)</option>
-  </select>
-
-  <div id="configProFechamento" style="display:none">
-    <label class="stats" style="margin-top:8px">
-      Perfil do PRO:
-    </label>
-
-    <select id="perfilProFechamento">
-      <option value="conservador">🟢 Conservador</option>
-      <option value="equilibrado">🟡 PRO</option>
-      <option value="ousado">🔴 Ousado</option>
-    </select>
+    <strong>📘 Fechamento Matemático Documentado</strong>
 
     <p class="stats">
-      O perfil define o nível de risco estatístico usado na seleção da base.
+<label style="display:block;margin-top:10px;font-size:13px">
+  <input type="checkbox" id="usarProFechamento">
+  🔥 Usar Lotofácil PRO como filtro inteligente
+</label>
+
+<p class="stats">
+  Quando ativado, o Fechamento utiliza apenas jogos com bom score
+  estatístico e melhor desempenho simulado.<br>
+  Isso não garante prêmio, mas reduz jogos matematicamente fracos.
+</p>
+
+<label style="display:block;margin-top:6px;font-size:13px">
+  <input type="checkbox" id="modoAutomaticoFechamento">
+  🤖 Modo automático (seleção inteligente da base)
+</label>
+
+      Universo fixo 1 a 25.<br>
+      Garantia válida somente se o sorteio estiver dentro da base.
     </p>
+
+    <select id="tipoFechamento">
+      <option value="16">16 → 15 (garante 14)</option>
+      <option value="17">17 → 15 (garante 14)</option>
+      <option value="18">18 → 15 (garante 14)</option>
+    </select>
+
+    <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
+  Gerar Fechamento
+</button>
   </div>
 
-  <hr>
-
-  <strong>📐 Tipo de Fechamento</strong>
-
-  <select id="tipoFechamento">
-    <option value="16">16 → 15 (garante 14)</option>
-    <option value="17">17 → 15 (garante 14)</option>
-    <option value="18">18 → 15 (garante 14)</option>
-  </select>
-
-<div class="card">
-  <strong>ℹ️ Como funciona o Fechamento PRO</strong>
-
-  <div class="stats">
-    • O Fechamento trabalha com uma <strong>base fixa</strong> de dezenas.<br><br>
-
-    • Quando a estratégia é <strong>Aleatória</strong>, a base é escolhida
-    sem filtros estatísticos.<br><br>
-
-    • Quando a estratégia é <strong>PRO</strong>, a base é formada apenas por
-    dezenas vindas de jogos com bom score estatístico.<br><br>
-
-    • No modo <strong>Automático</strong>, o sistema combina:
-    score estatístico + simulação + equilíbrio matemático
-    para selecionar a melhor base possível.<br><br>
-
-    • O <strong>perfil (Conservador / PRO / Ousado)</strong> define o nível de
-    risco aceito na seleção da base.<br><br>
-
-    ⚠️ O Fechamento <strong>não garante prêmio</strong>.
-    Ele reduz jogos matematicamente fracos e melhora a qualidade das combinações.
-  </div>
-</div>
-
-  <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
-    Gerar Fechamento
-  </button>
+  <div id="saidaFechamento"></div>
 
 </div>
-<div id="saidaFechamento"></div>
-</div>
+
 
 <!-- ================= SUPER SETE ================= -->
 <div class="content" id="tab4" style="display:none">
@@ -426,14 +345,7 @@ Gerar Jogos
 
 <script>
 
-document.getElementById("modoBaseFechamento").addEventListener("change", e=>{
-  const mostrar = e.target.value !== "aleatorio";
-  document.getElementById("configProFechamento").style.display =
-    mostrar ? "block" : "none";
-});
-
-let concursos = [];
-
+concursos=[];
 // ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
 function executarSeguro(fn, nome = "Processo"){
   try{
@@ -454,40 +366,16 @@ const saidaLotomania = document.getElementById("saidaLotomania");
 const saidaSuperSete = document.getElementById("saidaSuperSete");
 const saidaFechamento = document.getElementById("saidaFechamento");
 
-// ===== UTILITÁRIOS GERAIS =====
-function gerarComUX(fn, btnId, loaderId){
-  const btn = document.getElementById(btnId);
-  const loader = document.getElementById(loaderId);
-
-  if(btn) btn.disabled = true;
-  if(loader) loader.style.display = "block";
-
-  setTimeout(()=>{
-    try{
-      fn();
-    }finally{
-      if(loader) loader.style.display = "none";
-      if(btn) btn.disabled = false;
-    }
-  }, 50);
-}
-
-function gerarBaseDeterministica(tamanho){
-  return Array.from({length:tamanho},(_,i)=>i+1);
-}
-
-function confianca(extra=0){
-  return Math.min(98, 88 + extra + Math.floor(Math.random()*6));
-}
 
 function trocarTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>{
-    t.classList.toggle('active', idx === i);
-    const tab = document.getElementById('tab' + idx);
-    if(tab){
-      tab.style.display = idx === i ? 'block' : 'none';
-    }
+    t.classList.toggle('active',idx===i);
+    document.getElementById('tab'+idx).style.display=idx===i?'block':'none';
   });
+}
+
+function confianca(extra=0){
+  return Math.min(98,88+extra+Math.floor(Math.random()*6));
 }
 
 // ===== OPÇÃO 2: ÚLTIMO CONCURSO DA LOTOMANIA =====
@@ -498,7 +386,9 @@ function obterUltimoConcursoLotomania(){
 }
 
 // ===== BASE DETERMINÍSTICA (SEM ALEATORIEDADE) =====
-
+function gerarBaseDeterministica(tamanho){
+  return Array.from({length:tamanho},(_,i)=>i+1);
+}
 
 // ===== JOGOS DETERMINÍSTICOS =====
 function gerarJogosDeterministicos(base, qtdJogos){
@@ -518,14 +408,8 @@ function gerarJogosDeterministicos(base, qtdJogos){
 
 /* ===== BUSCAR CONCURSOS ===== */
 async function buscarConcursos(){
-const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-
-if(!r.ok){
-  throw new Error("Falha ao acessar API da Caixa");
-}
-
-const d = await r.json();
-
+  const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+  const d=await r.json();
   const ult=d.numero;
   let qtdRadio = document.querySelector('input[name="qtd"]:checked');
   let qtdLivre = document.getElementById("qtdLivre")?.value;
@@ -559,7 +443,7 @@ function gerarEstatisticasConcursos(concursos){
   let impares = nums.length - pares;
   let soma = nums.reduce((a,b)=>a+b,0);
 
-  let faixa = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+  let faixa = { f1:0, f2:0, f3:0, f4:0 };
   nums.forEach(n=>{
     if(n<=6) faixa.f1++;
     else if(n<=12) faixa.f2++;
@@ -573,11 +457,10 @@ function gerarEstatisticasConcursos(concursos){
     <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
     <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
     <div class="stats">📐 Faixas:
-      1–5: ${faixa.f1} |
-      6-10: ${faixa.f2} |
-      11-15: ${faixa.f3} |
-      16-20: ${faixa.f4} |
-      21–25: ${faixa.f5}
+      1–6: ${faixa.f1} |
+      7–12: ${faixa.f2} |
+      13–18: ${faixa.f3} |
+      19–25: ${faixa.f4}
     </div>
     <div class="stats">Concursos analisados: ${concursos.length}</div>
 
@@ -653,7 +536,9 @@ function gerarSuperSete(){
     if(!jogo) continue;
 
     // gera 1 número por coluna
- 
+    for(let col = 0; col < 7; col++){
+      jogo.push(Math.floor(Math.random() * 10));
+    }
 
     const soma = jogo.reduce((a,b)=>a+b,0);
     const pares = jogo.filter(n => n % 2 === 0).length;
@@ -689,19 +574,6 @@ function gerarSuperSete(){
 }
  
 /* ===== LOTOFÁCIL ===== */
-function obterDezenasFixas(){
-  const input = document.getElementById("dezenasFixas");
-  if(!input || !input.value.trim()) return [];
-
-  let nums = input.value
-    .replace(/,/g," ")
-    .split(" ")
-    .map(n => parseInt(n))
-    .filter(n => n >= 1 && n <= 25);
-
-  return [...new Set(nums)];
-}
-
 function gerarLotofacil(){
   const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
   const qtd = +document.getElementById("qtdJogos").value;
@@ -710,11 +582,7 @@ function gerarLotofacil(){
   let universo = Array.from({length:25},(_,i)=>i+1);
 
   // Se for estatístico, usa base dos concursos
-  baseNumeros = Object.entries(freq)
-  .sort((a,b)=>b[1]-a[1])   // mais frequentes primeiro
-  .slice(0,18)             // top 18 dezenas
-  .map(e=>Number(e[0]));
-
+  let baseNumeros = universo;
   if(modo === "estatistico" && concursos.length){
     let freq = {};
     concursos.flat().forEach(n=>{
@@ -723,22 +591,13 @@ function gerarLotofacil(){
     baseNumeros = Object.keys(freq).map(Number);
   }
 
- let fixas = obterDezenasFixas();
-
-if(fixas.length > dezenas){
-  alert("⚠️ Você escolheu mais dezenas fixas do que o total do jogo.");
-  return;
-}
-
-let html="";
-for(let i=0;i<qtd;i++){
-  let j = [...fixas];
-
-  while(j.length < dezenas){
-    let n = baseNumeros[Math.floor(Math.random()*baseNumeros.length)];
-    if(!j.includes(n)) j.push(n);
-  }
-
+  let html="";
+  for(let i=0;i<qtd;i++){
+    let j=[];
+    while(j.length<dezenas){
+      let n = baseNumeros[Math.floor(Math.random()*baseNumeros.length)];
+      if(!j.includes(n)) j.push(n);
+    }
     j.sort((a,b)=>a-b);
 
     html+=`
@@ -897,6 +756,76 @@ function gerarLotomania(){
   saidaLotomania.innerHTML = html;
 }
 
+/* ===== BASE VIA LOTOFÁCIL PRO ===== */
+function gerarBaseViaLotofacilPro(baseQtd){
+  let numeros = [];
+  let tentativas = 0;
+
+  while(numeros.length < baseQtd && tentativas < 500){
+    tentativas++;
+
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    if(score < 70) continue;
+    if(parseFloat(sim[13]) < 1.5) continue;
+
+    jogo.forEach(n=>{
+      if(!numeros.includes(n) && numeros.length < baseQtd){
+        numeros.push(n);
+      }
+    });
+  }
+
+  while(numeros.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!numeros.includes(n)) numeros.push(n);
+  }
+
+  return numeros.sort((a,b)=>a-b);
+}
+
+/* ===== BASE AUTOMÁTICA (PRO INTELIGENTE) ===== */
+function gerarBaseAutomatica(baseQtd){
+  let candidatos = [];
+  let tentativas = 0;
+
+  while(candidatos.length < 30 && tentativas < 800){
+    tentativas++;
+
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    if(score >= 75 && parseFloat(sim[13]) >= 2.0){
+      candidatos.push({ jogo, score });
+    }
+  }
+
+  candidatos.sort((a,b)=>b.score - a.score);
+
+  let base = [];
+  candidatos.forEach(c=>{
+    c.jogo.forEach(n=>{
+      if(!base.includes(n) && base.length < baseQtd){
+        base.push(n);
+      }
+    });
+  });
+
+  while(base.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!base.includes(n)) base.push(n);
+  }
+
+  return base.sort((a,b)=>a-b);
+}
+
 // ===== VALIDADOR MATEMÁTICO =====
 function validarFechamento(base, jogos){
   let resultados = jogos.map(j =>
@@ -912,151 +841,68 @@ function validarFechamento(base, jogos){
   };
 }
 
-/* ===== LOTOFÁCIL PRO — BASE PARA FECHAMENTO ===== */
-function gerarBaseViaLotofacilPro(baseQtd){
-  let numeros = [];
-  let tentativas = 0;
-
-  while(numeros.length < baseQtd && tentativas < 600){
-    tentativas++;
-
-    let jogo = gerarJogoLotofacilBase("equilibrado");
-    if(!jogo) continue;
-
-    let score = calcularScoreLotofacil(jogo);
-    let sim = simularPontuacaoLotofacil(jogo);
-
-    if(score < 70) continue;
-    if(parseFloat(sim["13"]) < 1.5) continue;
-
-    jogo.forEach(n=>{
-      if(!numeros.includes(n) && numeros.length < baseQtd){
-        numeros.push(n);
-      }
-    });
-  }
-
-  while(numeros.length < baseQtd){
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(!numeros.includes(n)) numeros.push(n);
-  }
-
-  return numeros.sort((a,b)=>a-b);
-
-}// ===== VALIDADOR MATEMÁTICO REAL (GARANTIA 14) =====
-function validarGarantia14(base, jogos){
-  if(base.length !== 16){
-    return { valido:false, erro:"Base ≠ 16" };
-  }
-
-  let falhas = 0;
-
-  for(let i=0;i<base.length;i++){
-    let sorteio = base.filter((_,idx)=>idx!==i);
-    let max = 0;
-
-    jogos.forEach(j=>{
-      let acertos = j.filter(n=>sorteio.includes(n)).length;
-      if(acertos > max) max = acertos;
-    });
-
-    if(max < 14) falhas++;
-  }
-
-  return {
-    valido: falhas === 0,
-    cenarios: base.length,
-    falhas
-  };
-}
-
-// ===== MODO AUTOMÁTICO INTELIGENTE =====
-function gerarBaseAutomatica(baseQtd, tentativas=120){
-  let melhorBase = null;
-  let melhorScore = -Infinity;
-
-  for(let i=0;i<tentativas;i++){
-    let base = gerarBaseViaLotofacilPro(baseQtd);
-
-    let pares = base.filter(n=>n%2===0).length;
-    let soma = base.reduce((a,b)=>a+b,0);
-
-    let score = 0;
-    if(pares >= 7 && pares <= 9) score += 2;
-    if(soma >= 190 && soma <= 215) score += 2;
-
-    if(score > melhorScore){
-      melhorScore = score;
-      melhorBase = base;
-    }
-  }
-
-  return melhorBase;
-}
-
-// ===== FECHAMENTO =====
+/* ===== FECHAMENTO REAL (FINAL ABSOLUTO) ===== */
 function gerarFechamento(){
 
-  // 🛡️ BLINDAGEM EXTRA
-  if(!saidaFechamento){
-    throw new Error("Elemento #saidaFechamento não encontrado");
-  }
+  const baseQtd = Number(document.getElementById("tipoFechamento").value);
+  const usarPro = document.getElementById("usarProFechamento")?.checked;
+  const modoAuto = document.getElementById("modoAutomaticoFechamento")?.checked;
 
-  const tipoEl = document.getElementById("tipoFechamento");
-  const modoEl = document.getElementById("modoBaseFechamento");
-
-  if(!tipoEl || !modoEl){
-    throw new Error("Configurações do fechamento ausentes");
-  }
-
-  const baseQtd = Number(tipoEl.value);
-  const modoBase = modoEl.value;
-
-  // 🎯 DEFINIÇÃO DA BASE
   let base;
-  if(modoBase === "aleatorio"){
-    base = gerarBaseDeterministica(baseQtd);
-  }else if(modoBase === "pro"){
+
+  if(modoAuto){
+    base = gerarBaseAutomatica(baseQtd);
+  }else if(usarPro){
     base = gerarBaseViaLotofacilPro(baseQtd);
   }else{
-    base = gerarBaseAutomatica(baseQtd);
+    base = [];
+    while(base.length < baseQtd){
+      let n = Math.floor(Math.random() * 25) + 1;
+      if(!base.includes(n)) base.push(n);
+    }
+    base.sort((a,b)=>a-b);
   }
 
-  // 🎲 QTD DE JOGOS (HONESTO)
-  let qtdJogos = baseQtd === 16 ? 6 : Math.max(12, baseQtd * 2);
+  const qtdJogos =
+    baseQtd === 16 ? 6 :
+    baseQtd === 17 ? 10 : 15;
 
   let jogos = [];
-  while(jogos.length < qtdJogos){
+  let tentativas = 0;
+
+  while(jogos.length < qtdJogos && tentativas < 5000){
+    tentativas++;
+
     let jogo = [];
     while(jogo.length < 15){
-      let n = base[Math.floor(Math.random()*base.length)];
+      let n = base[Math.floor(Math.random() * base.length)];
       if(!jogo.includes(n)) jogo.push(n);
     }
+
     jogo.sort((a,b)=>a-b);
-    if(!jogos.some(j=>j.join()==jogo.join())) jogos.push(jogo);
+
+    if(!jogos.some(j => j.join() === jogo.join())){
+      jogos.push(jogo);
+    }
   }
 
-  // 📐 VALIDAÇÃO
-  let validacao = baseQtd === 16 ? validarGarantia14(base, jogos) : null;
-
-  // 🖥️ SAÍDA
   let html = `
     <div class="card">
-      <strong>Base (${base.length})</strong><br>
-      ${base.join(" - ")}
+      <strong>📘 Fechamento com Base Inteligente</strong>
+      <div class="stats">
+        Base (${base.length} dezenas):<br>
+        ${base.join(" - ")}
+      </div>
     </div>
   `;
 
-  if(validacao){
+  jogos.forEach(j=>{
     html += `
-      <div class="card">
-        Garantia 14: ${validacao.valido ? "✅ CONFIRMADA" : "❌ NÃO CONFIRMADA"}
+      <div class="resultado">
+        ${j.join(" - ")}
+        ${analisar(j).html}
       </div>
     `;
-  }
-
-  jogos.forEach(j=>{
-    html += `<div class="resultado">${j.join(" - ")}</div>`;
   });
 
   saidaFechamento.innerHTML = html;
@@ -1075,76 +921,9 @@ function calcularRepeticaoMedia(jogo, concursosBase){
   return Math.round(totalRep / concursosBase.length);
 }
 
-function calcularConfiabilidadeReal(jogo, concursosBase){
-  let score = 0;
-
-  // 1️⃣ Pares / Ímpares (ideal: 7 ou 8)
-  let pares = jogo.filter(n => n % 2 === 0).length;
-  if(pares === 7 || pares === 8) score += 25;
-  else if(pares === 6 || pares === 9) score += 15;
-
-  // 2️⃣ Soma (ideal: 180 a 220)
-  let soma = jogo.reduce((a,b)=>a+b,0);
-  if(soma >= 180 && soma <= 220) score += 25;
-  else if(soma >= 170 && soma <= 230) score += 15;
-
-  // 3️⃣ Distribuição por faixas
-  let faixas = [0,0,0,0];
-  jogo.forEach(n=>{
-    if(n<=6) faixas[0]++;
-    else if(n<=12) faixas[1]++;
-    else if(n<=18) faixas[2]++;
-    else faixas[3]++;
-  });
-
-  let faixasOk = faixas.filter(f => f >= 3 && f <= 5).length;
-  score += faixasOk * 6; // até 24 pontos
-
-  // 4️⃣ Repetição média histórica
-  let repeticao = calcularRepeticaoMedia(jogo, concursosBase);
-  if(repeticao >= 6 && repeticao <= 10) score += 25;
-  else if(repeticao >= 5 && repeticao <= 11) score += 15;
-
-  return Math.min(100, score);
-}
-
-function analisar(jogo){
-  let score = 0;
-if(pares === 7 || pares === 8) score++;
-if(soma >= 180 && soma <= 220) score++;
-if(rep >= 6 && rep <= 10) score++;
-
 function analisar(jogo){
   let pares = jogo.filter(n => n % 2 === 0).length;
   let soma = jogo.reduce((a,b)=>a+b,0);
-
-  let baseAnalise = concursos.length ? concursos.slice(0,5) : [];
-  let rep = calcularRepeticaoMedia(jogo, baseAnalise);
-
-  let confiabilidade = calcularConfiabilidadeReal(jogo, baseAnalise);
-
-  let selo =
-    confiabilidade >= 80 ? "🟢 ALTA CONFIABILIDADE" :
-    confiabilidade >= 60 ? "🟡 MÉDIA CONFIABILIDADE" :
-                           "🔴 BAIXA CONFIABILIDADE";
-
-  return {
-    pares,
-    soma,
-    rep,
-    confiabilidade,
-    selo,
-    html: `
-      <div class="stats">
-        Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
-        <div class="conf">Confiabilidade real ${confiabilidade}%</div>
-        <strong>${selo}</strong>
-      </div>
-    `
-  };
-}
-
-
 
    // usa os últimos X concursos (ex: 5)
   let baseAnalise = concursos.length ? concursos.slice(0,5) : []; 
@@ -1169,8 +948,7 @@ function analisar(jogo){
   html: `
     <div class="stats">
       Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
-     <div class="conf">Indicador interno ${confianca()}%</div>
-
+      <div class="conf">Confiabilidade ${confianca()}%</div>
       <strong>${selo}</strong>
     </div>
   `
