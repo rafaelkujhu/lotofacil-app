@@ -157,8 +157,8 @@ button{
 
 
 <div class="tabs">
-  <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
-  <div class="tab" onclick="trocarTab(1)">Lotomania</div>
+  <div class="tab active" onclick="trocarTab(0)">🍀 Lotofácil</div>
+  <div class="tab" onclick="trocarTab(1)">🎲 Lotomania</div>
   <div class="tab" onclick="trocarTab(2)">📘 Fechamento</div>
   <div class="tab" onclick="trocarTab(3)">🎯 Super Sete</div>
   <div class="tab" onclick="trocarTab(4)">🔥 Lotofácil PRO</div>
@@ -396,7 +396,7 @@ button{
 
 </div>
 
-<div class="footer">Base Congelada V.1 • Estável</div>
+<div class="footer">🔒 Loterias Inteligentes PRO • v1.0 • Validação Matemática Real</div>
 </div>
 
 <script>
@@ -697,11 +697,26 @@ for(let i=0;i<qtd;i++){
       <div class="resultado">
         ${j.join(" - ")}
         ${analisar(j).html}
-        ${gerarStatsPro(j)}
       </div>
     `;
   }
   saida.innerHTML = html;
+}
+
+/* ===== AVANÇADO ===== */
+function gerarAvancado(){
+  const qtd = +document.getElementById("qtdAvancado").value;
+  let html="";
+  for(let i=0;i<qtd;i++){
+    let j=[];
+    while(j.length<15){
+      let n=Math.floor(Math.random()*25)+1;
+      if(!j.includes(n))j.push(n);
+    }
+    j.sort((a,b)=>a-b);
+    html+=`<div class="resultado">${j.join(" - ")}${analisar(j).html}</div>`;
+  }
+  saidaAvancado.innerHTML=html;
 }
 
 /* ===== LOTOMANIA ===== */
@@ -880,6 +895,7 @@ function gerarBaseViaLotofacilPro(baseQtd){
 
   return numeros.sort((a,b)=>a-b);
 
+  }
 
 // ===== VALIDAÇÃO MATEMÁTICA REAL =====
 function validarGarantia14(base, jogos){
@@ -1045,14 +1061,8 @@ if(validacao){
 }
 
   jogos.forEach(j=>{
-  html += `
-    <div class="resultado">
-      ${j.join(" - ")}
-      ${gerarStatsPro(j)}
-    </div>
-  `;
-});
-
+    html += `<div class="resultado">${j.join(" - ")}</div>`;
+  });
 
   saidaFechamento.innerHTML = html;
 }
@@ -1179,25 +1189,6 @@ function calcularScoreLotofacil(jogo){
   });
 
   return Math.max(0, score);
-}
-
-function gerarStatsPro(jogo){
-  let score = calcularScoreLotofacil(jogo);
-  let sim = simularPontuacaoLotofacil(jogo);
-
-  let perfil =
-    score >= 80 ? "🟢 Baixo risco" :
-    score >= 50 ? "🟡 Médio risco" :
-                  "🔴 Alto risco";
-
-  return `
-    <div class="stats">
-      <strong>${perfil}</strong><br>
-      Score: ${score}/100<br>
-      11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
-      13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
-    </div>
-  `;
 }
 
 function simularPontuacaoLotofacil(jogo, simulacoes=1500){
