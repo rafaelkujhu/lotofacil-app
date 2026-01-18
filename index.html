@@ -697,6 +697,7 @@ for(let i=0;i<qtd;i++){
       <div class="resultado">
         ${j.join(" - ")}
         ${analisar(j).html}
+        ${gerarStatsPro(j)}
       </div>
     `;
   }
@@ -712,10 +713,15 @@ function gerarAvancado(){
     while(j.length<15){
       let n=Math.floor(Math.random()*25)+1;
       if(!j.includes(n))j.push(n);
-    }
-    j.sort((a,b)=>a-b);
-    html+=`<div class="resultado">${j.join(" - ")}${analisar(j).html}</div>`;
-  }
+
+   html+=`
+  <div class="resultado">
+    ${j.join(" - ")}
+    ${analisar(j).html}
+    ${gerarStatsPro(j)}
+  </div>
+`;
+
   saidaAvancado.innerHTML=html;
 }
 
@@ -1061,8 +1067,14 @@ if(validacao){
 }
 
   jogos.forEach(j=>{
-    html += `<div class="resultado">${j.join(" - ")}</div>`;
-  });
+  html += `
+    <div class="resultado">
+      ${j.join(" - ")}
+      ${gerarStatsPro(j)}
+    </div>
+  `;
+});
+
 
   saidaFechamento.innerHTML = html;
 }
@@ -1211,6 +1223,26 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
 
   return dist;
 }
+
+function gerarStatsPro(jogo){
+  let score = calcularScoreLotofacil(jogo);
+  let sim = simularPontuacaoLotofacil(jogo);
+
+  let perfil =
+    score >= 80 ? "🟢 Baixo risco" :
+    score >= 50 ? "🟡 Médio risco" :
+                  "🔴 Alto risco";
+
+  return `
+    <div class="stats">
+      <strong>${perfil}</strong><br>
+      Score: ${score}/100<br>
+      11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
+      13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
+    </div>
+  `;
+}
+
 
 function gerarLotofacilPro(){
   const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
