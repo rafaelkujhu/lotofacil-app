@@ -704,27 +704,6 @@ for(let i=0;i<qtd;i++){
   saida.innerHTML = html;
 }
 
-/* ===== AVANÇADO ===== */
-function gerarAvancado(){
-  const qtd = +document.getElementById("qtdAvancado").value;
-  let html="";
-  for(let i=0;i<qtd;i++){
-    let j=[];
-    while(j.length<15){
-      let n=Math.floor(Math.random()*25)+1;
-      if(!j.includes(n))j.push(n);
-
-   html+=`
-  <div class="resultado">
-    ${j.join(" - ")}
-    ${analisar(j).html}
-    ${gerarStatsPro(j)}
-  </div>
-`;
-
-  saidaAvancado.innerHTML=html;
-}
-
 /* ===== LOTOMANIA ===== */
 function gerarJogoLotomaniaBase(modo, ultimo){
   let jogo = [];
@@ -901,7 +880,6 @@ function gerarBaseViaLotofacilPro(baseQtd){
 
   return numeros.sort((a,b)=>a-b);
 
-  }
 
 // ===== VALIDAÇÃO MATEMÁTICA REAL =====
 function validarGarantia14(base, jogos){
@@ -1203,6 +1181,25 @@ function calcularScoreLotofacil(jogo){
   return Math.max(0, score);
 }
 
+function gerarStatsPro(jogo){
+  let score = calcularScoreLotofacil(jogo);
+  let sim = simularPontuacaoLotofacil(jogo);
+
+  let perfil =
+    score >= 80 ? "🟢 Baixo risco" :
+    score >= 50 ? "🟡 Médio risco" :
+                  "🔴 Alto risco";
+
+  return `
+    <div class="stats">
+      <strong>${perfil}</strong><br>
+      Score: ${score}/100<br>
+      11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
+      13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
+    </div>
+  `;
+}
+
 function simularPontuacaoLotofacil(jogo, simulacoes=1500){
   let dist = {11:0,12:0,13:0,14:0,15:0};
 
@@ -1223,26 +1220,6 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
 
   return dist;
 }
-
-function gerarStatsPro(jogo){
-  let score = calcularScoreLotofacil(jogo);
-  let sim = simularPontuacaoLotofacil(jogo);
-
-  let perfil =
-    score >= 80 ? "🟢 Baixo risco" :
-    score >= 50 ? "🟡 Médio risco" :
-                  "🔴 Alto risco";
-
-  return `
-    <div class="stats">
-      <strong>${perfil}</strong><br>
-      Score: ${score}/100<br>
-      11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
-      13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
-    </div>
-  `;
-}
-
 
 function gerarLotofacilPro(){
   const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
