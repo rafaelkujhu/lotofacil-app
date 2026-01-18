@@ -409,11 +409,14 @@ button{
 
 <script>
 
-document.getElementById("modoBaseFechamento").addEventListener("change", e=>{
-  const mostrar = e.target.value !== "aleatorio";
-  document.getElementById("configProFechamento").style.display =
-    mostrar ? "block" : "none";
-});
+document
+  .getElementById("modoBaseFechamento")
+  .addEventListener("change", e => {
+    const mostrar = e.target.value !== "aleatorio";
+    document.getElementById("configProFechamento").style.display =
+      mostrar ? "block" : "none";
+  });
+
 
 let concursos = [];
 
