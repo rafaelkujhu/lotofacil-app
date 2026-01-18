@@ -901,57 +901,6 @@ function gerarBaseViaLotofacilPro(baseQtd){
 
   return numeros.sort((a,b)=>a-b);
 
-}// ===== VALIDADOR MATEMÁTICO REAL (GARANTIA 14) =====
-function validarGarantia14(base, jogos){
-  if(base.length !== 16){
-    return { valido:false, erro:"Base ≠ 16" };
-  }
-
-  let falhas = 0;
-
-  for(let i=0;i<base.length;i++){
-    let sorteio = base.filter((_,idx)=>idx!==i);
-    let max = 0;
-
-    jogos.forEach(j=>{
-      let acertos = j.filter(n=>sorteio.includes(n)).length;
-      if(acertos > max) max = acertos;
-    });
-
-    if(max < 14) falhas++;
-  }
-
-  return {
-    valido: falhas === 0,
-    cenarios: base.length,
-    falhas
-  };
-}
-
-// ===== MODO AUTOMÁTICO INTELIGENTE =====
-function gerarBaseAutomatica(baseQtd, tentativas=120){
-  let melhorBase = null;
-  let melhorScore = -Infinity;
-
-  for(let i=0;i<tentativas;i++){
-    let base = gerarBaseViaLotofacilPro(baseQtd);
-
-    let pares = base.filter(n=>n%2===0).length;
-    let soma = base.reduce((a,b)=>a+b,0);
-
-    let score = 0;
-    if(pares >= 7 && pares <= 9) score += 2;
-    if(soma >= 190 && soma <= 215) score += 2;
-
-    if(score > melhorScore){
-      melhorScore = score;
-      melhorBase = base;
-    }
-  }
-
-  return melhorBase;
-}
-
 // ===== VALIDAÇÃO MATEMÁTICA REAL =====
 function validarGarantia14(base, jogos){
   if(base.length !== 16){
@@ -1157,7 +1106,7 @@ function gerarJogoLotofacilBase(modo){
     let pares = jogo.filter(x => x % 2 === 0).length;
 
     // 🟢 CONSERVADOR: evita extremos
-    if(modo === "conservador" && >= 8) continue;
+    if(modo === "conservador" && pares >= 8) continue;
 
     // 🔴 OUSADO: só força depois que o jogo já está formado
     if(modo === "ousado" && jogo.length >= 10 && pares <= 5) continue;
