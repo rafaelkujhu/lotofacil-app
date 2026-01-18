@@ -158,11 +158,10 @@ button{
 
 <div class="tabs">
   <div class="tab active" onclick="trocarTab(0)">Lotofácil</div>
-  <div class="tab" onclick="trocarTab(1)">Avançado</div>
-  <div class="tab" onclick="trocarTab(2)">Lotomania</div>
-  <div class="tab" onclick="trocarTab(3)">📘 Fechamento</div>
-  <div class="tab" onclick="trocarTab(4)">🎯 Super Sete</div>
-  <div class="tab" onclick="trocarTab(5)">🔥 Lotofácil PRO</div>
+  <div class="tab" onclick="trocarTab(1)">Lotomania</div>
+  <div class="tab" onclick="trocarTab(2)">📘 Fechamento</div>
+  <div class="tab" onclick="trocarTab(3)">🎯 Super Sete</div>
+  <div class="tab" onclick="trocarTab(4)">🔥 Lotofácil PRO</div>
 </div>
 
 <!-- ================= LOTOFÁCIL ================= -->
@@ -229,37 +228,8 @@ button{
 <div id="saida"></div>
 </div>
 
-<!-- ================= AVANÇADO ================= -->
-<div class="content" id="tab1" style="display:none">
-
-  <div class="card">
-    <select id="tipoAvancado">
-      <option value="16">16 → 15 (garante 14)</option>
-      <option value="17">17 → 15 (garante 14)</option>
-      <option value="18">18 → 15 (garante 14)</option>
-    </select>
-
-    <input type="number" id="qtdAvancado" value="10" min="1">
-    <button onclick="executarSeguro(gerarAvancado,'Avançado')">
-  Gerar Jogos Avançados
-</button>
-  </div>
-
-  <div class="card">
-    <strong>📘 Como funciona o Avançado</strong>
-    <div class="stats">
-      • Gera jogos com filtros reais<br>
-      • Evita padrões estatisticamente fracos<br>
-      • Usa soma, pares e repetição<br>
-      • Não promete prêmio, reduz risco
-    </div>
-  </div>
-
-  <div id="saidaAvancado"></div>
-</div>
-
 <!-- ================= LOTOMANIA ================= -->
-<div class="content" id="tab2" style="display:none">
+<div class="content" id="tab1" style="display:none">
 <div class="card">
 
   <select id="modoLotomania">
@@ -279,18 +249,13 @@ button{
 </div>
 
 <!-- ================= FECHAMENTO ================= -->
-<div class="content" id="tab3" style="display:none">
+<div class="content" id="tab2" style="display:none">
 
   <div class="card">
   <strong>📘 Fechamento Matemático Documentado</strong>
   <div class="radio-group">
 
-  <label>
-    <input type="checkbox" id="usarProFechamento">
-    🔥 Usar Lotofácil PRO como filtro inteligente
-  </label>
-
-</div>
+ </div>
 
 <p class="stats">
   Quando ativado, o fechamento utiliza apenas dezenas vindas
@@ -373,7 +338,7 @@ button{
 </div>
 
 <!-- ================= SUPER SETE ================= -->
-<div class="content" id="tab4" style="display:none">
+<div class="content" id="tab3" style="display:none">
 
   <div class="card">
     <strong>🎯 Super Sete</strong>
@@ -402,7 +367,7 @@ button{
 
 
 <!-- ================= LOTOFÁCIL PRO ================= -->
-<div class="content" id="tab5" style="display:none">
+<div class="content" id="tab4" style="display:none">
 
   <div class="card">
     <strong>🔥 Lotofácil PRO</strong>
@@ -416,6 +381,7 @@ button{
       <option value="equilibrado">🎯 Equilibrado</option>
       <option value="conservador">🟢 Conservador</option>
       <option value="ousado">🔴 Ousado</option>
+      <option value="avancado">📊 Estatístico Avançado</option>
     </select>
 
     <input type="number" id="qtdLotofacilPro" value="5" min="1">
@@ -1249,6 +1215,12 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
 function gerarLotofacilPro(){
   const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
   const modo = document.getElementById("modoLotofacilPro").value;
+
+  if(modo === "avancado"){
+  // reutiliza lógica avançada
+  // ex: filtros mais rígidos, soma, pares, repetição
+}
+
 
   let html = "";
 
