@@ -283,10 +283,10 @@ button{
   <strong>🧠 Estratégia da Base</strong>
 
   <select id="modoBaseFechamento">
-    <option value="aleatorio">🎲 Base Aleatória</option>
-    <option value="pro">🔥 Base via Lotofácil PRO</option>
-    <option value="automatico">🤖 Automático (PRO + filtros avançados)</option>
-  </select>
+  <option value="aleatorio">🎲 Base Aleatória</option>
+  <option value="pro">🔥 Base via Lotofácil PRO</option>
+  <option value="automatico">🧠 Automático PRO Otimizado</option>
+</select>
 
   <div id="configProFechamento" style="display:none">
     <label class="stats" style="margin-top:8px">
@@ -1049,13 +1049,18 @@ function gerarFechamento(){
   // 🖥️ SAÍDA
   let html = `<div class="card"><strong>Base</strong><br>${base.join(" - ")}</div>`;
 
-  if(validacao){
-    html += `
-      <div class="card">
-        Garantia 14: ${validacao.valido ? "✅ CONFIRMADA" : "❌ NÃO CONFIRMADA"}
-      </div>
-    `;
-  }
+if(validacao){
+  html += `
+    <div class="card">
+      <strong>📐 Garantia Matemática 14</strong><br>
+      ${validacao.valido ? "✅ CONFIRMADA" : "❌ NÃO CONFIRMADA"}<br>
+      <span class="stats">
+        Todos os cenários possíveis da base (16 → 15)
+        foram testados matematicamente.
+      </span>
+    </div>
+  `;
+}
 
   jogos.forEach(j=>{
     html += `<div class="resultado">${j.join(" - ")}</div>`;
