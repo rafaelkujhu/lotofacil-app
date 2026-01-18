@@ -209,22 +209,16 @@ button{
   </p>
 </div>
 
-<button id="btnLotofacil" onclick="executarSeguro(() => gerarComUX(gerarLotofacil, 'btnLotofacil', 'loaderLotofacil'),'Lotofácil')">
-  Gerar Jogos
+<button id="btnLotofacil"
+onclick="executarComUX(gerarLotofacil,'btnLotofacil','loaderLotofacil')">
+Gerar Jogos
 </button>
 
-<div class="loader" id="loaderLotofacil">
-  ⏳ Processando...
-</div>
-
+<div class="loader" id="loaderLotofacil">⏳ Processando...</div>
 
 <div id="saida"></div>
+</div>
 
-<div class="card">
-<strong>💰 Prêmio atual</strong>
-<div id="premio">—</div>
-</div>
-</div>
 
 <!-- ================= AVANÇADO ================= -->
 <div class="content" id="tab1" style="display:none">
@@ -1081,9 +1075,76 @@ function calcularRepeticaoMedia(jogo, concursosBase){
   return Math.round(totalRep / concursosBase.length);
 }
 
+function calcularConfiabilidadeReal(jogo, concursosBase){
+  let score = 0;
+
+  // 1️⃣ Pares / Ímpares (ideal: 7 ou 8)
+  let pares = jogo.filter(n => n % 2 === 0).length;
+  if(pares === 7 || pares === 8) score += 25;
+  else if(pares === 6 || pares === 9) score += 15;
+
+  // 2️⃣ Soma (ideal: 180 a 220)
+  let soma = jogo.reduce((a,b)=>a+b,0);
+  if(soma >= 180 && soma <= 220) score += 25;
+  else if(soma >= 170 && soma <= 230) score += 15;
+
+  // 3️⃣ Distribuição por faixas
+  let faixas = [0,0,0,0];
+  jogo.forEach(n=>{
+    if(n<=6) faixas[0]++;
+    else if(n<=12) faixas[1]++;
+    else if(n<=18) faixas[2]++;
+    else faixas[3]++;
+  });
+
+  let faixasOk = faixas.filter(f => f >= 3 && f <= 5).length;
+  score += faixasOk * 6; // até 24 pontos
+
+  // 4️⃣ Repetição média histórica
+  let repeticao = calcularRepeticaoMedia(jogo, concursosBase);
+  if(repeticao >= 6 && repeticao <= 10) score += 25;
+  else if(repeticao >= 5 && repeticao <= 11) score += 15;
+
+  return Math.min(100, score);
+}
+
+function analisar(jogo){
+  let score = 0;
+if(pares === 7 || pares === 8) score++;
+if(soma >= 180 && soma <= 220) score++;
+if(rep >= 6 && rep <= 10) score++;
+
 function analisar(jogo){
   let pares = jogo.filter(n => n % 2 === 0).length;
   let soma = jogo.reduce((a,b)=>a+b,0);
+
+  let baseAnalise = concursos.length ? concursos.slice(0,5) : [];
+  let rep = calcularRepeticaoMedia(jogo, baseAnalise);
+
+  let confiabilidade = calcularConfiabilidadeReal(jogo, baseAnalise);
+
+  let selo =
+    confiabilidade >= 80 ? "🟢 ALTA CONFIABILIDADE" :
+    confiabilidade >= 60 ? "🟡 MÉDIA CONFIABILIDADE" :
+                           "🔴 BAIXA CONFIABILIDADE";
+
+  return {
+    pares,
+    soma,
+    rep,
+    confiabilidade,
+    selo,
+    html: `
+      <div class="stats">
+        Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
+        <div class="conf">Confiabilidade real ${confiabilidade}%</div>
+        <strong>${selo}</strong>
+      </div>
+    `
+  };
+}
+
+
 
    // usa os últimos X concursos (ex: 5)
   let baseAnalise = concursos.length ? concursos.slice(0,5) : []; 
