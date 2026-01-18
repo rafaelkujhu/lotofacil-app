@@ -201,11 +201,6 @@ button{
 </div>
 
 <div id="saida"></div>
-
-<div class="card">
-<strong>💰 Prêmio atual</strong>
-<div id="premio">—</div>
-</div>
 </div>
 
 <!-- ================= AVANÇADO ================= -->
@@ -420,7 +415,8 @@ document.getElementById("modoBaseFechamento").addEventListener("change", e=>{
     mostrar ? "block" : "none";
 });
 
-concursos=[];
+let concursos = [];
+
 // ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
 function executarSeguro(fn, nome = "Processo"){
   try{
@@ -465,11 +461,6 @@ function obterUltimoConcursoLotomania(){
   // FUTURO: integrar com API da Caixa
   // Por enquanto, retorna vazio (não quebra nada)
   return [];
-}
-
-// ===== BASE DETERMINÍSTICA (SEM ALEATORIEDADE) =====
-function gerarBaseDeterministica(tamanho){
-  return Array.from({length:tamanho},(_,i)=>i+1);
 }
 
 // ===== JOGOS DETERMINÍSTICOS =====
@@ -525,7 +516,7 @@ function gerarEstatisticasConcursos(concursos){
   let impares = nums.length - pares;
   let soma = nums.reduce((a,b)=>a+b,0);
 
-  let faixa = { f1:0, f2:0, f3:0, f4:0 };
+  let faixa = { f1:0, f2:0, f3:0, f4:0, f5:0 };
   nums.forEach(n=>{
     if(n<=6) faixa.f1++;
     else if(n<=12) faixa.f2++;
@@ -619,10 +610,7 @@ function gerarSuperSete(){
     if(!jogo) continue;
 
     // gera 1 número por coluna
-    for(let col = 0; col < 7; col++){
-      jogo.push(Math.floor(Math.random() * 10));
-    }
-
+  
     const soma = jogo.reduce((a,b)=>a+b,0);
     const pares = jogo.filter(n => n % 2 === 0).length;
 
@@ -684,8 +672,11 @@ function gerarLotofacil(){
     concursos.flat().forEach(n=>{
       freq[n] = (freq[n] || 0) + 1;
     });
-    baseNumeros = Object.keys(freq).map(Number);
-  }
+  baseNumeros = Object.entries(freq)
+  .sort((a,b)=>b[1]-a[1])   // mais frequentes primeiro
+  .slice(0,18)             // top 18 dezenas
+  .map(e=>Number(e[0]));
+}
 
  let fixas = obterDezenasFixas();
 
@@ -1039,25 +1030,69 @@ function calcularRepeticaoMedia(jogo, concursosBase){
   return Math.round(totalRep / concursosBase.length);
 }
 
+function calcularConfiabilidadeReal(jogo, concursosBase){
+  let score = 0;
+
+  // 1️⃣ Pares / Ímpares (ideal: 7 ou 8)
+  let pares = jogo.filter(n => n % 2 === 0).length;
+  if(pares === 7 || pares === 8) score += 25;
+  else if(pares === 6 || pares === 9) score += 15;
+
+  // 2️⃣ Soma (ideal: 180 a 220)
+  let soma = jogo.reduce((a,b)=>a+b,0);
+  if(soma >= 180 && soma <= 220) score += 25;
+  else if(soma >= 170 && soma <= 230) score += 15;
+
+  // 3️⃣ Distribuição por faixas
+  let faixas = [0,0,0,0];
+  jogo.forEach(n=>{
+    if(n<=6) faixas[0]++;
+    else if(n<=12) faixas[1]++;
+    else if(n<=18) faixas[2]++;
+    else faixas[3]++;
+  });
+
+  let faixasOk = faixas.filter(f => f >= 3 && f <= 5).length;
+  score += faixasOk * 6; // até 24 pontos
+
+  // 4️⃣ Repetição média histórica
+  let repeticao = calcularRepeticaoMedia(jogo, concursosBase);
+  if(repeticao >= 6 && repeticao <= 10) score += 25;
+  else if(repeticao >= 5 && repeticao <= 11) score += 15;
+
+  return Math.min(100, score);
+}
+
 function analisar(jogo){
   let pares = jogo.filter(n => n % 2 === 0).length;
   let soma = jogo.reduce((a,b)=>a+b,0);
 
-   // usa os últimos X concursos (ex: 5)
-  let baseAnalise = concursos.length ? concursos.slice(0,5) : []; 
+  let baseAnalise = concursos.length ? concursos.slice(0,5) : [];
   let rep = calcularRepeticaoMedia(jogo, baseAnalise);
 
-  let score = 0;
-  if(pares === 7 || pares === 8) score++;
-  if(soma >= 180 && soma <= 220) score++;
-  if(rep >= 6 && rep <= 10) score++;
+  let confiabilidade = calcularConfiabilidadeReal(jogo, baseAnalise);
 
   let selo =
-    score === 3 ? "🟢 EXCELENTE" :
-    score === 2 ? "🟡 REGULAR" :
-                  "🔴 FORA DO PADRÃO";
+    confiabilidade >= 80 ? "🟢 ALTA CONFIABILIDADE" :
+    confiabilidade >= 60 ? "🟡 MÉDIA CONFIABILIDADE" :
+                           "🔴 BAIXA CONFIABILIDADE";
 
- return {
+  return {
+    pares,
+    soma,
+    rep,
+    confiabilidade,
+    selo,
+    html: `
+      <div class="stats">
+        Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
+        <div class="conf">Confiabilidade real ${confiabilidade}%</div>
+        <strong>${selo}</strong>
+      </div>
+    `
+  };
+}
+
   pares,
   soma,
   rep,
@@ -1066,7 +1101,8 @@ function analisar(jogo){
   html: `
     <div class="stats">
       Pares: ${pares} | Soma: ${soma} | Repetição: ${rep}<br>
-      <div class="conf">Confiabilidade ${confianca()}%</div>
+   <div class="conf">Indicador interno ${confianca()}%</div>
+
       <strong>${selo}</strong>
     </div>
   `
