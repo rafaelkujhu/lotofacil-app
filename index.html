@@ -467,10 +467,6 @@ function obterUltimoConcursoLotomania(){
   return [];
 }
 
-// ===== BASE DETERMINÍSTICA (SEM ALEATORIEDADE) =====
-function gerarBaseDeterministica(tamanho){
-  return Array.from({length:tamanho},(_,i)=>i+1);
-}
 
 // ===== JOGOS DETERMINÍSTICOS =====
 function gerarJogosDeterministicos(base, qtdJogos){
@@ -875,7 +871,6 @@ function validarFechamento(base, jogos){
   };
 }
 
-}// ===== LOTOFACIL PRO =====
 function gerarBaseViaLotofacilPro(qtd){
   let base=[];
   let tentativas=0;
@@ -906,7 +901,6 @@ function gerarBaseViaLotofacilPro(qtd){
   return base.sort((a,b)=>a-b);
 }
 
-}// ===== VALIDADOR MATEMÁTICO REAL (GARANTIA 14) =====
 function validarGarantia14(base, jogos){
   if(base.length !== 16){
     return { valido:false, erro:"Base ≠ 16" };
@@ -977,8 +971,14 @@ function gerarFechamento(){
 
   // 🎯 DEFINIÇÃO DA BASE
   let base;
-  if(modoBase === "aleatorio"){
-    base = gerarBaseDeterministica(baseQtd);
+  function gerarBaseAleatoria(baseQtd){
+  let base = [];
+  while(base.length < baseQtd){
+    let n = Math.floor(Math.random() * 25) + 1;
+    if(!base.includes(n)) base.push(n);
+  }
+  return base.sort((a,b)=>a-b);
+}
   }else if(modoBase === "pro"){
     base = gerarBaseViaLotofacilPro(baseQtd);
   }else{
@@ -989,15 +989,33 @@ function gerarFechamento(){
   let qtdJogos = baseQtd === 16 ? 6 : Math.max(12, baseQtd * 2);
 
   let jogos = [];
-  while(jogos.length < qtdJogos){
-    let jogo = [];
-    while(jogo.length < 15){
-      let n = base[Math.floor(Math.random()*base.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
-    jogo.sort((a,b)=>a-b);
-    if(!jogos.some(j=>j.join()==jogo.join())) jogos.push(jogo);
+let jogos = [];
+let tentativas = 0;
+const LIMITE = 5000;
+
+while(jogos.length < qtdJogos && tentativas < LIMITE){
+  tentativas++;
+
+  let jogo = [];
+  let t = 0;
+
+  while(jogo.length < 15 && t < 300){
+    t++;
+    let n = base[Math.floor(Math.random() * base.length)];
+    if(!jogo.includes(n)) jogo.push(n);
   }
+
+  if(jogo.length < 15) continue;
+
+  jogo.sort((a,b)=>a-b);
+  if(!jogos.some(j => j.join() === jogo.join())){
+    jogos.push(jogo);
+  }
+}
+
+if(jogos.length < qtdJogos){
+  alert("⚠️ Não foi possível gerar todos os jogos com esses filtros.");
+}
 
   // 📐 VALIDAÇÃO
   let validacao = baseQtd === 16 ? validarGarantia14(base, jogos) : null;
