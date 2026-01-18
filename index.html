@@ -113,6 +113,32 @@ button{
   color:#777;
   padding:14px;
 }
+.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+.loading::after {
+  content: "⏳ Processando...";
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4a148c;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: 0 6px 14px rgba(0,0,0,.25);
+  z-index: 9999;
+}
+.resultado {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.resultado:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.15);
+}
 
 /* ===== CONTAINER DE RESULTADOS INTERNOS ===== */
 .saida-interna{
@@ -422,12 +448,18 @@ let concursos = [];
 
 // ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
 function executarSeguro(fn, nome = "Processo"){
-  try{
-    fn();
-  }catch(e){
-    console.error(`Erro em ${nome}:`, e);
-    alert(`⚠️ Erro interno em ${nome}. Veja o console.`);
-  }
+  document.body.classList.add("loading");
+
+  setTimeout(() => {
+    try{
+      fn();
+    }catch(e){
+      console.error(`Erro em ${nome}:`, e);
+      alert(`⚠️ Ocorreu um erro em ${nome}. Veja o console.`);
+    }finally{
+      document.body.classList.remove("loading");
+    }
+  }, 60);
 }
 
 // ===== ELEMENTOS GLOBAIS (OBRIGATÓRIO) =====
