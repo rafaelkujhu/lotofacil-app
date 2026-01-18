@@ -901,6 +901,8 @@ function gerarBaseViaLotofacilPro(baseQtd){
 
   return numeros.sort((a,b)=>a-b);
 
+  }
+
 // ===== VALIDAÇÃO MATEMÁTICA REAL =====
 function validarGarantia14(base, jogos){
   if(base.length !== 16){
@@ -951,7 +953,7 @@ function gerarBaseAutomatica(baseQtd, tentativas=120){
     }
   }
 
-  return melhorBase;
+  return melhor;
 }
 
 // ===== FECHAMENTO =====
