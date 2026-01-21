@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+~~<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -503,10 +503,31 @@ concursos=[];
  gerarEstatisticasConcursos(concursos);
 
 }
+ function analisarRepeticaoConcursos(concursos){
+  if(concursos.length < 2) return null;
+
+  let total = 0;
+  let dist = {}; // ex: {4: 10, 5: 22, 6: 8}
+
+  for(let i = 0; i < concursos.length - 1; i++){
+    let atual = concursos[i];
+    let anterior = concursos[i + 1];
+
+    let repetidos = atual.filter(n => anterior.includes(n)).length;
+
+    total += repetidos;
+    dist[repetidos] = (dist[repetidos] || 0) + 1;
+  }
+
+  let media = (total / (concursos.length - 1)).toFixed(2);
+
+  return { media, dist };
+}
 
 /* ===== ESTATÍSTICAS CONCURSOS ===== */
 function gerarEstatisticasConcursos(concursos){
   const resumoPadrao = analisarHistoricoUltimoAno(concursos);
+  const repeticaoInfo = analisarRepeticaoConcursos(concursos);
 
   let nums = concursos.flat();
   let pares = nums.filter(n=>n%2===0).length;
@@ -514,12 +535,16 @@ function gerarEstatisticasConcursos(concursos){
   let soma = nums.reduce((a,b)=>a+b,0);
 
   let faixa = { f1:0, f2:0, f3:0, f4:0, f5:0 };
-  nums.forEach(n=>{
-    if(n<=6) faixa.f1++;
-    else if(n<=12) faixa.f2++;
-    else if(n<=18) faixa.f3++;
-    else faixa.f4++;
-  });
+
+nums.forEach(n=>{
+  n = Number(n); // segurança
+
+  if(n >= 1 && n <= 5) faixa.f1++;
+  else if(n >= 6 && n <= 10) faixa.f2++;
+  else if(n >= 11 && n <= 15) faixa.f3++;
+  else if(n >= 16 && n <= 20) faixa.f4++;
+  else if(n >= 21 && n <= 25) faixa.f5++; // 🔥 agora conta corretamente
+});
 
   estatConcursos.style.display = "block";
   estatConcursos.innerHTML = `
@@ -533,14 +558,23 @@ function gerarEstatisticasConcursos(concursos){
       16-20: ${faixa.f4} |
       21–25: ${faixa.f5}
     </div>
-    <div class="stats">Concursos analisados: ${concursos.length}</div>
+  <div class="stats">Concursos analisados: ${concursos.length}</div>
 
-    <hr>
-    <strong>🧠 Padrão Estatístico</strong>
-    <div class="stats">🟢 Dentro do padrão: ${resumoPadrao.dentro}</div>
-    <div class="stats">🔴 Fora do padrão: ${resumoPadrao.fora}</div>
-  `;
-}
+${repeticaoInfo ? `
+<hr>
+<strong>🔁 Repetição entre concursos</strong>
+<div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
+<div class="stats">
+  ${Object.keys(repeticaoInfo.dist)
+    .sort((a,b)=>a-b)
+    .map(k => `${k} repetidos: ${repeticaoInfo.dist[k]}x`)
+    .join(" | ")}
+</div>
+` : ""}
+
+<hr>
+<strong>🧠 Padrão Estatístico</strong>
+
 
 /* ===== ANÁLISE HISTÓRICA (ÚLTIMO ANO) ===== */
 function analisarHistoricoUltimoAno(concursos){
