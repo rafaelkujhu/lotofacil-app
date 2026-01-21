@@ -567,7 +567,7 @@ ${repeticaoInfo ? `
 <div class="stats">
   ${Object.keys(repeticaoInfo.dist)
     .sort((a,b)=>a-b)
-    .map(k => `${k} repetidos: ${repeticaoInfo.dist[k]}x`)
+    .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
     .join(" | ")}
 </div>
 ` : ""}
