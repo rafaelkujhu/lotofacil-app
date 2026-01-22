@@ -219,6 +219,24 @@ button{
     Separe por espaço ou vírgula.
   </p>
 </div>
+ <div class="card">
+  <strong>🚫 Dezenas proibidas (opcional)</strong>
+
+  <p class="stats">
+    Estes números <strong>não poderão aparecer</strong> nos jogos gerados.
+  </p>
+
+  <input
+    type="text"
+    id="dezenasProibidas"
+    placeholder="Ex: 1 5 13 22"
+  >
+
+  <p class="stats">
+    Separe por espaço ou vírgula.
+  </p>
+</div>
+
 
 <button onclick="executarSeguro(gerarLotofacil,'Lotofácil')">
   Gerar Jogos
@@ -628,19 +646,7 @@ function gerarEstatisticasConcursos(concursos){
 
     <div class="stats">Concursos analisados: ${concursos.length}</div>
 
-    ${repeticaoInfo ? `
-      <hr>
-      <strong>🔁 Repetição entre concursos</strong>
-      <div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
-      <div class="stats">
-        ${Object.keys(repeticaoInfo.dist)
-          .sort((a,b)=>a-b)
-          .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
-          .join(" | ")}
-      </div>
-    ` : ""}
-
-    ${numerosRepetidos && numerosRepetidos.length ? `
+       ${numerosRepetidos && numerosRepetidos.length ? `
       <hr>
       <strong>🔢 Números mais repetidos entre concursos</strong>
       <div class="stats">
@@ -1252,11 +1258,29 @@ function gerarLotofacil(){
   const qtd = +document.getElementById("qtdJogos").value || 1;
   const modo = document.querySelector('input[name="modo"]:checked')?.value || "estatistico";
 
-  let html = "";
+  
+  // 🔢 Lê dezenas proibidas
+  const proibidasRaw = document.getElementById("dezenasProibidas")?.value || "";
+  const dezenasProibidas = proibidasRaw
+    .split(/[\s,]+/)
+    .map(n => Number(n))
+    .filter(n => n >= 1 && n <= 25);
+
+let html = "";
 
   for(let i = 0; i < qtd; i++){
     let jogo = gerarJogoLotofacilBase("equilibrado", tamanho); // 👈 agora respeita 15–18
     if(!jogo) continue;
+
+  // 🚫 Remove jogos que contenham dezenas proibidas
+  if(dezenasProibidas.length){
+    const temProibida = jogo.some(n => dezenasProibidas.includes(n));
+    if(temProibida){
+      i--; // tenta gerar outro jogo no lugar
+      continue;
+    }
+  }
+
 
     let score = calcularScoreLotofacil(jogo);
     let sim = simularPontuacaoLotofacil(jogo);
