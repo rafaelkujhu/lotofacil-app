@@ -745,9 +745,94 @@ function gerarEstatisticasLotomania(concursos){
 // 6️⃣ GERADORES LOTOMANIA
 // =========================
 
-function gerarJogoLotomaniaBase(modo, ultimo){ ... }
-function calcularScoreRiscoLotomania(jogo, ultimo){ ... }
-function simularPontuacaoLotomania(jogo, simulacoes = 2000){ ... }
+function gerarJogoLotomaniaBase(modo, ultimo){
+  let jogo = [];
+  let tentativas = 0;
+  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+
+  if(modo === "vinte" && ultimo.length){
+    while(jogo.length < 15){
+      let n = ultimo[Math.floor(Math.random() * ultimo.length)];
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+  }
+
+  while(jogo.length < 50 && tentativas < 15000){
+    tentativas++;
+    let n = Math.floor(Math.random() * 100);
+    if(jogo.includes(n)) continue;
+
+    if(modo === "zero" && ultimo.includes(n)) continue;
+
+    if(modo === "equilibrado" && ultimo.length){
+      let coinc = jogo.filter(x => ultimo.includes(x)).length;
+      if(coinc >= 12) continue;
+    }
+
+    let pares = jogo.filter(x => x % 2 === 0).length;
+    let impares = jogo.length - pares;
+    if(n % 2 === 0 && pares >= 26) continue;
+    if(n % 2 !== 0 && impares >= 26) continue;
+
+    let faixa =
+      n <= 19 ? "f1" :
+      n <= 39 ? "f2" :
+      n <= 59 ? "f3" :
+      n <= 79 ? "f4" : "f5";
+
+    if(faixas[faixa] >= 12) continue;
+
+    faixas[faixa]++;
+    jogo.push(n);
+  }
+
+  return jogo.length === 50 ? jogo.sort((a,b)=>a-b) : null;
+}
+
+function calcularScoreRiscoLotomania(jogo, ultimo){
+  let score = 100;
+
+  let pares = jogo.filter(n => n % 2 === 0).length;
+  let coinc = ultimo.length
+    ? jogo.filter(n => ultimo.includes(n)).length
+    : 0;
+
+  if(pares < 20 || pares > 30) score -= 20;
+  if(coinc === 0) score -= 15;
+  if(coinc > 16) score -= 25;
+
+  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+  jogo.forEach(n=>{
+    if(n<=19) faixas.f1++;
+    else if(n<=39) faixas.f2++;
+    else if(n<=59) faixas.f3++;
+    else if(n<=79) faixas.f4++;
+    else faixas.f5++;
+  });
+
+  Object.values(faixas).forEach(v=>{
+    if(v < 6 || v > 14) score -= 10;
+  });
+
+  return Math.max(0, score);
+}
+
+function simularPontuacaoLotomania(jogo, simulacoes = 2000){
+  let dist = Array(21).fill(0);
+
+  for(let i=0;i<simulacoes;i++){
+    let sorteio = [];
+    while(sorteio.length < 50){
+      let n = Math.floor(Math.random() * 100);
+      if(!sorteio.includes(n)) sorteio.push(n);
+    }
+
+    let acertos = jogo.filter(n => sorteio.includes(n)).length;
+    dist[acertos]++;
+  }
+
+  return dist.map(v => ((v / simulacoes) * 100).toFixed(2));
+}
 
 async function gerarLotomania(){
   const qtd = +document.getElementById("qtdLotomania").value || 1;
