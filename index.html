@@ -879,14 +879,14 @@ function validarFechamento(base, jogos){
     j.filter(n => base.includes(n)).length
   );
 
-  return {
-    minimo: Math.min(...resultados),
-    maximo: Math.max(...resultados),
-    media: (
-      resultados.reduce((a,b)=>a+b,0) / resultados.length
-    ).toFixed(2)
-  };
-}
+return {
+  minimo: Math.min.apply(null, resultados),
+  maximo: Math.max.apply(null, resultados),
+  media: (
+    resultados.reduce((a,b)=>a+b,0) / resultados.length
+  ).toFixed(2)
+};
+
 
 /* ===== LOTOFÁCIL PRO — BASE PARA FECHAMENTO ===== */
 function gerarBaseViaLotofacilPro(baseQtd){
