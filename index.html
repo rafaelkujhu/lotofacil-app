@@ -1255,67 +1255,66 @@ function gerarLotofacil(){
     document.querySelector('input[name="dezenas"]:checked')?.value || 15
   );
 
-// 🔢 Lê dezenas fixas
-const fixasRaw = document.getElementById("dezenasFixas")?.value || "";
-const dezenasFixas = fixasRaw
-  .split(/[\s,]+/)
-  .map(n => Number(n))
-  .filter(n => n >= 1 && n <= 25);
+  // 🔢 Lê dezenas fixas
+  const fixasRaw = document.getElementById("dezenasFixas")?.value || "";
+  const dezenasFixas = fixasRaw
+    .split(/[\s,]+/)
+    .map(n => Number(n))
+    .filter(n => n >= 1 && n <= 25);
 
-// Validação: não pode ter mais fixas que o tamanho do jogo
-if(dezenasFixas.length > tamanho){
-  alert("⚠️ Você escolheu mais dezenas fixas do que o tamanho do jogo.");
-  return;
-}
-
-// ❌ Validação: fixa não pode estar nas proibidas
-const conflito = dezenasFixas.filter(n => dezenasProibidas.includes(n));
-if(conflito.length){
-  alert("⚠️ Estas dezenas estão em FIXAS e PROIBIDAS ao mesmo tempo: " + conflito.join(", "));
-  return;
-}
-
-  const qtd = +document.getElementById("qtdJogos").value || 1;
-  const modo = document.querySelector('input[name="modo"]:checked')?.value || "estatistico";
-
-  
-  // 🔢 Lê dezenas proibidas
+  // 🔢 Lê dezenas proibidas  ⬅️ TEM QUE VIR ANTES DAS VALIDAÇÕES
   const proibidasRaw = document.getElementById("dezenasProibidas")?.value || "";
   const dezenasProibidas = proibidasRaw
     .split(/[\s,]+/)
     .map(n => Number(n))
     .filter(n => n >= 1 && n <= 25);
 
-let html = "";
+  // Validação: não pode ter mais fixas que o tamanho do jogo
+  if(dezenasFixas.length > tamanho){
+    alert("⚠️ Você escolheu mais dezenas fixas do que o tamanho do jogo.");
+    return;
+  }
+
+  // Validação: fixa não pode estar nas proibidas
+  const conflito = dezenasFixas.filter(n => dezenasProibidas.includes(n));
+  if(conflito.length){
+    alert("⚠️ Estas dezenas estão em FIXAS e PROIBIDAS ao mesmo tempo: " + conflito.join(", "));
+    return;
+  }
+
+  const qtd = +document.getElementById("qtdJogos").value || 1;
+  const modo = document.querySelector('input[name="modo"]:checked')?.value || "estatistico";
+
+  let html = "";
 
   for(let i = 0; i < qtd; i++){
-   // 🎯 Começa o jogo com as dezenas fixas
-let jogo = [...dezenasFixas];
 
-// Completa até atingir o tamanho escolhido
-let tentativas = 0;
-while(jogo.length < tamanho && tentativas < 3000){
-  tentativas++;
-  let n = Math.floor(Math.random() * 25) + 1;
+    // 🎯 Começa o jogo com as dezenas fixas
+    let jogo = [...dezenasFixas];
 
-  // não repete número
-  if(jogo.includes(n)) continue;
+    // Completa até atingir o tamanho escolhido
+    let tentativas = 0;
+    while(jogo.length < tamanho && tentativas < 3000){
+      tentativas++;
+      let n = Math.floor(Math.random() * 25) + 1;
 
-  // respeita dezenas proibidas
-  if(dezenasProibidas.includes(n)) continue;
+      // não repete número
+      if(jogo.includes(n)) continue;
 
-  jogo.push(n);
-}
+      // respeita dezenas proibidas
+      if(dezenasProibidas.includes(n)) continue;
 
-// Se não conseguiu formar jogo válido, tenta outro
-if(jogo.length !== tamanho){
-  i--;
-  continue;
-}
+      jogo.push(n);
+    }
 
-// Ordena
-jogo.sort((a,b)=>a-b);
+    // Se não conseguiu formar jogo válido, tenta outro
+    if(jogo.length !== tamanho){
+      i--;
+      continue;
+    }
 
+    // Ordena
+    jogo.sort((a,b)=>a-b);
 
     let score = calcularScoreLotofacil(jogo);
     let sim = simularPontuacaoLotofacil(jogo);
@@ -1340,7 +1339,6 @@ jogo.sort((a,b)=>a-b);
 
   document.getElementById("saida").innerHTML = html;
 }
-
 
 
 function gerarLotofacilPro(){
