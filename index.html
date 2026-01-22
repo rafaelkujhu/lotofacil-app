@@ -1091,32 +1091,6 @@ if(validacao){
   saidaFechamento.innerHTML = html;
 }
 
-/* ===== ANÁLISE DO JOGO (INTELIGÊNCIA) ===== */
-function analisarNumerosRepetidos(concursos){
-  if(concursos.length < 2) return null;
-
-  let mapa = {};
-
-  for(let i = 0; i < concursos.length - 1; i++){
-    let atual = concursos[i];
-    let anterior = concursos[i + 1];
-
-    let repetidos = atual.filter(n => anterior.includes(n));
-
-    repetidos.forEach(n=>{
-      mapa[n] = (mapa[n] || 0) + 1;
-    });
-  }
-
-  // transforma em array e ordena pelos mais repetidos
-  let ordenado = Object.entries(mapa)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,10); // top 10
-
-  return ordenado; // [[num, qtd], [num, qtd], ...]
-}
-
-
 function calcularRepeticaoMedia(jogo, concursosBase){
   if(!concursosBase.length) return 0;
 
