@@ -523,6 +523,31 @@ concursos=[];
 
   return { media, dist };
 }
+function analisarHistoricoUltimoAno(concursos){
+  let dentro = 0;
+  let fora = 0;
+
+  concursos.forEach(jogo=>{
+    let pares = jogo.filter(n=>n%2===0).length;
+    let soma  = jogo.reduce((a,b)=>a+b,0);
+
+    let okPares = (pares === 7 || pares === 8);
+    let okSoma  = (soma >= 180 && soma <= 220);
+
+    if(okPares && okSoma){
+      dentro++;
+    } else {
+      fora++;
+    }
+  });
+
+  return {
+    total: concursos.length,
+    dentro,
+    fora
+  };
+}
+
  /* ===== ESTATÍSTICAS CONCURSOS ===== */
 function gerarEstatisticasConcursos(concursos){
   const resumoPadrao = analisarHistoricoUltimoAno(concursos);
