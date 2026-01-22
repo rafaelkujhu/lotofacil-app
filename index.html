@@ -1250,12 +1250,18 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
 function gerarLotofacil(){
 
   const qtd = +document.getElementById("qtdJogos").value || 1;
+
   const modo = document.querySelector('input[name="modo"]:checked')?.value || "estatistico";
+
+  // 🔥 AQUI LEMOS O TAMANHO 15 / 16 / 17 / 18
+  const tamanho = Number(
+    document.querySelector('input[name="dezenas"]:checked')?.value || 15
+  );
 
   let html = "";
 
   for(let i = 0; i < qtd; i++){
-    let jogo = gerarJogoLotofacilBase("equilibrado");
+    let jogo = gerarJogoLotofacilBase("equilibrado", tamanho); // 👈 AGORA PASSA O TAMANHO
     if(!jogo) continue;
 
     let score = calcularScoreLotofacil(jogo);
