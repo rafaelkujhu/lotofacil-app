@@ -1247,6 +1247,42 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
   return dist;
 }
 
+function gerarLotofacil(){
+
+  const qtd = +document.getElementById("qtdJogos").value || 1;
+  const modo = document.querySelector('input[name="modo"]:checked')?.value || "estatistico";
+
+  let html = "";
+
+  for(let i = 0; i < qtd; i++){
+    let jogo = gerarJogoLotofacilBase("equilibrado");
+    if(!jogo) continue;
+
+    let score = calcularScoreLotofacil(jogo);
+    let sim = simularPontuacaoLotofacil(jogo);
+
+    let perfil =
+      score >= 80 ? "🟢 Baixo risco" :
+      score >= 50 ? "🟡 Médio risco" :
+                    "🔴 Alto risco";
+
+    html += `
+      <div class="resultado">
+        ${jogo.join(" - ")}
+        <div class="stats">
+          <strong>${perfil}</strong><br>
+          Score: ${score}/100<br>
+          11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
+          13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById("saida").innerHTML = html;
+}
+
+
 function gerarLotofacilPro(){
   const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
   const modo = document.getElementById("modoLotofacilPro").value;
