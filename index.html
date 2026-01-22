@@ -577,20 +577,14 @@ function analisarHistoricoUltimoAno(concursos){
   return { total: concursos.length, dentro, fora };
 }
 
-function analisarNumerosRepetidos(concursos){
-  if(concursos.length < 2) return null;
-
+function analisarNumerosMaisFrequentes(concursos){
   let mapa = {};
 
-  for(let i = 0; i < concursos.length - 1; i++){
-    let atual = concursos[i];
-    let anterior = concursos[i + 1];
-
-    let repetidos = atual.filter(n => anterior.includes(n));
-    repetidos.forEach(n=>{
+  concursos.forEach(jogo=>{
+    jogo.forEach(n=>{
       mapa[n] = (mapa[n] || 0) + 1;
     });
-  }
+  });
 
   return Object.entries(mapa)
     .sort((a,b)=>b[1]-a[1])
@@ -599,7 +593,7 @@ function analisarNumerosRepetidos(concursos){
 
 function gerarEstatisticasConcursos(concursos){
   const repeticaoInfo = analisarRepeticaoConcursos(concursos);
-  const numerosRepetidos = analisarNumerosRepetidos(concursos);
+  const numerosRepetidos = analisarNumerosMaisFrequentes(concursos);
 
   let nums = concursos.flat();
   let pares = nums.filter(n=>n%2===0).length;
@@ -1178,12 +1172,12 @@ function analisar(jogo){
   };
 }
 
-  /* ===== LOTOFÁCIL PRO ===== */
-function gerarJogoLotofacilBase(modo){
+ /* ===== LOTOFÁCIL PRO ===== */
+function gerarJogoLotofacilBase(modo, tamanho = 15){
   let jogo = [];
   let tentativas = 0;
 
-  while(jogo.length < 15 && tentativas < 3000){
+  while(jogo.length < tamanho && tentativas < 3000){
     tentativas++;
     let n = Math.floor(Math.random() * 25) + 1;
     if(jogo.includes(n)) continue;
@@ -1191,16 +1185,17 @@ function gerarJogoLotofacilBase(modo){
     let pares = jogo.filter(x => x % 2 === 0).length;
 
     // 🟢 CONSERVADOR: evita extremos
-    if(modo === "conservador" && pares >= 8) continue;
+    if(modo === "conservador" && pares >= Math.ceil(tamanho / 2)) continue;
 
     // 🔴 OUSADO: só força depois que o jogo já está formado
-    if(modo === "ousado" && jogo.length >= 10 && pares <= 5) continue;
+    if(modo === "ousado" && jogo.length >= tamanho - 5 && pares <= Math.floor(tamanho / 3)) continue;
 
     jogo.push(n);
   }
 
-  return jogo.length === 15 ? jogo.sort((a,b)=>a-b) : null;
+  return jogo.length === tamanho ? jogo.sort((a,b)=>a-b) : null;
 }
+
 
 function calcularScoreLotofacil(jogo){
   let score = 100;
@@ -1248,9 +1243,8 @@ function simularPontuacaoLotofacil(jogo, simulacoes=1500){
 }
 
 function gerarLotofacil(){
-
+  const tamanho = +document.querySelector('input[name="dezenas"]:checked')?.value || 15;
   const qtd = +document.getElementById("qtdJogos").value || 1;
-
   const modo = document.querySelector('input[name="modo"]:checked')?.value || "estatistico";
 
   // 🔥 AQUI LEMOS O TAMANHO 15 / 16 / 17 / 18
