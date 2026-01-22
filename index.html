@@ -570,48 +570,48 @@ function gerarEstatisticasConcursos(concursos){
     else if(n >= 21 && n <= 25) faixa.f5++;
   });
 
-  estatConcursos.style.display = "block";
-  estatConcursos.innerHTML = `
-    <strong>📊 Estatísticas dos Concursos</strong>
-    <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
-    <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
-    <div class="stats">📐 Faixas:
-      1–5: ${faixa.f1} |
-      6-10: ${faixa.f2} |
-      11-15: ${faixa.f3} |
-      16-20: ${faixa.f4} |
-      21–25: ${faixa.f5}
-    </div>
-    <div class="stats">Concursos analisados: ${concursos.length}</div>
+  
+estatConcursos.innerHTML = `
+  <strong>📊 Estatísticas dos Concursos</strong>
 
-    ${repeticaoInfo ? `
-    <hr>
-    <strong>🔁 Repetição entre concursos</strong>
-    <div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
-    <div class="stats">
-      ${Object.keys(repeticaoInfo.dist)
-        .sort((a,b)=>a-b)
-        .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
-        .join(" | ")}
-    </div>
-    ` : ""}
+  <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
+  <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
 
-    ${numerosRepetidos ? `
-    <div class="stats">
-      <strong>🔢 Dezenas mais repetidas entre concursos:</strong><br>
-      ${Object.entries(numerosRepetidos)
-        .sort((a,b)=>b[1]-a[1])
-        .slice(0,10)
-        .map(([n,q]) => n + ": " + q + "x")
-        .join(" | ")}
-    </div>
-    ` : ""}
+  <div class="stats">📐 Faixas:
+    1–5: ${faixa.f1} |
+    6-10: ${faixa.f2} |
+    11-15: ${faixa.f3} |
+    16-20: ${faixa.f4} |
+    21–25: ${faixa.f5}
+  </div>
 
-    <hr>
-    <strong>🧠 Padrão Estatístico</strong>
-    <div class="stats">🟢 Dentro do padrão: ${resumoPadrao.dentro}</div>
-    <div class="stats">🔴 Fora do padrão: ${resumoPadrao.fora}</div>
-  `;
+  <div class="stats">Concursos analisados: ${concursos.length}</div>
+
+${repeticaoInfo ? `
+<hr>
+<strong>🔁 Repetição entre concursos</strong>
+<div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
+<div class="stats">
+  ${Object.keys(repeticaoInfo.dist)
+    .sort((a,b)=>a-b)
+    .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
+    .join(" | ")}
+</div>
+` : ""}
+
+${numerosRepetidos && numerosRepetidos.length ? `
+<hr>
+<strong>🔢 Números mais repetidos entre concursos</strong>
+<div class="stats">
+  ${numerosRepetidos
+    .map(([num, qtd]) => String(num).padStart(2,"0") + "(" + qtd + "x)")
+    .join(" | ")}
+</div>
+` : ""}
+
+<hr>
+<strong>🧠 Padrão Estatístico</strong>
+`;
 }
  
 /* ===== SUPERSETE ===== */
@@ -1117,7 +1117,7 @@ if(validacao){
 function analisarNumerosRepetidos(concursos){
   if(concursos.length < 2) return null;
 
-  let mapa = {}; // ex: {5: 18, 11: 22, ...}
+  let mapa = {};
 
   for(let i = 0; i < concursos.length - 1; i++){
     let atual = concursos[i];
@@ -1130,8 +1130,14 @@ function analisarNumerosRepetidos(concursos){
     });
   }
 
-  return mapa;
+  // transforma em array e ordena pelos mais repetidos
+  let ordenado = Object.entries(mapa)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,10); // top 10
+
+  return ordenado; // [[num, qtd], [num, qtd], ...]
 }
+
 
 function calcularRepeticaoMedia(jogo, concursosBase){
   if(!concursosBase.length) return 0;
