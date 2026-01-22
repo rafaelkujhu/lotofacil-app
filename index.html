@@ -403,6 +403,10 @@ button{
 
 <script>
 
+// =========================
+// 1️⃣ CONFIGURAÇÃO E GLOBAIS
+// =========================
+
 document
   .getElementById("modoBaseFechamento")
   .addEventListener("change", e => {
@@ -411,10 +415,23 @@ document
       mostrar ? "block" : "none";
   });
 
-
 let concursos = [];
 
-// ===== EXECUÇÃO SEGURA (BLINDAGEM GLOBAL) =====
+// Elementos globais
+const resultados = document.getElementById("resultados");
+const estatConcursos = document.getElementById("estatConcursos");
+const saida = document.getElementById("saida");
+const saidaAvancado = document.getElementById("saidaAvancado");
+const saidaLotomania = document.getElementById("saidaLotomania");
+const saidaSuperSete = document.getElementById("saidaSuperSete");
+const saidaFechamento = document.getElementById("saidaFechamento");
+
+
+// =========================
+// 2️⃣ UTILITÁRIOS GERAIS
+// =========================
+
+// Blindagem global
 function executarSeguro(fn, nome = "Processo"){
   document.body.classList.add("loading");
 
@@ -430,16 +447,6 @@ function executarSeguro(fn, nome = "Processo"){
   }, 60);
 }
 
-// ===== ELEMENTOS GLOBAIS (OBRIGATÓRIO) =====
-const resultados = document.getElementById("resultados");
-const estatConcursos = document.getElementById("estatConcursos");
-const saida = document.getElementById("saida");
-const saidaAvancado = document.getElementById("saidaAvancado");
-const saidaLotomania = document.getElementById("saidaLotomania");
-const saidaSuperSete = document.getElementById("saidaSuperSete");
-const saidaFechamento = document.getElementById("saidaFechamento");
-
-// ===== UTILITÁRIOS GERAIS =====
 function gerarBaseDeterministica(tamanho){
   return Array.from({length:tamanho},(_,i)=>i+1);
 }
@@ -458,14 +465,12 @@ function trocarTab(i){
   });
 }
 
-// ===== OPÇÃO 2: ÚLTIMO CONCURSO DA LOTOMANIA =====
+// Placeholder futuro
 function obterUltimoConcursoLotomania(){
-  // FUTURO: integrar com API da Caixa
-  // Por enquanto, retorna vazio (não quebra nada)
   return [];
 }
 
-// ===== JOGOS DETERMINÍSTICOS =====
+// Jogos determinísticos
 function gerarJogosDeterministicos(base, qtdJogos){
   let jogos = [];
   let offset = 0;
@@ -481,7 +486,12 @@ function gerarJogosDeterministicos(base, qtdJogos){
   return jogos;
 }
 
-/* ===== BUSCAR CONCURSOS ===== */
+
+// =========================
+// 3️⃣ BUSCA DE CONCURSOS (APIs)
+// =========================
+
+// Lotomania
 async function buscarConcursosLotomania(){
   const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania");
   const d = await r.json();
@@ -494,47 +504,51 @@ async function buscarConcursosLotomania(){
   for(let i = ultimo; i > ultimo - qtd; i--){
     let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania/${i}`);
     let dd = await rr.json();
-
-    // listaDezenas vem como strings, converte para número
     concursos.push(dd.listaDezenas.map(Number));
   }
 
   return concursos;
 }
 
+// Lotofácil
 async function buscarConcursos(){
-  const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
-  const d=await r.json();
-  const ult=d.numero;
+  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
+  const d = await r.json();
+  const ult = d.numero;
+
   let qtdRadio = document.querySelector('input[name="qtd"]:checked');
   let qtdLivre = document.getElementById("qtdLivre")?.value;
 
-const qtd = qtdLivre && qtdLivre > 0
-  ? Number(qtdLivre)
-  : Number(qtdRadio.value);
-  
-concursos=[];
-  for(let i=ult;i>ult-qtd;i--){
-    let rr=await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
-    let dd=await rr.json();
+  const qtd = qtdLivre && qtdLivre > 0
+    ? Number(qtdLivre)
+    : Number(qtdRadio.value);
+
+  concursos = [];
+
+  for(let i = ult; i > ult - qtd; i--){
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/${i}`);
+    let dd = await rr.json();
     concursos.push(dd.listaDezenas.map(Number));
   }
 
- resultados.value=concursos.map(c=>c.join(" ")).join("\n");
-
- gerarEstatisticasConcursos(concursos);
-
+  resultados.value = concursos.map(c=>c.join(" ")).join("\n");
+  gerarEstatisticasConcursos(concursos);
 }
- function analisarRepeticaoConcursos(concursos){
+
+
+// =========================
+// 4️⃣ ANÁLISES LOTOFÁCIL
+// =========================
+
+function analisarRepeticaoConcursos(concursos){
   if(concursos.length < 2) return null;
 
   let total = 0;
-  let dist = {}; // ex: {4: 10, 5: 22, 6: 8}
+  let dist = {};
 
   for(let i = 0; i < concursos.length - 1; i++){
     let atual = concursos[i];
     let anterior = concursos[i + 1];
-
     let repetidos = atual.filter(n => anterior.includes(n)).length;
 
     total += repetidos;
@@ -542,9 +556,9 @@ concursos=[];
   }
 
   let media = (total / (concursos.length - 1)).toFixed(2);
-
   return { media, dist };
 }
+
 function analisarHistoricoUltimoAno(concursos){
   let dentro = 0;
   let fora = 0;
@@ -556,23 +570,34 @@ function analisarHistoricoUltimoAno(concursos){
     let okPares = (pares === 7 || pares === 8);
     let okSoma  = (soma >= 180 && soma <= 220);
 
-    if(okPares && okSoma){
-      dentro++;
-    } else {
-      fora++;
-    }
+    if(okPares && okSoma) dentro++;
+    else fora++;
   });
 
-  return {
-    total: concursos.length,
-    dentro,
-    fora
-  };
+  return { total: concursos.length, dentro, fora };
 }
 
- /* ===== ESTATÍSTICAS CONCURSOS ===== */
+function analisarNumerosRepetidos(concursos){
+  if(concursos.length < 2) return null;
+
+  let mapa = {};
+
+  for(let i = 0; i < concursos.length - 1; i++){
+    let atual = concursos[i];
+    let anterior = concursos[i + 1];
+
+    let repetidos = atual.filter(n => anterior.includes(n));
+    repetidos.forEach(n=>{
+      mapa[n] = (mapa[n] || 0) + 1;
+    });
+  }
+
+  return Object.entries(mapa)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,10);
+}
+
 function gerarEstatisticasConcursos(concursos){
-  const resumoPadrao = analisarHistoricoUltimoAno(concursos);
   const repeticaoInfo = analisarRepeticaoConcursos(concursos);
   const numerosRepetidos = analisarNumerosRepetidos(concursos);
 
@@ -584,60 +609,62 @@ function gerarEstatisticasConcursos(concursos){
   let faixa = { f1:0, f2:0, f3:0, f4:0, f5:0 };
 
   nums.forEach(n=>{
-    n = Number(n);
-    if(n >= 1 && n <= 5) faixa.f1++;
-    else if(n >= 6 && n <= 10) faixa.f2++;
-    else if(n >= 11 && n <= 15) faixa.f3++;
-    else if(n >= 16 && n <= 20) faixa.f4++;
-    else if(n >= 21 && n <= 25) faixa.f5++;
+    if(n <= 5) faixa.f1++;
+    else if(n <= 10) faixa.f2++;
+    else if(n <= 15) faixa.f3++;
+    else if(n <= 20) faixa.f4++;
+    else faixa.f5++;
   });
 
   estatConcursos.style.display = "block";
 
-estatConcursos.innerHTML = `
-  <strong>📊 Estatísticas dos Concursos</strong>
+  estatConcursos.innerHTML = `
+    <strong>📊 Estatísticas dos Concursos</strong>
 
-  <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
-  <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
+    <div class="stats">🔢 Pares: ${pares} | Ímpares: ${impares}</div>
+    <div class="stats">➕ Soma média: ${(soma/concursos.length).toFixed(1)}</div>
 
-  <div class="stats">📐 Faixas:
-    1–5: ${faixa.f1} |
-    6-10: ${faixa.f2} |
-    11-15: ${faixa.f3} |
-    16-20: ${faixa.f4} |
-    21–25: ${faixa.f5}
-  </div>
+    <div class="stats">📐 Faixas:
+      1–5: ${faixa.f1} |
+      6-10: ${faixa.f2} |
+      11-15: ${faixa.f3} |
+      16-20: ${faixa.f4} |
+      21–25: ${faixa.f5}
+    </div>
 
-  <div class="stats">Concursos analisados: ${concursos.length}</div>
+    <div class="stats">Concursos analisados: ${concursos.length}</div>
 
-${repeticaoInfo ? `
-<hr>
-<strong>🔁 Repetição entre concursos</strong>
-<div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
-<div class="stats">
-  ${Object.keys(repeticaoInfo.dist)
-    .sort((a,b)=>a-b)
-    .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
-    .join(" | ")}
-</div>
-` : ""}
+    ${repeticaoInfo ? `
+      <hr>
+      <strong>🔁 Repetição entre concursos</strong>
+      <div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
+      <div class="stats">
+        ${Object.keys(repeticaoInfo.dist)
+          .sort((a,b)=>a-b)
+          .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
+          .join(" | ")}
+      </div>
+    ` : ""}
 
-${numerosRepetidos && numerosRepetidos.length ? `
-<hr>
-<strong>🔢 Números mais repetidos entre concursos</strong>
-<div class="stats">
-  ${numerosRepetidos
-    .map(([num, qtd]) => String(num).padStart(2,"0") + "(" + qtd + "x)")
-    .join(" | ")}
-</div>
-` : ""}
+    ${numerosRepetidos && numerosRepetidos.length ? `
+      <hr>
+      <strong>🔢 Números mais repetidos entre concursos</strong>
+      <div class="stats">
+        ${numerosRepetidos
+          .map(([num, qtd]) => String(num).padStart(2,"0") + "(" + qtd + "x)")
+          .join(" | ")}
+      </div>
+    ` : ""}
 
-<hr>
-<strong>🧠 Padrão Estatístico</strong>
-`;
+    <hr>
+    <strong>🧠 Padrão Estatístico</strong>
+  `;
 }
 
-/* ===== ANÁLISE LOTOMANIA ===== */
+
+// =========================
+// 5️⃣ ANÁLISES LOTOMANIA
+// =========================
 
 function analisarRepeticaoLotomania(concursos){
   if(concursos.length < 2) return null;
@@ -656,7 +683,6 @@ function analisarRepeticaoLotomania(concursos){
   }
 
   let media = (total / (concursos.length - 1)).toFixed(2);
-
   return { media, dist };
 }
 
@@ -670,17 +696,14 @@ function analisarNumerosRepetidosLotomania(concursos){
     let anterior = concursos[i + 1];
 
     let repetidos = atual.filter(n => anterior.includes(n));
-
     repetidos.forEach(n=>{
       mapa[n] = (mapa[n] || 0) + 1;
     });
   }
 
-  let ordenado = Object.entries(mapa)
+  return Object.entries(mapa)
     .sort((a,b)=>b[1]-a[1])
     .slice(0,10);
-
-  return ordenado;
 }
 
 function gerarEstatisticasLotomania(concursos){
@@ -693,291 +716,46 @@ function gerarEstatisticasLotomania(concursos){
   estat.innerHTML = `
     <strong>📊 Estatísticas da Lotomania</strong>
 
-${repeticaoInfo ? `
-<hr>
-<strong>🔁 Repetição entre concursos</strong>
-<div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
-<div class="stats">
-  ${Object.keys(repeticaoInfo.dist)
-    .sort((a,b)=>a-b)
-    .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
-    .join(" | ")}
-</div>
-` : ""}
+    ${repeticaoInfo ? `
+      <hr>
+      <strong>🔁 Repetição entre concursos</strong>
+      <div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
+      <div class="stats">
+        ${Object.keys(repeticaoInfo.dist)
+          .sort((a,b)=>a-b)
+          .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
+          .join(" | ")}
+      </div>
+    ` : ""}
 
-${numerosRepetidos && numerosRepetidos.length ? `
-<hr>
-<strong>🔢 Números mais repetidos entre concursos</strong>
-<div class="stats">
-  ${numerosRepetidos
-    .map(([num, qtd]) => String(num).padStart(2,"0") + "(" + qtd + "x)")
-    .join(" | ")}
-</div>
-` : ""}
-
+    ${numerosRepetidos && numerosRepetidos.length ? `
+      <hr>
+      <strong>🔢 Números mais repetidos entre concursos</strong>
+      <div class="stats">
+        ${numerosRepetidos
+          .map(([num, qtd]) => String(num).padStart(2,"0") + "(" + qtd + "x)")
+          .join(" | ")}
+      </div>
+    ` : ""}
   `;
 }
 
- 
-/* ===== SUPERSETE ===== */
-function gerarJogoSuperSeteBase(modo){
-  let jogo = [];
-  let tentativas = 0;
 
-  while(jogo.length < 7 && tentativas < 200){
-    tentativas++;
+// =========================
+// 6️⃣ GERADORES LOTOMANIA
+// =========================
 
-    let n = Math.floor(Math.random() * 10);
-    jogo.push(n);
-
-    let soma = jogo.reduce((a,b)=>a+b,0);
-    let pares = jogo.filter(x => x % 2 === 0).length;
-
-    // 🟢 Conservador: evita extremos
-    if(modo === "conservador"){
-      if(soma > 42) { jogo.pop(); continue; }
-      if(pares >= 6) { jogo.pop(); continue; }
-    }
-
-    // 🔴 Ousado: aceita extremos (menos filtro)
-    if(modo === "ousado"){
-      // quase sem restrição
-    }
-  }
-
-  return jogo.length === 7 ? jogo : null;
-}
-
-function gerarSuperSete(){
-  const qtd = +document.getElementById("qtdSuperSete").value || 1;
-  const modo = document.getElementById("modoSuperSete").value;
-  let html = "";
-
-  for(let i = 0; i < qtd; i++){
-    let jogo = gerarJogoSuperSeteBase(modo);
-    if(!jogo) continue;
-
-    // gera 1 número por coluna
-  
-    const soma = jogo.reduce((a,b)=>a+b,0);
-    const pares = jogo.filter(n => n % 2 === 0).length;
-
-    let perfil = "🎯 Perfil equilibrado";
-    let classe = "";
-
-    // soma fora do padrão
-    if(soma < 21 || soma > 42){
-      perfil = "⚠️ Perfil extremo";
-      classe = "ss-extremo";
-    }
-
-    // pares extremos
-    if(pares <= 1 || pares >= 6){
-      perfil = "🧪 Perfil ousado";
-      classe = "ss-ousado";
-    }
-
-    html += `
-      <div class="resultado ${classe}">
-        ${jogo.join(" | ")}
-        <div class="stats">
-          Soma: ${soma}<br>
-          Pares: ${pares} | Ímpares: ${7 - pares}<br>
-          <strong>${perfil}</strong>
-        </div>
-      </div>
-    `;
-  }
-
-  saidaSuperSete.innerHTML = html;
-}
- 
-/* ===== LOTOFÁCIL ===== */
-function obterDezenasFixas(){
-  const input = document.getElementById("dezenasFixas");
-  if(!input || !input.value.trim()) return [];
-
-  let nums = input.value
-    .replace(/,/g," ")
-    .split(" ")
-    .map(n => parseInt(n))
-    .filter(n => n >= 1 && n <= 25);
-
-  return [...new Set(nums)];
-}
-
-function gerarLotofacil(){
-  const dezenas = +document.querySelector('input[name="dezenas"]:checked').value;
-  const qtd = +document.getElementById("qtdJogos").value;
-  const modo = document.querySelector('input[name="modo"]:checked').value;
-
-  let universo = Array.from({length:25},(_,i)=>i+1);
-
-  // Se for estatístico, usa base dos concursos
-  let baseNumeros = universo;
-  if(modo === "estatistico" && concursos.length){
-    let freq = {};
-    concursos.flat().forEach(n=>{
-      freq[n] = (freq[n] || 0) + 1;
-    });
-  baseNumeros = Object.entries(freq)
-  .sort((a,b)=>b[1]-a[1])   // mais frequentes primeiro
-  .slice(0,18)             // top 18 dezenas
-  .map(e=>Number(e[0]));
-}
-
- let fixas = obterDezenasFixas();
-
-if(fixas.length > dezenas){
-  alert("⚠️ Você escolheu mais dezenas fixas do que o total do jogo.");
-  return;
-}
-
-let html="";
-for(let i=0;i<qtd;i++){
-  let j = [...fixas];
-
-  while(j.length < dezenas){
-    let n = baseNumeros[Math.floor(Math.random()*baseNumeros.length)];
-    if(!j.includes(n)) j.push(n);
-  }
-
-    j.sort((a,b)=>a-b);
-
-    html+=`
-      <div class="resultado">
-        ${j.join(" - ")}
-        ${analisar(j).html}
-      </div>
-    `;
-  }
-  saida.innerHTML = html;
-}
-
-/* ===== AVANÇADO ===== */
-function gerarAvancado(){
-  const qtd = +document.getElementById("qtdAvancado").value;
-  let html="";
-  for(let i=0;i<qtd;i++){
-    let j=[];
-    while(j.length<15){
-      let n=Math.floor(Math.random()*25)+1;
-      if(!j.includes(n))j.push(n);
-    }
-    j.sort((a,b)=>a-b);
-    html+=`<div class="resultado">${j.join(" - ")}${analisar(j).html}</div>`;
-  }
-  saidaAvancado.innerHTML=html;
-}
-
-/* ===== LOTOMANIA ===== */
-function gerarJogoLotomaniaBase(modo, ultimo){
-  let jogo = [];
-  let tentativas = 0;
-  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
-
-  // pré-inclusão modo 20
-  if(modo === "vinte" && ultimo.length){
-    while(jogo.length < 15){
-      let n = ultimo[Math.floor(Math.random() * ultimo.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
-  }
-
-  while(jogo.length < 50 && tentativas < 15000){
-    tentativas++;
-    let n = Math.floor(Math.random() * 100);
-    if(jogo.includes(n)) continue;
-
-    if(modo === "zero" && ultimo.includes(n)) continue;
-
-    if(modo === "equilibrado" && ultimo.length){
-      let coinc = jogo.filter(x => ultimo.includes(x)).length;
-      if(coinc >= 12) continue;
-    }
-
-    let pares = jogo.filter(x => x % 2 === 0).length;
-    let impares = jogo.length - pares;
-    if(n % 2 === 0 && pares >= 26) continue;
-    if(n % 2 !== 0 && impares >= 26) continue;
-
-    let faixa =
-      n <= 19 ? "f1" :
-      n <= 39 ? "f2" :
-      n <= 59 ? "f3" :
-      n <= 79 ? "f4" : "f5";
-
-    if(faixas[faixa] >= 12) continue;
-
-    faixas[faixa]++;
-    jogo.push(n);
-  }
-
-  return jogo.length === 50 ? jogo.sort((a,b)=>a-b) : null;
-}
-
-function calcularScoreRiscoLotomania(jogo, ultimo){
-  let score = 100;
-
-  let pares = jogo.filter(n => n % 2 === 0).length;
-  let coinc = ultimo.length
-    ? jogo.filter(n => ultimo.includes(n)).length
-    : 0;
-
-  // risco por pares extremos
-  if(pares < 20 || pares > 30) score -= 20;
-
-  // risco por coincidência extrema
-  if(coinc === 0) score -= 15;
-  if(coinc > 16) score -= 25;
-
-  // risco por concentração de faixas
-  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
-  jogo.forEach(n=>{
-    if(n<=19) faixas.f1++;
-    else if(n<=39) faixas.f2++;
-    else if(n<=59) faixas.f3++;
-    else if(n<=79) faixas.f4++;
-    else faixas.f5++;
-  });
-
-  Object.values(faixas).forEach(v=>{
-    if(v < 6 || v > 14) score -= 10;
-  });
-
-  return Math.max(0, score);
-}
-
-function simularPontuacaoLotomania(jogo, simulacoes = 2000){
-  let dist = Array(21).fill(0);
-
-  for(let i=0;i<simulacoes;i++){
-    let sorteio = [];
-    while(sorteio.length < 50){
-      let n = Math.floor(Math.random() * 100);
-      if(!sorteio.includes(n)) sorteio.push(n);
-    }
-
-    let acertos = jogo.filter(n => sorteio.includes(n)).length;
-    dist[acertos]++;
-  }
-
-  return dist.map(v => ((v / simulacoes) * 100).toFixed(2));
-}
+function gerarJogoLotomaniaBase(modo, ultimo){ ... }
+function calcularScoreRiscoLotomania(jogo, ultimo){ ... }
+function simularPontuacaoLotomania(jogo, simulacoes = 2000){ ... }
 
 async function gerarLotomania(){
-
-  // 🎯 CONFIGURAÇÕES DO USUÁRIO
   const qtd = +document.getElementById("qtdLotomania").value || 1;
   const modo = document.getElementById("modoLotomania").value;
 
-  // 🔥 BUSCA CONCURSOS REAIS DA LOTOMANIA
   const concursos = await buscarConcursosLotomania();
-
-  // 🔥 GERA ESTATÍSTICAS REAIS
   gerarEstatisticasLotomania(concursos);
 
-  // 🎲 ÚLTIMO CONCURSO REAL
   const ultimo = concursos.length ? concursos[0] : [];
 
   let html = "";
@@ -1009,7 +787,6 @@ async function gerarLotomania(){
 
   saidaLotomania.innerHTML = html;
 }
-
 
 // ===== VALIDADOR MATEMÁTICO =====
 function validarFechamento(base, jogos){
