@@ -244,6 +244,8 @@ button{
     Gerar Lotomania
   </button>
 
+<div class="card" id="estatLotomania" style="display:none"></div>
+
 </div>
 <div id="saidaLotomania"></div>
 </div>
@@ -480,6 +482,26 @@ function gerarJogosDeterministicos(base, qtdJogos){
 }
 
 /* ===== BUSCAR CONCURSOS ===== */
+async function buscarConcursosLotomania(){
+  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania");
+  const d = await r.json();
+  const ultimo = d.numero;
+
+  const qtd = +document.getElementById("qtdLotomania").value || 5;
+
+  let concursos = [];
+
+  for(let i = ultimo; i > ultimo - qtd; i--){
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania/${i}`);
+    let dd = await rr.json();
+
+    // listaDezenas vem como strings, converte para número
+    concursos.push(dd.listaDezenas.map(Number));
+  }
+
+  return concursos;
+}
+
 async function buscarConcursos(){
   const r=await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil");
   const d=await r.json();
@@ -614,6 +636,88 @@ ${numerosRepetidos && numerosRepetidos.length ? `
 <strong>🧠 Padrão Estatístico</strong>
 `;
 }
+
+/* ===== ANÁLISE LOTOMANIA ===== */
+
+function analisarRepeticaoLotomania(concursos){
+  if(concursos.length < 2) return null;
+
+  let total = 0;
+  let dist = {};
+
+  for(let i = 0; i < concursos.length - 1; i++){
+    let atual = concursos[i];
+    let anterior = concursos[i + 1];
+
+    let repetidos = atual.filter(n => anterior.includes(n)).length;
+
+    total += repetidos;
+    dist[repetidos] = (dist[repetidos] || 0) + 1;
+  }
+
+  let media = (total / (concursos.length - 1)).toFixed(2);
+
+  return { media, dist };
+}
+
+function analisarNumerosRepetidosLotomania(concursos){
+  if(concursos.length < 2) return null;
+
+  let mapa = {};
+
+  for(let i = 0; i < concursos.length - 1; i++){
+    let atual = concursos[i];
+    let anterior = concursos[i + 1];
+
+    let repetidos = atual.filter(n => anterior.includes(n));
+
+    repetidos.forEach(n=>{
+      mapa[n] = (mapa[n] || 0) + 1;
+    });
+  }
+
+  let ordenado = Object.entries(mapa)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,10);
+
+  return ordenado;
+}
+
+function gerarEstatisticasLotomania(concursos){
+  const repeticaoInfo = analisarRepeticaoLotomania(concursos);
+  const numerosRepetidos = analisarNumerosRepetidosLotomania(concursos);
+
+  const estat = document.getElementById("estatLotomania");
+  estat.style.display = "block";
+
+  estat.innerHTML = `
+    <strong>📊 Estatísticas da Lotomania</strong>
+
+${repeticaoInfo ? `
+<hr>
+<strong>🔁 Repetição entre concursos</strong>
+<div class="stats">📊 Média de repetidos: ${repeticaoInfo.media}</div>
+<div class="stats">
+  ${Object.keys(repeticaoInfo.dist)
+    .sort((a,b)=>a-b)
+    .map(k => k + " repetidos: " + repeticaoInfo.dist[k] + "x")
+    .join(" | ")}
+</div>
+` : ""}
+
+${numerosRepetidos && numerosRepetidos.length ? `
+<hr>
+<strong>🔢 Números mais repetidos entre concursos</strong>
+<div class="stats">
+  ${numerosRepetidos
+    .map(([num, qtd]) => String(num).padStart(2,"0") + "(" + qtd + "x)")
+    .join(" | ")}
+</div>
+` : ""}
+
+  `;
+}
+
  
 /* ===== SUPERSETE ===== */
 function gerarJogoSuperSeteBase(modo){
@@ -861,14 +965,24 @@ function simularPontuacaoLotomania(jogo, simulacoes = 2000){
   return dist.map(v => ((v / simulacoes) * 100).toFixed(2));
 }
 
-function gerarLotomania(){
+async function gerarLotomania(){
+
+  // 🎯 CONFIGURAÇÕES DO USUÁRIO
   const qtd = +document.getElementById("qtdLotomania").value || 1;
   const modo = document.getElementById("modoLotomania").value;
-  const ultimo = obterUltimoConcursoLotomania();
+
+  // 🔥 BUSCA CONCURSOS REAIS DA LOTOMANIA
+  const concursos = await buscarConcursosLotomania();
+
+  // 🔥 GERA ESTATÍSTICAS REAIS
+  gerarEstatisticasLotomania(concursos);
+
+  // 🎲 ÚLTIMO CONCURSO REAL
+  const ultimo = concursos.length ? concursos[0] : [];
 
   let html = "";
 
-  for(let i=0;i<qtd;i++){
+  for(let i = 0; i < qtd; i++){
     let jogo = gerarJogoLotomaniaBase(modo, ultimo);
     if(!jogo) continue;
 
@@ -895,6 +1009,7 @@ function gerarLotomania(){
 
   saidaLotomania.innerHTML = html;
 }
+
 
 // ===== VALIDADOR MATEMÁTICO =====
 function validarFechamento(base, jogos){
