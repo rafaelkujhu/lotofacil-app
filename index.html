@@ -251,6 +251,26 @@ button{
 <div class="card">
 
 <div id="tab1">
+
+<!-- 🔍 BUSCAR CONCURSOS LOTOMANIA -->
+<div class="card" style="margin-bottom:10px">
+  <button class="btn" onclick="buscarConcursosLotomania()">🔍 Buscar concursos</button>
+
+  <div style="margin-top:8px">
+    <label><input type="radio" name="qtdLoto" value="1" checked> Último</label>
+    <label><input type="radio" name="qtdLoto" value="10"> 10</label>
+    <label><input type="radio" name="qtdLoto" value="20"> 20</label>
+    <label><input type="radio" name="qtdLoto" value="30"> 30</label>
+  </div>
+
+  <input
+    type="number"
+    id="qtdLivreLoto"
+    placeholder="Qtd personalizada (ex: 50)"
+    style="margin-top:6px; width:100%"
+  />
+</div>
+
   <div id="painelLotomaniaInfo"></div>
 
   <!-- resto da interface da Lotomania -->
@@ -486,12 +506,7 @@ function trocarTab(i){
       tab.style.display = idx === i ? 'block' : 'none';
     }
   });
-
-  // 🔥 ao entrar na aba Lotomania (índice 1), busca os últimos 30 concursos
-  if(i === 1){
-    buscarEstatisticasLotomania();
-  }
-}
+ }
 
 
 async function obterUltimoConcursoLotomania(){
@@ -655,6 +670,76 @@ async function buscarConcursosLotomania(){
 
   return concursos;
 }
+
+// ===== BUSCAR CONCURSOS LOTOMANIA (COM ESCOLHA DO USUÁRIO) =====
+async function buscarConcursosLotomania(){
+
+  // lê rádio selecionado
+  let radio = document.querySelector('input[name="qtdLoto"]:checked');
+  let qtdLivre = document.getElementById("qtdLivreLoto")?.value;
+
+  const qtd = qtdLivre && qtdLivre > 0
+    ? Number(qtdLivre)
+    : Number(radio.value);
+
+  const concursos = await buscarUltimosConcursosLotomania(qtd);
+
+  if(!concursos.length){
+    document.getElementById("painelLotomaniaInfo").innerHTML =
+      "<div class='card'>⚠️ Erro ao buscar concursos da Lotomania</div>";
+    return;
+  }
+
+  const ultimo = concursos[0];
+  const analise = analisarHistoricoLotomania(concursos);
+
+  // guarda globalmente
+  window.concursosLotomania = concursos;
+  window.ultimoLotomania = ultimo;
+
+  let html = `
+    <div class="card">
+      <strong>📊 Estatísticas da Lotomania (últimos ${concursos.length} concursos)</strong>
+      <div class="stats">Concursos analisados: ${concursos.length}</div>
+    </div>
+
+    <div class="card">
+      <strong>📌 Último concurso da Lotomania</strong>
+      <div class="stats" style="margin-top:6px">
+        ${ultimo.join(" - ")}
+      </div>
+    </div>
+  `;
+
+  if(analise){
+    html += `
+      <div class="card">
+        <strong>🔁 Repetição entre concursos</strong>
+        <div class="stats">📊 Média de repetidos: ${analise.media}</div>
+        <div class="stats">
+          ${Object.keys(analise.dist)
+            .sort((a,b)=>a-b)
+            .map(k => k + " repetidos: " + analise.dist[k] + "x")
+            .join(" | ")}
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>🔢 Dezenas mais repetidas</strong>
+        <div class="stats">
+          ${Object.entries(analise.mapa)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,15)
+            .map(([n,q]) => n + ": " + q + "x")
+            .join(" | ")}
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById("painelLotomaniaInfo").innerHTML = html;
+}
+
 
 // Lotofácil
 async function buscarConcursos(){
