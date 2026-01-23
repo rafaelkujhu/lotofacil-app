@@ -483,9 +483,15 @@ function trocarTab(i){
   });
 }
 
-// Placeholder futuro
-function obterUltimoConcursoLotomania(){
-  return [];
+async function obterUltimoConcursoLotomania(){
+  try{
+    const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania");
+    const d = await r.json();
+    return d.listaDezenas.map(Number);
+  }catch(e){
+    console.error("Erro ao buscar último concurso da Lotomania", e);
+    return [];
+  }
 }
 
 // Jogos determinísticos
@@ -838,7 +844,7 @@ async function gerarLotomania(){
   const qtd = +document.getElementById("qtdLotomania").value || 1;
   const modo = document.getElementById("modoLotomania").value;
 
-  const concursos = await buscarConcursosLotomania();
+  const ultimo = await obterUltimoConcursoLotomania();
   gerarEstatisticasLotomania(concursos);
 
   const ultimo = concursos.length ? concursos[0] : [];
