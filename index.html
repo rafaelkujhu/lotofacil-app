@@ -844,23 +844,24 @@ async function gerarLotomania(){
   const qtd = +document.getElementById("qtdLotomania").value || 1;
   const modo = document.getElementById("modoLotomania").value;
 
+  // 🔥 busca o último concurso REAL da API
   const ultimo = await obterUltimoConcursoLotomania();
-  gerarEstatisticasLotomania(concursos);
 
-  const ultimo = concursos.length ? concursos[0] : [];
+  // se você tiver estatísticas históricas da Lotomania, use aqui
+  // gerarEstatisticasLotomania(concursos);  // só se concursos existir
 
   let html = "";
 
-if(ultimo.length){
-  html += `
-    <div class="card">
-      <strong>📌 Último concurso da Lotomania</strong>
-      <div class="stats" style="margin-top:6px">
-        ${ultimo.join(" - ")}
+  if(ultimo.length){
+    html += `
+      <div class="card">
+        <strong>📌 Último concurso da Lotomania</strong>
+        <div class="stats" style="margin-top:6px">
+          ${ultimo.join(" - ")}
+        </div>
       </div>
-    </div>
-  `;
-}
+    `;
+  }
 
   for(let i = 0; i < qtd; i++){
     let jogo = gerarJogoLotomaniaBase(modo, ultimo);
