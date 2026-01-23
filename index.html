@@ -256,12 +256,12 @@ button{
 <div class="card" style="margin-bottom:10px">
   <button class="btn" onclick="buscarConcursosLotomania()">🔍 Buscar concursos</button>
 
-  <div style="margin-top:8px">
-    <label><input type="radio" name="qtdLoto" value="1" checked> Último</label>
-    <label><input type="radio" name="qtdLoto" value="10"> 10</label>
-    <label><input type="radio" name="qtdLoto" value="20"> 20</label>
-    <label><input type="radio" name="qtdLoto" value="30"> 30</label>
-  </div>
+<div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap">
+  <label><input type="radio" name="qtdLoto" value="1" checked> Último</label>
+  <label><input type="radio" name="qtdLoto" value="10"> 10</label>
+  <label><input type="radio" name="qtdLoto" value="20"> 20</label>
+  <label><input type="radio" name="qtdLoto" value="30"> 30</label>
+</div>
 
   <input
     type="number"
@@ -693,6 +693,17 @@ async function buscarConcursosLotomania(){
   const ultimo = concursos[0];
   const analise = analisarHistoricoLotomania(concursos);
 
+let listaConcursosHTML = `
+  <div class="card">
+    <strong>📜 Últimos ${concursos.length} concursos</strong>
+    <div class="stats" style="max-height:180px; overflow-y:auto; font-size:13px">
+      ${concursos
+        .map((c,idx) => `<div>${idx === 0 ? "👉" : ""} ${c.join(" - ")}</div>`)
+        .join("")}
+    </div>
+  </div>
+`;
+
   // guarda globalmente
   window.concursosLotomania = concursos;
   window.ultimoLotomania = ultimo;
@@ -713,17 +724,6 @@ async function buscarConcursosLotomania(){
 
   if(analise){
     html += `
-      <div class="card">
-        <strong>🔁 Repetição entre concursos</strong>
-        <div class="stats">📊 Média de repetidos: ${analise.media}</div>
-        <div class="stats">
-          ${Object.keys(analise.dist)
-            .sort((a,b)=>a-b)
-            .map(k => k + " repetidos: " + analise.dist[k] + "x")
-            .join(" | ")}
-        </div>
-      </div>
-
       <div class="card">
         <strong>🔢 Dezenas mais repetidas</strong>
         <div class="stats">
