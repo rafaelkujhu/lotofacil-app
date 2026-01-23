@@ -1017,11 +1017,13 @@ function gerarEstatisticasLotomania(concursos){
 function gerarEquilibradoInteligente(estat, mapa){
 
   let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
-  let quentes = ordenadas.slice(0, 30).map(x => Number(x[0]));
-  let frias   = ordenadas.slice(-30).map(x => Number(x[0]));
+  let quentes = ordenadas.slice(0, 40).map(x => Number(x[0]));
+  let frias   = ordenadas.slice(-40).map(x => Number(x[0]));
+
+  let alvoPares = Math.round(estat.mediaParesPorJogo * 50);
 
   let jogo = [];
-  let alvoPares = Math.round(estat.mediaParesPorJogo * 50);
+  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
 
   while(jogo.length < 50){
 
@@ -1031,20 +1033,32 @@ function gerarEquilibradoInteligente(estat, mapa){
     let n = fonte[Math.floor(Math.random() * fonte.length)];
     if(jogo.includes(n)) continue;
 
+    // força pares próximos da média
     let paresAtuais = jogo.filter(x => x % 2 === 0).length;
     if(n % 2 === 0 && paresAtuais >= alvoPares) continue;
 
+    // força faixas equilibradas
+    let faixa =
+      n <= 19 ? "f1" :
+      n <= 39 ? "f2" :
+      n <= 59 ? "f3" :
+      n <= 79 ? "f4" : "f5";
+
+    if(faixas[faixa] >= 10) continue;
+
+    faixas[faixa]++;
     jogo.push(n);
   }
 
   return jogo.sort((a,b)=>a-b);
 }
 
-
 function gerarVinteEstatistico(estat, mapa){
 
   let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
-  let quentes = ordenadas.slice(0, 50).map(x => Number(x[0]));
+
+  // pega só as 60 mais quentes
+  let quentes = ordenadas.slice(0, 60).map(x => Number(x[0]));
 
   let jogo = [];
 
@@ -1061,7 +1075,9 @@ function gerarVinteEstatistico(estat, mapa){
 function gerarZeroEstatistico(estat, mapa){
 
   let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
-  let frias = ordenadas.slice(-50).map(x => Number(x[0]));
+
+  // pega só as 60 mais frias
+  let frias = ordenadas.slice(-60).map(x => Number(x[0]));
 
   let jogo = [];
 
