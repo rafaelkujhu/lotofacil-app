@@ -96,6 +96,12 @@ button{
   text-align:center;
   font-weight:600;
   color:#4a148c;
+
+  /* 🔒 BLINDAGEM CONTRA ESTOURO */
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 .conf{
   margin-top:6px;
@@ -277,12 +283,6 @@ button{
   <option value="vinte">🔴 Modo 20 Pontos</option>
 </select>
 
-<select id="modoLotomania">
-  <option value="equilibrado">🎯 Equilibrado</option>
-  <option value="zero">🔵 Modo 0 Pontos</option>
-  <option value="vinte">🔴 Modo 20 Pontos</option>
-</select>
-
 <!-- 🧠 TEXTO EDUCATIVO DOS MODOS -->
 <div class="card">
   <strong>🧠 Como funcionam os modos da Lotomania</strong>
@@ -434,7 +434,28 @@ button{
 <div class="content" id="tab3" style="display:none">
 
   <div class="card">
-    <strong>🎯 Super Sete</strong>
+   <div class="card">
+  <strong>📚 Como funciona a geração no Super Sete</strong>
+
+  <div class="stats" style="margin-top:8px">
+
+  • Cada jogo possui <strong>7 colunas independentes</strong>, com dígitos de 0 a 9.<br><br>
+
+  • O modo <strong>Equilibrado</strong> gera distribuição neutra, sem forçar padrões.<br><br>
+
+  • O modo <strong>Conservador</strong> evita extremos (0 e 9), priorizando dígitos centrais.<br><br>
+
+  • O modo <strong>Ousado</strong> favorece extremos, buscando padrões mais raros.<br><br>
+
+  <strong>Estatísticas analisadas:</strong><br>
+  – Soma total dos dígitos (ideal: 20 a 35)<br>
+  – Quantidade de extremos (0 e 9)<br>
+  – Perfil de equilíbrio do jogo<br><br>
+
+  ⚠️ Nenhuma estratégia garante prêmio.<br>
+  Os modos apenas controlam o <strong>perfil estatístico</strong> do jogo gerado.
+  </div>
+</div>
 
     <p class="stats">
       7 colunas (0 a 9)<br>
@@ -1788,6 +1809,65 @@ function gerarLotofacil(){
   document.getElementById("saida").innerHTML = html;
 }
 
+function gerarSuperSete(){
+
+  const qtd = +document.getElementById("qtdSuperSete").value || 1;
+  const modo = document.getElementById("modoSuperSete").value;
+
+  let html = "";
+
+  for(let i = 0; i < qtd; i++){
+
+    let jogo = [];
+
+    for(let col = 0; col < 7; col++){
+      let n;
+
+      if(modo === "conservador"){
+        // evita extremos: 2 a 7
+        n = Math.floor(Math.random() * 6) + 2;
+      }
+      else if(modo === "ousado"){
+        // favorece extremos
+        let extremos = [0,1,8,9];
+        if(Math.random() < 0.5){
+          n = extremos[Math.floor(Math.random() * extremos.length)];
+        }else{
+          n = Math.floor(Math.random() * 10);
+        }
+      }
+      else{
+        // equilibrado
+        n = Math.floor(Math.random() * 10);
+      }
+
+      jogo.push(n);
+    }
+
+    // 📊 Estatísticas confiáveis do Super Sete
+    const soma = jogo.reduce((a,b)=>a+b,0);
+    const zeros = jogo.filter(n => n === 0).length;
+    const extremos = jogo.filter(n => n === 0 || n === 9).length;
+
+    let perfil =
+      soma >= 20 && soma <= 35 && extremos <= 2
+        ? "🟢 Perfil equilibrado"
+        : "🟡 Perfil alternativo";
+
+    html += `
+      <div class="resultado">
+        ${jogo.join(" | ")}
+        <div class="stats">
+          Soma: ${soma}<br>
+          Zeros: ${zeros} | Extremos (0/9): ${extremos}<br>
+          <strong>${perfil}</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById("saidaSuperSete").innerHTML = html;
+}
 
 function gerarLotofacilPro(){
   const qtd = +document.getElementById("qtdLotofacilPro").value || 1;
