@@ -493,14 +493,17 @@ function confianca(extra=0){
 }
 
 function trocarTab(i){
-  document.querySelectorAll('.tab').forEach((t,idx)=>{
+
+  document.querySelectorAll('.tab').forEach((t, idx) => {
     t.classList.toggle('active', idx === i);
+
     const tab = document.getElementById('tab' + idx);
     if(tab){
       tab.style.display = idx === i ? 'block' : 'none';
     }
   });
- }
+
+}
 
 
 async function obterUltimoConcursoLotomania(){
@@ -794,6 +797,9 @@ return {
     f5: (faixas.f5 / concursos.length / 50)
   }
 };
+
+ }
+
 
 
 // Lotofácil
@@ -1094,38 +1100,6 @@ function gerarJogoLotomaniaBase(modo, ultimo, estat, mapa){
   return gerarJogoAleatorioLotomania();
 }
 
-
-  while(jogo.length < 50 && tentativas < 15000){
-    tentativas++;
-    let n = Math.floor(Math.random() * 100);
-    if(jogo.includes(n)) continue;
-
-    if(modo === "zero" && ultimo.includes(n)) continue;
-
-    if(modo === "equilibrado" && ultimo.length){
-      let coinc = jogo.filter(x => ultimo.includes(x)).length;
-      if(coinc >= 12) continue;
-    }
-
-    let pares = jogo.filter(x => x % 2 === 0).length;
-    let impares = jogo.length - pares;
-    if(n % 2 === 0 && pares >= 26) continue;
-    if(n % 2 !== 0 && impares >= 26) continue;
-
-    let faixa =
-      n <= 19 ? "f1" :
-      n <= 39 ? "f2" :
-      n <= 59 ? "f3" :
-      n <= 79 ? "f4" : "f5";
-
-    if(faixas[faixa] >= 12) continue;
-
-    faixas[faixa]++;
-    jogo.push(n);
-  }
-
-  return jogo.length === 50 ? jogo.sort((a,b)=>a-b) : null;
-}
 
 function calcularScoreRiscoLotomania(jogo, ultimo){
   let score = 100;
