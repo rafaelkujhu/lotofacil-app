@@ -247,21 +247,16 @@ button{
 </div>
 
 <!-- ================= LOTOMANIA ================= -->
-<div class="content" id="tab1" style="display:none">
-<div class="card">
-
-<div id="tab1">
-
-<!-- 🔍 BUSCAR CONCURSOS LOTOMANIA -->
 <div class="card" style="margin-bottom:10px">
+
   <button class="btn" onclick="buscarConcursosLotomania()">🔍 Buscar concursos</button>
 
-<div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap">
-  <label><input type="radio" name="qtdLoto" value="1" checked> Último</label>
-  <label><input type="radio" name="qtdLoto" value="10"> 10</label>
-  <label><input type="radio" name="qtdLoto" value="20"> 20</label>
-  <label><input type="radio" name="qtdLoto" value="30"> 30</label>
-</div>
+  <div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap">
+    <label><input type="radio" name="qtdLoto" value="1" checked> Último</label>
+    <label><input type="radio" name="qtdLoto" value="10"> 10</label>
+    <label><input type="radio" name="qtdLoto" value="20"> 20</label>
+    <label><input type="radio" name="qtdLoto" value="30"> 30</label>
+  </div>
 
   <input
     type="number"
@@ -269,29 +264,26 @@ button{
     placeholder="Qtd personalizada (ex: 50)"
     style="margin-top:6px; width:100%"
   />
-</div>
-
-  <div id="painelLotomaniaInfo"></div>
-
-  <!-- resto da interface da Lotomania -->
-
-  <select id="modoLotomania">
-    <option value="equilibrado">🎯 Equilibrado</option>
-    <option value="zero">🔵 Modo 0 Pontos</option>
-    <option value="vinte">🔴 Modo 20 Pontos</option>
-  </select>
-
-  <input type="number" id="qtdLotomania" value="3" min="1">
-
-  <button onclick="executarSeguro(gerarLotomania,'Lotomania')">
-    Gerar Lotomania
-  </button>
-
-<div class="card" id="estatLotomania" style="display:none"></div>
 
 </div>
+
+<!-- PAINEL DE ESTATÍSTICAS -->
+<div id="painelLotomaniaInfo"></div>
+
+<!-- CONFIGURAÇÕES DE GERAÇÃO -->
+<select id="modoLotomania">
+  <option value="equilibrado">🎯 Equilibrado</option>
+  <option value="zero">🔵 Modo 0 Pontos</option>
+  <option value="vinte">🔴 Modo 20 Pontos</option>
+</select>
+
+<input type="number" id="qtdLotomania" value="3" min="1">
+
+<button onclick="executarSeguro(gerarLotomania,'Lotomania')">
+  Gerar Lotomania
+</button>
+
 <div id="saidaLotomania"></div>
-</div>
 
 <!-- ================= FECHAMENTO ================= -->
 <div class="content" id="tab2" style="display:none">
@@ -679,6 +671,8 @@ async function buscarConcursosLotomania(){
 
   const ultimo = concursos[0];
 
+ const estat = gerarEstatisticasLotomaniaCompletas(concursos);
+
   // guarda global
   window.concursosLotomania = concursos;
   window.ultimoLotomania = ultimo;
@@ -701,11 +695,24 @@ async function buscarConcursosLotomania(){
     mapa[n] = (mapa[n] || 0) + 1;
   });
 
-  let html = `
-    <div class="card">
-      <strong>📊 Estatísticas da Lotomania (últimos ${concursos.length} concursos)</strong>
-      <div class="stats">Concursos analisados: ${concursos.length}</div>
+let html = `
+  <div class="card">
+    <strong>📊 Estatísticas da Lotomania (últimos ${concursos.length} concursos)</strong>
+
+    <div class="stats">🔢 Pares: ${estat.pares} | Ímpares: ${estat.impares}</div>
+    <div class="stats">➕ Soma média: ${estat.somaMedia}</div>
+
+    <div class="stats">📐 Faixas:
+      0–19: ${estat.faixas.f1} |
+      20–39: ${estat.faixas.f2} |
+      40–59: ${estat.faixas.f3} |
+      60–79: ${estat.faixas.f4} |
+      80–99: ${estat.faixas.f5}
     </div>
+
+    <div class="stats">🔄 Média de sequências consecutivas: ${estat.mediaSequencias}</div>
+    <div class="stats">Concursos analisados: ${concursos.length}</div>
+  </div>
 
     <div class="card">
       <strong>📌 Último concurso da Lotomania</strong>
@@ -730,6 +737,51 @@ async function buscarConcursosLotomania(){
 
   document.getElementById("painelLotomaniaInfo").innerHTML = html;
 }
+
+function gerarEstatisticasLotomaniaCompletas(concursos){
+
+  let nums = concursos.flat();
+
+  // 🔢 Pares / Ímpares
+  let pares = nums.filter(n => n % 2 === 0).length;
+  let impares = nums.length - pares;
+
+  // ➕ Soma média
+  let soma = nums.reduce((a,b)=>a+b,0);
+  let somaMedia = (soma / concursos.length).toFixed(1);
+
+  // 📐 Faixas
+  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+
+  nums.forEach(n=>{
+    if(n <= 19) faixas.f1++;
+    else if(n <= 39) faixas.f2++;
+    else if(n <= 59) faixas.f3++;
+    else if(n <= 79) faixas.f4++;
+    else faixas.f5++;
+  });
+
+  // 🔄 Sequências consecutivas
+  let totalSequencias = 0;
+  concursos.forEach(jogo=>{
+    let ordenado = [...jogo].sort((a,b)=>a-b);
+    for(let i=1;i<ordenado.length;i++){
+      if(ordenado[i] === ordenado[i-1] + 1){
+        totalSequencias++;
+      }
+    }
+  });
+  let mediaSequencias = (totalSequencias / concursos.length).toFixed(1);
+
+  return {
+    pares,
+    impares,
+    somaMedia,
+    faixas,
+    mediaSequencias
+  };
+}
+
 
 // Lotofácil
 async function buscarConcursos(){
