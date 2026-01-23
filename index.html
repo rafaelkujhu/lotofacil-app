@@ -250,6 +250,11 @@ button{
 <div class="content" id="tab1" style="display:none">
 <div class="card">
 
+<div id="tab1">
+  <div id="painelLotomaniaInfo"></div>
+
+  <!-- resto da interface da Lotomania -->
+
   <select id="modoLotomania">
     <option value="equilibrado">🎯 Equilibrado</option>
     <option value="zero">🔵 Modo 0 Pontos</option>
@@ -481,7 +486,13 @@ function trocarTab(i){
       tab.style.display = idx === i ? 'block' : 'none';
     }
   });
+
+  // 🔥 ao entrar na aba Lotomania (índice 1), busca os últimos 30 concursos
+  if(i === 1){
+    buscarEstatisticasLotomania();
+  }
 }
+
 
 async function obterUltimoConcursoLotomania(){
   try{
@@ -493,6 +504,117 @@ async function obterUltimoConcursoLotomania(){
     return [];
   }
 }
+
+// ===== BUSCAR ÚLTIMOS CONCURSOS DA LOTOMANIA =====
+async function buscarUltimosConcursosLotomania(qtd = 30){
+  try{
+    const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania");
+    const d = await r.json();
+    const ultimoNumero = d.numero;
+
+    let concursos = [];
+
+    for(let i = ultimoNumero; i > ultimoNumero - qtd; i--){
+      let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania/${i}`);
+      let dd = await rr.json();
+      concursos.push(dd.listaDezenas.map(Number));
+    }
+
+    return concursos;
+  }catch(e){
+    console.error("Erro ao buscar concursos da Lotomania", e);
+    return [];
+  }
+}
+
+// ===== ANÁLISE HISTÓRICA LOTOMANIA =====
+function analisarHistoricoLotomania(concursos){
+  if(concursos.length < 2) return null;
+
+  let total = 0;
+  let dist = {};
+  let mapa = {};
+
+  for(let i = 0; i < concursos.length - 1; i++){
+    let atual = concursos[i];
+    let anterior = concursos[i + 1];
+
+    let repetidos = atual.filter(n => anterior.includes(n)).length;
+    total += repetidos;
+    dist[repetidos] = (dist[repetidos] || 0) + 1;
+
+    atual.forEach(n=>{
+      if(anterior.includes(n)){
+        mapa[n] = (mapa[n] || 0) + 1;
+      }
+    });
+  }
+
+  let media = (total / (concursos.length - 1)).toFixed(2);
+
+  return { media, dist, mapa };
+}
+
+// ===== BUSCAR + MOSTRAR ESTATÍSTICAS LOTOMANIA =====
+async function buscarEstatisticasLotomania(){
+  const concursos = await buscarUltimosConcursosLotomania(30);
+
+  if(!concursos.length){
+    document.getElementById("painelLotomaniaInfo").innerHTML =
+      "<div class='card'>⚠️ Erro ao buscar concursos da Lotomania</div>";
+    return;
+  }
+
+  const ultimo = concursos[0];
+  const analise = analisarHistoricoLotomania(concursos);
+
+  // guarda globalmente
+  window.concursosLotomania = concursos;
+  window.ultimoLotomania = ultimo;
+
+  let html = `
+    <div class="card">
+      <strong>📊 Estatísticas da Lotomania (últimos 30 concursos)</strong>
+      <div class="stats">Concursos analisados: ${concursos.length}</div>
+    </div>
+
+    <div class="card">
+      <strong>📌 Último concurso da Lotomania</strong>
+      <div class="stats" style="margin-top:6px">
+        ${ultimo.join(" - ")}
+      </div>
+    </div>
+  `;
+
+  if(analise){
+    html += `
+      <div class="card">
+        <strong>🔁 Repetição entre concursos</strong>
+        <div class="stats">📊 Média de repetidos: ${analise.media}</div>
+        <div class="stats">
+          ${Object.keys(analise.dist)
+            .sort((a,b)=>a-b)
+            .map(k => k + " repetidos: " + analise.dist[k] + "x")
+            .join(" | ")}
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>🔢 Dezenas mais repetidas</strong>
+        <div class="stats">
+          ${Object.entries(analise.mapa)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,15)
+            .map(([n,q]) => n + ": " + q + "x")
+            .join(" | ")}
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById("painelLotomaniaInfo").innerHTML = html;
+}
+
 
 // Jogos determinísticos
 function gerarJogosDeterministicos(base, qtdJogos){
