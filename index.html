@@ -1058,7 +1058,7 @@ function gerarVinteEstatistico(estat, mapa){
   let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
 
   // pega só as 60 mais quentes
-  let quentes = ordenadas.slice(0, 60).map(x => Number(x[0]));
+  let quentes = ordenadas.slice(0, 40).map(x => Number(x[0]));
 
   let jogo = [];
 
@@ -1080,10 +1080,26 @@ function gerarZeroEstatistico(estat, mapa){
   let frias = ordenadas.slice(-60).map(x => Number(x[0]));
 
   let jogo = [];
+  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
 
   while(jogo.length < 50){
+
     let n = frias[Math.floor(Math.random() * frias.length)];
+
+    // não repete número
     if(jogo.includes(n)) continue;
+
+    // 🔵 BLOQUEIO DE FAIXA DOMINANTE (AQUI)
+    let faixa =
+      n <= 19 ? "f1" :
+      n <= 39 ? "f2" :
+      n <= 59 ? "f3" :
+      n <= 79 ? "f4" : "f5";
+
+    // se essa faixa já é dominante no histórico, evita
+    if(estat.faixas[faixa] > (estat.pares + estat.impares) / 5) continue;
+
+    faixas[faixa]++;
     jogo.push(n);
   }
 
@@ -1145,7 +1161,7 @@ function calcularScoreRiscoLotomania(jogo, ultimo){
   return Math.max(0, score);
 }
 
-function simularPontuacaoLotomania(jogo, simulacoes = 2000){
+function simularPontuacaoLotomania(jogo, simulacoes = 500){
   let dist = Array(21).fill(0);
 
   for(let i=0;i<simulacoes;i++){
