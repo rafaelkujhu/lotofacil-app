@@ -647,31 +647,7 @@ function gerarJogosDeterministicos(base, qtdJogos){
   return jogos;
 }
 
-
-// =========================
-// 3️⃣ BUSCA DE CONCURSOS (APIs)
-// =========================
-
-// Lotomania
-async function buscarConcursosLotomania(){
-  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania");
-  const d = await r.json();
-  const ultimo = d.numero;
-
-  const qtd = +document.getElementById("qtdLotomania").value || 5;
-
-  let concursos = [];
-
-  for(let i = ultimo; i > ultimo - qtd; i--){
-    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania/${i}`);
-    let dd = await rr.json();
-    concursos.push(dd.listaDezenas.map(Number));
-  }
-
-  return concursos;
-}
-
-// ===== BUSCAR CONCURSOS LOTOMANIA (COM ESCOLHA DO USUÁRIO) =====
+// ===== BUSCAR CONCURSOS LOTOMANIA (VERSÃO FINAL CORRETA) =====
 async function buscarConcursosLotomania(){
 
   // lê rádio selecionado
@@ -682,7 +658,18 @@ async function buscarConcursosLotomania(){
     ? Number(qtdLivre)
     : Number(radio.value);
 
-  const concursos = await buscarUltimosConcursosLotomania(qtd);
+  // 🔥 busca o número do último concurso
+  const r = await fetch("https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania");
+  const d = await r.json();
+  const ultimoNumero = d.numero;
+
+  let concursos = [];
+
+  for(let i = ultimoNumero; i > ultimoNumero - qtd; i--){
+    let rr = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/lotomania/${i}`);
+    let dd = await rr.json();
+    concursos.push(dd.listaDezenas.map(Number));
+  }
 
   if(!concursos.length){
     document.getElementById("painelLotomaniaInfo").innerHTML =
@@ -691,22 +678,28 @@ async function buscarConcursosLotomania(){
   }
 
   const ultimo = concursos[0];
-  const analise = analisarHistoricoLotomania(concursos);
 
-let listaConcursosHTML = `
-  <div class="card">
-    <strong>📜 Últimos ${concursos.length} concursos</strong>
-    <div class="stats" style="max-height:180px; overflow-y:auto; font-size:13px">
-      ${concursos
-        .map((c,idx) => `<div>${idx === 0 ? "👉" : ""} ${c.join(" - ")}</div>`)
-        .join("")}
-    </div>
-  </div>
-`;
-
-  // guarda globalmente
+  // guarda global
   window.concursosLotomania = concursos;
   window.ultimoLotomania = ultimo;
+
+  // 📜 lista dos concursos
+  let listaConcursosHTML = `
+    <div class="card">
+      <strong>📜 Últimos ${concursos.length} concursos</strong>
+      <div class="stats" style="max-height:180px; overflow-y:auto; font-size:13px">
+        ${concursos
+          .map((c,idx) => `<div>${idx === 0 ? "👉" : ""} ${c.join(" - ")}</div>`)
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  // 🔢 dezenas mais repetidas
+  const mapa = {};
+  concursos.flat().forEach(n => {
+    mapa[n] = (mapa[n] || 0) + 1;
+  });
 
   let html = `
     <div class="card">
@@ -720,26 +713,23 @@ let listaConcursosHTML = `
         ${ultimo.join(" - ")}
       </div>
     </div>
-  `;
 
-  if(analise){
-    html += `
-      <div class="card">
-        <strong>🔢 Dezenas mais repetidas</strong>
-        <div class="stats">
-          ${Object.entries(analise.mapa)
-            .sort((a,b)=>b[1]-a[1])
-            .slice(0,15)
-            .map(([n,q]) => n + ": " + q + "x")
-            .join(" | ")}
-        </div>
+    ${listaConcursosHTML}
+
+    <div class="card">
+      <strong>🔢 Dezenas mais repetidas</strong>
+      <div class="stats">
+        ${Object.entries(mapa)
+          .sort((a,b)=>b[1]-a[1])
+          .slice(0,15)
+          .map(([n,q]) => n + ": " + q + "x")
+          .join(" | ")}
       </div>
-    `;
-  }
+    </div>
+  `;
 
   document.getElementById("painelLotomaniaInfo").innerHTML = html;
 }
-
 
 // Lotofácil
 async function buscarConcursos(){
