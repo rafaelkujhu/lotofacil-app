@@ -247,6 +247,7 @@ button{
 </div>
 
 <!-- ================= LOTOMANIA ================= -->
+ <div class="content" id="tab1">
 <div class="card" style="margin-bottom:10px">
 
   <button class="btn" onclick="buscarConcursosLotomania()">🔍 Buscar concursos</button>
@@ -695,6 +696,10 @@ async function buscarConcursosLotomania(){
     mapa[n] = (mapa[n] || 0) + 1;
   });
 
+// guarda global para o gerador usar depois
+window.estatLotomania = estat;
+window.mapaLotomania = mapa;
+
 let html = `
   <div class="card">
     <strong>📊 Estatísticas da Lotomania (últimos ${concursos.length} concursos)</strong>
@@ -773,14 +778,21 @@ function gerarEstatisticasLotomaniaCompletas(concursos){
   });
   let mediaSequencias = (totalSequencias / concursos.length).toFixed(1);
 
-  return {
-    pares,
-    impares,
-    somaMedia,
-    faixas,
-    mediaSequencias
-  };
-}
+return {
+  pares,
+  impares,
+  somaMedia,
+  faixas,
+  mediaSequencias,
+  mediaParesPorJogo: (pares / concursos.length / 50).toFixed(2), // proporção
+  mediaFaixasPorJogo: {
+    f1: (faixas.f1 / concursos.length / 50),
+    f2: (faixas.f2 / concursos.length / 50),
+    f3: (faixas.f3 / concursos.length / 50),
+    f4: (faixas.f4 / concursos.length / 50),
+    f5: (faixas.f5 / concursos.length / 50)
+  }
+};
 
 
 // Lotofácil
@@ -995,22 +1007,92 @@ function gerarEstatisticasLotomania(concursos){
   `;
 }
 
+function gerarEquilibradoInteligente(estat, mapa){
+
+  let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
+  let quentes = ordenadas.slice(0, 30).map(x => Number(x[0]));
+  let frias   = ordenadas.slice(-30).map(x => Number(x[0]));
+
+  let jogo = [];
+  let alvoPares = Math.round(estat.mediaParesPorJogo * 50);
+
+  while(jogo.length < 50){
+
+    let usarQuente = Math.random() < 0.6;
+    let fonte = usarQuente ? quentes : frias;
+
+    let n = fonte[Math.floor(Math.random() * fonte.length)];
+    if(jogo.includes(n)) continue;
+
+    let paresAtuais = jogo.filter(x => x % 2 === 0).length;
+    if(n % 2 === 0 && paresAtuais >= alvoPares) continue;
+
+    jogo.push(n);
+  }
+
+  return jogo.sort((a,b)=>a-b);
+}
+
+
+function gerarVinteEstatistico(estat, mapa){
+
+  let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
+  let quentes = ordenadas.slice(0, 50).map(x => Number(x[0]));
+
+  let jogo = [];
+
+  while(jogo.length < 50){
+    let n = quentes[Math.floor(Math.random() * quentes.length)];
+    if(jogo.includes(n)) continue;
+    jogo.push(n);
+  }
+
+  return jogo.sort((a,b)=>a-b);
+}
+
+
+function gerarZeroEstatistico(estat, mapa){
+
+  let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
+  let frias = ordenadas.slice(-50).map(x => Number(x[0]));
+
+  let jogo = [];
+
+  while(jogo.length < 50){
+    let n = frias[Math.floor(Math.random() * frias.length)];
+    if(jogo.includes(n)) continue;
+    jogo.push(n);
+  }
+
+  return jogo.sort((a,b)=>a-b);
+}
 
 // =========================
 // 6️⃣ GERADORES LOTOMANIA
 // =========================
 
-function gerarJogoLotomaniaBase(modo, ultimo){
-  let jogo = [];
-  let tentativas = 0;
-  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+function gerarJogoLotomaniaBase(modo, ultimo, estat, mapa){
 
-  if(modo === "vinte" && ultimo.length){
-    while(jogo.length < 15){
-      let n = ultimo[Math.floor(Math.random() * ultimo.length)];
-      if(!jogo.includes(n)) jogo.push(n);
-    }
+  // se ainda não buscou concursos
+  if(!estat || !mapa){
+    return gerarJogoAleatorioLotomania();
   }
+
+  if(modo === "equilibrado"){
+    return gerarEquilibradoInteligente(estat, mapa);
+  }
+
+  if(modo === "vinte"){
+    return gerarVinteEstatistico(estat, mapa);
+  }
+
+  if(modo === "zero"){
+    return gerarZeroEstatistico(estat, mapa);
+  }
+
+  return gerarJogoAleatorioLotomania();
+}
+
 
   while(jogo.length < 50 && tentativas < 15000){
     tentativas++;
@@ -1113,7 +1195,13 @@ async function gerarLotomania(){
   }
 
   for(let i = 0; i < qtd; i++){
-    let jogo = gerarJogoLotomaniaBase(modo, ultimo);
+   let jogo = gerarJogoLotomaniaBase(
+  modo,
+  ultimo,
+  window.estatLotomania,
+  window.mapaLotomania
+);
+
     if(!jogo) continue;
 
     let score = calcularScoreRiscoLotomania(jogo, ultimo);
