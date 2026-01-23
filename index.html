@@ -165,8 +165,7 @@ button{
 </div>
 
 <!-- ================= LOTOFÁCIL ================= -->
-<div class="content" id="tab0">
-
+<div class="content" id="tab0" style="display:block">
 <div class="card">
 <button onclick="buscarConcursos()">🔍 Buscar concursos</button>
 <div class="radio-group">
@@ -247,7 +246,7 @@ button{
 </div>
 
 <!-- ================= LOTOMANIA ================= -->
- <div class="content" id="tab1">
+<div class="content" id="tab1" style="display:none">
 <div class="card" style="margin-bottom:10px">
 
   <button class="btn" onclick="buscarConcursosLotomania()">🔍 Buscar concursos</button>
@@ -277,6 +276,61 @@ button{
   <option value="zero">🔵 Modo 0 Pontos</option>
   <option value="vinte">🔴 Modo 20 Pontos</option>
 </select>
+
+<select id="modoLotomania">
+  <option value="equilibrado">🎯 Equilibrado</option>
+  <option value="zero">🔵 Modo 0 Pontos</option>
+  <option value="vinte">🔴 Modo 20 Pontos</option>
+</select>
+
+<!-- 🧠 TEXTO EDUCATIVO DOS MODOS -->
+<div class="card">
+  <strong>🧠 Como funcionam os modos da Lotomania</strong>
+
+  <div class="stats" style="margin-top:8px">
+
+    <strong>🎯 Modo Equilibrado Inteligente</strong><br>
+    Este modo tenta reproduzir o comportamento médio dos concursos reais.<br>
+    Ele força:
+    <ul>
+      <li>Pares e ímpares próximos da média histórica</li>
+      <li>Distribuição equilibrada entre as faixas (0–19, 20–39, etc)</li>
+      <li>Mistura dezenas <em>quentes</em> com <em>frias</em></li>
+    </ul>
+    Objetivo: gerar jogos estatisticamente saudáveis, evitando extremos.
+
+    <hr>
+
+    <strong>🔴 Modo 20 Pontos Estatístico</strong><br>
+    Ele prioriza padrões mais comuns entre jogos com muitos acertos:
+    <ul>
+      <li>Dezenas mais repetidas</li>
+      <li>Faixas dominantes</li>
+      <li>Padrões mais frequentes</li>
+    </ul>
+    Objetivo: buscar combinações com perfil típico de altos acertos.
+
+    <hr>
+
+    <strong>🔵 Modo 0 Pontos Estatístico</strong><br>
+    Ele evita os padrões mais comuns:
+    <ul>
+      <li>Evita dezenas quentes</li>
+      <li>Evita faixas dominantes</li>
+      <li>Evita padrões frequentes</li>
+    </ul>
+    Objetivo: gerar jogos raros, fora do padrão estatístico comum.
+
+    <hr>
+
+    <em>
+      ⚠️ Nenhum modo garante prêmio.<br>
+      Os modos apenas controlam o perfil estatístico do jogo gerado.
+    </em>
+
+  </div>
+</div>
+
 
 <input type="number" id="qtdLotomania" value="3" min="1">
 
@@ -1025,7 +1079,11 @@ function gerarEquilibradoInteligente(estat, mapa){
   let jogo = [];
   let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
 
-  while(jogo.length < 50){
+  let tentativas = 0;
+
+  while(jogo.length < 50 && tentativas < 20000){
+  tentativas++;
+
 
     let usarQuente = Math.random() < 0.6;
     let fonte = usarQuente ? quentes : frias;
@@ -1046,12 +1104,22 @@ function gerarEquilibradoInteligente(estat, mapa){
 
     if(faixas[faixa] >= 10) continue;
 
+    // evita repetir faixa dominante histórica
+    if(estat.faixas[faixa] > (estat.pares + estat.impares) / 5) continue;
+
+
     faixas[faixa]++;
     jogo.push(n);
   }
 
+  if(jogo.length < 50){
+    console.warn("Equilibrado travou. Fallback aleatório.");
+    return gerarJogoAleatorioLotomania();
+  }
+
   return jogo.sort((a,b)=>a-b);
 }
+
 
 function gerarVinteEstatistico(estat, mapa){
 
@@ -1062,10 +1130,19 @@ function gerarVinteEstatistico(estat, mapa){
 
   let jogo = [];
 
-  while(jogo.length < 50){
+let tentativas = 0;
+
+while(jogo.length < 50 && tentativas < 20000){
+  tentativas++;
+
     let n = quentes[Math.floor(Math.random() * quentes.length)];
     if(jogo.includes(n)) continue;
     jogo.push(n);
+  }
+
+   if(jogo.length < 50){
+    console.warn("Vinte Estatístico travou. Fallback aleatório.");
+    return gerarJogoAleatorioLotomania();
   }
 
   return jogo.sort((a,b)=>a-b);
@@ -1082,7 +1159,11 @@ function gerarZeroEstatistico(estat, mapa){
   let jogo = [];
   let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
 
-  while(jogo.length < 50){
+ let tentativas = 0;
+
+ while(jogo.length < 50 && tentativas < 20000){
+  tentativas++;
+
 
     let n = frias[Math.floor(Math.random() * frias.length)];
 
@@ -1103,8 +1184,14 @@ function gerarZeroEstatistico(estat, mapa){
     jogo.push(n);
   }
 
+  if(jogo.length < 50){
+    console.warn("Zero Estatístico travou. Fallback aleatório.");
+    return gerarJogoAleatorioLotomania();
+  }
+
   return jogo.sort((a,b)=>a-b);
 }
+
 
 // =========================
 // 6️⃣ GERADORES LOTOMANIA
@@ -1177,6 +1264,16 @@ function simularPontuacaoLotomania(jogo, simulacoes = 500){
 
   return dist.map(v => ((v / simulacoes) * 100).toFixed(2));
 }
+
+function gerarJogoAleatorioLotomania(){
+  let jogo = [];
+  while(jogo.length < 50){
+    let n = Math.floor(Math.random() * 100);
+    if(!jogo.includes(n)) jogo.push(n);
+  }
+  return jogo.sort((a,b)=>a-b);
+}
+
 
 async function gerarLotomania(){
   const qtd = +document.getElementById("qtdLotomania").value || 1;
