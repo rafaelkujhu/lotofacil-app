@@ -433,7 +433,6 @@ button{
 <!-- ================= SUPER SETE ================= -->
 <div class="content" id="tab3" style="display:none">
 
-  <div class="card">
    <div class="card">
   <strong>📚 Como funciona a geração no Super Sete</strong>
 
@@ -1676,7 +1675,7 @@ function analisar(jogo){
     `
   };
 }
-
+ 
  /* ===== LOTOFÁCIL PRO ===== */
 function gerarJogoLotofacilBase(modo, tamanho = 15){
   let jogo = [];
@@ -1821,7 +1820,7 @@ function gerarLotofacil(){
     let perfil =
       score >= 80 ? "🟢 Baixo risco" :
       score >= 50 ? "🟡 Médio risco" :
-                    "🔴 Alto risco";~
+                    "🔴 Alto risco";
 
 const padrao = estaDentroDoPadrao(jogo);
 
@@ -1829,7 +1828,7 @@ let seloPadrao = padrao.dentro
   ? "🟢 DENTRO do padrão estatístico"
   : "🔴 FORA do padrão estatístico";
 
-
+ const analiseAntiga = analisar(jogo);
     html += `
       <div class="resultado">
         ${jogo.join(" - ")}
@@ -1841,7 +1840,7 @@ let seloPadrao = padrao.dentro
   11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
   13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
 </div>
-
+${analiseAntiga.html}
       </div>
     `;
   }
