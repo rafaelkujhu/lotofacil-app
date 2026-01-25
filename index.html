@@ -1200,6 +1200,10 @@ function gerarEquilibradoInteligente(estat, mapa){
 
 function gerarZeroEstatistico(estat, mapa, jogosUnicos) {
 
+  if(!jogosUnicos){
+    jogosUnicos = new Set();
+  }
+
   let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
 
   // pega só as 60 mais frias
