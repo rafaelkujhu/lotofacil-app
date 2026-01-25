@@ -1008,6 +1008,20 @@ function gerarEstatisticasConcursos(concursos){
     <hr>
     <strong>🧠 Padrão Estatístico</strong>
   `;
+
+ const padrao = analisarHistoricoUltimoAno(concursos);
+
+ estatConcursos.innerHTML += `
+  <hr>
+  <strong>🧠 Padrão Estatístico dos Concursos</strong>
+  <div class="stats">
+    Dentro do padrão: ${padrao.dentro}<br>
+    Fora do padrão: ${padrao.fora}<br>
+    Total analisados: ${padrao.total}<br>
+    Taxa dentro do padrão: ${((padrao.dentro / padrao.total) * 100).toFixed(1)}%
+  </div>
+`;
+
 }
 
 
@@ -1617,6 +1631,22 @@ function calcularConfiabilidadeReal(jogo, concursosBase){
   return Math.min(100, score);
 }
 
+function estaDentroDoPadrao(jogo){
+
+  const pares = jogo.filter(n => n % 2 === 0).length;
+  const soma  = jogo.reduce((a,b)=>a+b,0);
+
+  const okPares = (pares === 7 || pares === 8);
+  const okSoma  = (soma >= 180 && soma <= 220);
+
+  return {
+    dentro: okPares && okSoma,
+    pares,
+    soma
+  };
+}
+
+
 function analisar(jogo){
   let pares = jogo.filter(n => n % 2 === 0).length;
   let soma = jogo.reduce((a,b)=>a+b,0);
@@ -1791,17 +1821,27 @@ function gerarLotofacil(){
     let perfil =
       score >= 80 ? "🟢 Baixo risco" :
       score >= 50 ? "🟡 Médio risco" :
-                    "🔴 Alto risco";
+                    "🔴 Alto risco";~
+
+const padrao = estaDentroDoPadrao(jogo);
+
+let seloPadrao = padrao.dentro
+  ? "🟢 DENTRO do padrão estatístico"
+  : "🔴 FORA do padrão estatístico";
+
 
     html += `
       <div class="resultado">
         ${jogo.join(" - ")}
-        <div class="stats">
-          <strong>${perfil}</strong><br>
-          Score: ${score}/100<br>
-          11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
-          13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
-        </div>
+       <div class="stats">
+  <strong>${perfil}</strong><br>
+  ${seloPadrao}<br>
+  Pares: ${padrao.pares} | Soma: ${padrao.soma}<br>
+  Score: ${score}/100<br>
+  11 pts: ${sim[11]}% | 12 pts: ${sim[12]}%<br>
+  13 pts: ${sim[13]}% | 14 pts: ${sim[14]}% | 15 pts: ${sim[15]}%
+</div>
+
       </div>
     `;
   }
