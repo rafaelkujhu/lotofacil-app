@@ -718,6 +718,46 @@ function gerarJogosDeterministicos(base, qtdJogos){
   return jogos;
 }
 
+// ===== SHUFFLE FORTE =====
+function shuffle(array) {
+  let arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ===== GERADOR ZERO PONTOS (CORRIGIDO) =====
+function gerarJogosZeroPontos(qtdJogos, ultimoResultado) {
+  const jogosUnicos = new Set();
+  const resultadoFinal = [];
+
+  while (resultadoFinal.length < qtdJogos) {
+
+    // recria base a cada jogo
+    let base = [];
+    for (let i = 1; i <= 100; i++) {
+      if (!ultimoResultado.includes(i)) {
+        base.push(i);
+      }
+    }
+
+    base = shuffle(base);
+
+    let jogo = base.slice(0, 50).sort((a, b) => a - b);
+    const chave = jogo.join("-");
+
+    if (!jogosUnicos.has(chave)) {
+      jogosUnicos.add(chave);
+      resultadoFinal.push(jogo);
+    }
+  }
+
+  return resultadoFinal;
+}
+
+
 // ===== BUSCAR CONCURSOS LOTOMANIA (VERSÃO FINAL CORRETA) =====
 async function buscarConcursosLotomania(){
 
@@ -1158,86 +1198,68 @@ function gerarEquilibradoInteligente(estat, mapa){
   return jogo.sort((a,b)=>a-b);
 }
 
-
-function gerarVinteEstatistico(estat, mapa){
-
-  let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
-
-  // pega só as 60 mais quentes
-  let quentes = ordenadas.slice(0, 40).map(x => Number(x[0]));
-
-  let jogo = [];
-
-let tentativas = 0;
-
-while(jogo.length < 50 && tentativas < 20000){
-  tentativas++;
-
-    let n = quentes[Math.floor(Math.random() * quentes.length)];
-    if(jogo.includes(n)) continue;
-    jogo.push(n);
-  }
-
-   if(jogo.length < 50){
-    console.warn("Vinte Estatístico travou. Fallback aleatório.");
-    return gerarJogoAleatorioLotomania();
-  }
-
-  return jogo.sort((a,b)=>a-b);
-}
-
-
-function gerarZeroEstatistico(estat, mapa){
+function gerarZeroEstatistico(estat, mapa, jogosUnicos) {
 
   let ordenadas = Object.entries(mapa).sort((a,b)=>b[1]-a[1]);
 
   // pega só as 60 mais frias
-  let frias = ordenadas.slice(-60).map(x => Number(x[0]));
+  let friasBase = ordenadas.slice(-60).map(x => Number(x[0]));
 
-  let jogo = [];
-  let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+  let tentativasGlobais = 0;
 
- let tentativas = 0;
+  while (tentativasGlobais < 1000) {
+    tentativasGlobais++;
 
- while(jogo.length < 50 && tentativas < 20000){
-  tentativas++;
+    // 🔥 embaralha as frias a cada novo jogo
+    let frias = shuffle(friasBase);
 
+    let jogo = [];
+    let faixas = { f1:0, f2:0, f3:0, f4:0, f5:0 };
+    let tentativas = 0;
 
-    let n = frias[Math.floor(Math.random() * frias.length)];
+    while (jogo.length < 50 && tentativas < 20000) {
+      tentativas++;
 
-    // não repete número
-    if(jogo.includes(n)) continue;
+      let n = frias[Math.floor(Math.random() * frias.length)];
 
-    // 🔵 BLOQUEIO DE FAIXA DOMINANTE (AQUI)
-    let faixa =
-      n <= 19 ? "f1" :
-      n <= 39 ? "f2" :
-      n <= 59 ? "f3" :
-      n <= 79 ? "f4" : "f5";
+      if (jogo.includes(n)) continue;
 
-    // se essa faixa já é dominante no histórico, evita
-    if(estat.faixas[faixa] > (estat.pares + estat.impares) / 5) continue;
+      let faixa =
+        n <= 19 ? "f1" :
+        n <= 39 ? "f2" :
+        n <= 59 ? "f3" :
+        n <= 79 ? "f4" : "f5";
 
-    faixas[faixa]++;
-    jogo.push(n);
+      if (estat.faixas[faixa] > (estat.pares + estat.impares) / 5) continue;
+
+      faixas[faixa]++;
+      jogo.push(n);
+    }
+
+    if (jogo.length < 50) continue;
+
+    let ordenado = jogo.sort((a,b)=>a-b);
+    let chave = ordenado.join("-");
+
+    // 🔐 garante que não repete jogo
+    if (!jogosUnicos.has(chave)) {
+      jogosUnicos.add(chave);
+      return ordenado;
+    }
   }
 
-  if(jogo.length < 50){
-    console.warn("Zero Estatístico travou. Fallback aleatório.");
-    return gerarJogoAleatorioLotomania();
-  }
-
-  return jogo.sort((a,b)=>a-b);
+  console.warn("Zero Estatístico não conseguiu gerar jogo único. Fallback.");
+  return gerarJogoAleatorioLotomania();
 }
+
 
 
 // =========================
 // 6️⃣ GERADORES LOTOMANIA
 // =========================
 
-function gerarJogoLotomaniaBase(modo, ultimo, estat, mapa){
+function gerarJogoLotomaniaBase(modo, ultimo, estat, mapa, jogosUnicos){
 
-  // se ainda não buscou concursos
   if(!estat || !mapa){
     return gerarJogoAleatorioLotomania();
   }
@@ -1251,7 +1273,7 @@ function gerarJogoLotomaniaBase(modo, ultimo, estat, mapa){
   }
 
   if(modo === "zero"){
-    return gerarZeroEstatistico(estat, mapa);
+    return gerarZeroEstatistico(estat, mapa, jogosUnicos);
   }
 
   return gerarJogoAleatorioLotomania();
@@ -1312,16 +1334,11 @@ function gerarJogoAleatorioLotomania(){
   return jogo.sort((a,b)=>a-b);
 }
 
-
 async function gerarLotomania(){
   const qtd = +document.getElementById("qtdLotomania").value || 1;
   const modo = document.getElementById("modoLotomania").value;
 
-  // 🔥 busca o último concurso REAL da API
   const ultimo = await obterUltimoConcursoLotomania();
-
-  // se você tiver estatísticas históricas da Lotomania, use aqui
-  // gerarEstatisticasLotomania(concursos);  // só se concursos existir
 
   let html = "";
 
@@ -1336,13 +1353,18 @@ async function gerarLotomania(){
     `;
   }
 
+  // 🔐 CONTROLE GLOBAL DE JOGOS ÚNICOS
+  const jogosUnicos = new Set();
+
   for(let i = 0; i < qtd; i++){
-   let jogo = gerarJogoLotomaniaBase(
-  modo,
-  ultimo,
-  window.estatLotomania,
-  window.mapaLotomania
-);
+
+    let jogo = gerarJogoLotomaniaBase(
+      modo,
+      ultimo,
+      window.estatLotomania,
+      window.mapaLotomania,
+      jogosUnicos          // 👈 AQUI está a correção chave
+    );
 
     if(!jogo) continue;
 
