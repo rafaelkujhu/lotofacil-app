@@ -1003,26 +1003,28 @@ function gerarEstatisticasConcursos(concursos){
           .join(" | ")}
       </div>
     ` : ""}
-
-    <hr>
-    <strong>🧠 Padrão Estatístico</strong>
   `;
 
- const padrao = analisarHistoricoUltimoAno(concursos);
+const padrao = analisarHistoricoUltimoAno(concursos);
+const taxa = (padrao.dentro / padrao.total) * 100;
 
- estatConcursos.innerHTML += `
+let seloPadraoGlobal =
+  taxa >= 55 ? "🟢 PADRÃO SAUDÁVEL" :
+  taxa >= 30 ? "🟡 PADRÃO INSTÁVEL" :
+               "🔴 PADRÃO FRACO";
+
+estatConcursos.innerHTML += `
   <hr>
   <strong>🧠 Padrão Estatístico dos Concursos</strong>
   <div class="stats">
     Dentro do padrão: ${padrao.dentro}<br>
     Fora do padrão: ${padrao.fora}<br>
     Total analisados: ${padrao.total}<br>
-    Taxa dentro do padrão: ${((padrao.dentro / padrao.total) * 100).toFixed(1)}%
+    Taxa dentro do padrão: ${taxa.toFixed(1)}%<br><br>
+
+    <strong>${seloPadraoGlobal}</strong>
   </div>
 `;
-
-}
-
 
 // =========================
 // 5️⃣ ANÁLISES LOTOMANIA
