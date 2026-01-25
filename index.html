@@ -956,8 +956,8 @@ function analisarNumerosMaisFrequentes(concursos){
     .sort((a,b)=>b[1]-a[1])
     .slice(0,10);
 }
-
 function gerarEstatisticasConcursos(concursos){
+
   const repeticaoInfo = analisarRepeticaoConcursos(concursos);
   const numerosRepetidos = analisarNumerosMaisFrequentes(concursos);
 
@@ -978,6 +978,16 @@ function gerarEstatisticasConcursos(concursos){
 
   estatConcursos.style.display = "block";
 
+  // 🧠 calcula padrão ANTES
+  const padrao = analisarHistoricoUltimoAno(concursos);
+  const taxa = (padrao.dentro / padrao.total) * 100;
+
+  let seloPadraoGlobal =
+    taxa >= 55 ? "🟢 PADRÃO SAUDÁVEL" :
+    taxa >= 30 ? "🟡 PADRÃO INSTÁVEL" :
+                 "🔴 PADRÃO FRACO";
+
+  // 🖥️ monta HTML FINAL
   estatConcursos.innerHTML = `
     <strong>📊 Estatísticas dos Concursos</strong>
 
@@ -994,7 +1004,7 @@ function gerarEstatisticasConcursos(concursos){
 
     <div class="stats">Concursos analisados: ${concursos.length}</div>
 
-       ${numerosRepetidos && numerosRepetidos.length ? `
+    ${numerosRepetidos && numerosRepetidos.length ? `
       <hr>
       <strong>🔢 Números mais repetidos entre concursos</strong>
       <div class="stats">
@@ -1004,26 +1014,19 @@ function gerarEstatisticasConcursos(concursos){
       </div>
     ` : ""}
 
-const padrao = analisarHistoricoUltimoAno(concursos);
-const taxa = (padrao.dentro / padrao.total) * 100;
+    <hr>
+    <strong>🧠 Padrão Estatístico dos Concursos</strong>
+    <div class="stats">
+      Dentro do padrão: ${padrao.dentro}<br>
+      Fora do padrão: ${padrao.fora}<br>
+      Total analisados: ${padrao.total}<br>
+      Taxa dentro do padrão: ${taxa.toFixed(1)}%<br><br>
 
-let seloPadraoGlobal =
-  taxa >= 55 ? "🟢 PADRÃO SAUDÁVEL" :
-  taxa >= 30 ? "🟡 PADRÃO INSTÁVEL" :
-               "🔴 PADRÃO FRACO";
+      <strong>${seloPadraoGlobal}</strong>
+    </div>
+  `;
+}
 
-estatConcursos.innerHTML += `
-  <hr>
-  <strong>🧠 Padrão Estatístico dos Concursos</strong>
-  <div class="stats">
-    Dentro do padrão: ${padrao.dentro}<br>
-    Fora do padrão: ${padrao.fora}<br>
-    Total analisados: ${padrao.total}<br>
-    Taxa dentro do padrão: ${taxa.toFixed(1)}%<br><br>
-
-    <strong>${seloPadraoGlobal}</strong>
-  </div>
-`;
 
 // =========================
 // 5️⃣ ANÁLISES LOTOMANIA
