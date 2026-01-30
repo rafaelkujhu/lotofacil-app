@@ -372,22 +372,6 @@ button{
   <option value="automatico">🧠 Automático PRO Otimizado</option>
 </select>
 
-  <div id="configProFechamento" style="display:none">
-    <label class="stats" style="margin-top:8px">
-      Perfil do PRO:
-    </label>
-
-    <select id="perfilProFechamento">
-      <option value="conservador">🟢 Conservador</option>
-      <option value="equilibrado">🟡 PRO</option>
-      <option value="ousado">🔴 Ousado</option>
-    </select>
-
-    <p class="stats">
-      O perfil define o nível de risco estatístico usado na seleção da base.
-    </p>
-  </div>
-
   <hr>
 
   <strong>📐 Tipo de Fechamento</strong>
@@ -399,27 +383,11 @@ button{
   </select>
 
 <div class="card">
-  <strong>ℹ️ Como funciona o Fechamento PRO</strong>
-
-  <div class="stats">
-    • O Fechamento trabalha com uma <strong>base fixa</strong> de dezenas.<br><br>
-
-    • Quando a estratégia é <strong>Aleatória</strong>, a base é escolhida
-    sem filtros estatísticos.<br><br>
-
-    • Quando a estratégia é <strong>PRO</strong>, a base é formada apenas por
-    dezenas vindas de jogos com bom score estatístico.<br><br>
-
-    • No modo <strong>Automático</strong>, o sistema combina:
-    score estatístico + simulação + equilíbrio matemático
-    para selecionar a melhor base possível.<br><br>
-
-    • O <strong>perfil (Conservador / PRO / Ousado)</strong> define o nível de
-    risco aceito na seleção da base.<br><br>
-
-    ⚠️ O Fechamento <strong>não garante prêmio</strong>.
-    Ele reduz jogos matematicamente fracos e melhora a qualidade das combinações.
-  </div>
+  <strong>ℹ️ Sobre o fechamento</strong>
+  <p class="stats">
+    Sistema combinatório que reduz jogos mantendo cobertura.
+    A garantia vale se as dezenas sorteadas estiverem na base.
+  </p>
 </div>
 
 <div class="card">
@@ -1467,36 +1435,16 @@ return {
 
 /* ===== LOTOFÁCIL PRO — BASE PARA FECHAMENTO ===== */
 function gerarBaseViaLotofacilPro(baseQtd){
-  let numeros = [];
-  let tentativas = 0;
+  let base = [];
 
-  while(numeros.length < baseQtd && tentativas < 600){
-    tentativas++;
-
-    let jogo = gerarJogoLotofacilBase("equilibrado");
-    if(!jogo) continue;
-
-    let score = calcularScoreLotofacil(jogo);
-    let sim = simularPontuacaoLotofacil(jogo);
-
-    if(score < 70) continue;
-    if(parseFloat(sim["13"]) < 1.5) continue;
-
-    jogo.forEach(n=>{
-      if(!numeros.includes(n) && numeros.length < baseQtd){
-        numeros.push(n);
-      }
-    });
+  while(base.length < baseQtd){
+    let n = Math.floor(Math.random()*25)+1;
+    if(!base.includes(n)) base.push(n);
   }
 
-  while(numeros.length < baseQtd){
-    let n = Math.floor(Math.random() * 25) + 1;
-    if(!numeros.includes(n)) numeros.push(n);
-  }
+  return base.sort((a,b)=>a-b);
+}
 
-  return numeros.sort((a,b)=>a-b);
-
-  }
 
 // ===== VALIDAÇÃO MATEMÁTICA REAL =====
 function validarGarantia14(base, jogos){
@@ -1606,9 +1554,6 @@ function gerarFechamento(){
     document.getElementById("tipoFechamento").value
   );
 
-  if(tipo !== 17){
-    alert("Use 17 dezenas para fechamento profissional.");
-    return;
   }
 
   // 🔹 gera base de 17
@@ -1648,6 +1593,7 @@ function gerarFechamento(){
 
   saidaFechamento.innerHTML=html;
 }
+
 
 
 function calcularRepeticaoMedia(jogo, concursosBase){
