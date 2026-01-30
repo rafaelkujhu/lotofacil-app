@@ -380,26 +380,32 @@ button{
   </p>
 </div>
 
-<div class="card">
-  <strong>💰 Modo Orçamento</strong>
-
-  <input
-    type="number"
-    id="orcamento"
-    placeholder="Ex: 35"
-  >
-
-  <button onclick="modoOrcamento()">
-    Calcular Jogos pelo Orçamento
-  </button>
-</div>
-
   <button onclick="executarSeguro(gerarFechamento,'Fechamento Real')">
     Gerar Fechamento
   </button>
 
 </div>
 <div id="saidaFechamento"></div>
+</div>
+
+<!-- ================= ORÇAMENTO ================= -->
+
+<div class="card">
+  <strong>💰 Gerador por Orçamento</strong>
+
+  <p class="stats">
+    Gere jogos trabalhados conforme seu valor disponível.
+  </p>
+
+  <input
+    type="number"
+    id="orcamento"
+    placeholder="Valor em R$"
+  >
+
+  <button onclick="modoOrcamento()">
+    🎯 Gerar Jogos pelo Valor
+  </button>
 </div>
 
 <!-- ================= SUPER SETE ================= -->
