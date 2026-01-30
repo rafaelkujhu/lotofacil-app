@@ -364,16 +364,6 @@ button{
 
   <hr>
 
-  <strong>🧠 Estratégia da Base</strong>
-
-  <select id="modoBaseFechamento">
-  <option value="aleatorio">🎲 Base Aleatória</option>
-  <option value="pro">🔥 Base via Lotofácil PRO</option>
-  <option value="automatico">🧠 Automático PRO Otimizado</option>
-</select>
-
-  <hr>
-
   <strong>📐 Tipo de Fechamento</strong>
 
   <select id="tipoFechamento">
@@ -500,15 +490,7 @@ button{
 // 1️⃣ CONFIGURAÇÃO E GLOBAIS
 // =========================
 
-document
-  .getElementById("modoBaseFechamento")
-  .addEventListener("change", e => {
-    const mostrar = e.target.value !== "aleatorio";
-    document.getElementById("configProFechamento").style.display =
-      mostrar ? "block" : "none";
-  });
-
-let concursos = [];
+ let concursos = [];
 
 // Elementos globais
 const resultados = document.getElementById("resultados");
@@ -1554,30 +1536,57 @@ function gerarFechamento(){
     document.getElementById("tipoFechamento").value
   );
 
-  let base=[];
-  while(base.length<17){
-    let n=Math.floor(Math.random()*25)+1;
+  // 🎯 BASE INTELIGENTE
+  let base = [];
+
+  while(base.length < tipo){
+    let n = Math.floor(Math.random()*25)+1;
     if(!base.includes(n)) base.push(n);
   }
 
   base.sort((a,b)=>a-b);
 
-  let todos = combinar(base,15);
-  let reduzidos = reduzirJogos(todos,30);
+  // 📐 Combinações matemáticas reais
+  const todos = combinar(base,15);
 
-  let html=`
+  // 🔥 REDUÇÃO PROFISSIONAL
+  let jogos;
+
+  if(tipo === 16){
+    jogos = todos; // já é fechado natural
+  }
+  else if(tipo === 17){
+    jogos = reduzirJogos(todos,28);
+  }
+  else{
+    jogos = reduzirJogos(todos,36);
+  }
+
+  // 📊 Garantia teórica
+  const garantia =
+    tipo === 16 ? "14 pontos" :
+    tipo === 17 ? "13–14 pontos" :
+                  "13 pontos";
+
+  let html = `
     <div class="card">
-      <strong>Base 17 dezenas</strong><br>
+      <strong>Base ${tipo} dezenas</strong><br>
       ${base.join(" - ")}
+    </div>
+
+    <div class="card">
+      🎯 Garantia teórica: ${garantia}<br>
+      📊 Jogos gerados: ${jogos.length}
     </div>
   `;
 
-  reduzidos.forEach(j=>{
-    html+=`<div class="resultado">${j.join(" - ")}</div>`;
+  jogos.forEach(j=>{
+    html += `<div class="resultado">${j.join(" - ")}</div>`;
   });
 
-  saidaFechamento.innerHTML=html;
+  saidaFechamento.innerHTML = html;
 }
+
 
 function calcularRepeticaoMedia(jogo, concursosBase){
   if(!concursosBase.length) return 0;
@@ -1966,7 +1975,7 @@ function modoOrcamento(){
   `;
 
   for(let i=0;i<qtdJogos;i++){
-    let jogo = gerarJogoLotofacilBase("equilibrado");
+    let jogo = gerarLotofacil();
     html += `<div class="resultado">${jogo.join(" - ")}</div>`;
   }
 
