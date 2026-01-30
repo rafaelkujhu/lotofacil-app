@@ -1957,6 +1957,47 @@ function gerarLotofacilPro(){
   document.getElementById("saidaLotofacilPro").innerHTML = html;
 }
 
+function gerarJogoTrabalhado(){
+
+  let tentativas = 0;
+
+  while(tentativas < 500){
+    tentativas++;
+
+    let jogo = [];
+
+    while(jogo.length < 15){
+      let n = Math.floor(Math.random()*25)+1;
+      if(!jogo.includes(n)) jogo.push(n);
+    }
+
+    let pares = jogo.filter(n=>n%2===0).length;
+    let soma = jogo.reduce((a,b)=>a+b,0);
+
+    // 🎯 FILTROS FORTES
+    if(pares < 7 || pares > 8) continue;
+    if(soma < 180 || soma > 220) continue;
+
+    // 📊 Distribuição por faixas
+    let f1=0,f2=0,f3=0,f4=0;
+
+    jogo.forEach(n=>{
+      if(n<=6) f1++;
+      else if(n<=12) f2++;
+      else if(n<=18) f3++;
+      else f4++;
+    });
+
+    if(f1<3 || f2<3 || f3<3 || f4<3) continue;
+
+    return jogo.sort((a,b)=>a-b);
+  }
+
+  // fallback (raro)
+  return Array.from({length:15},()=>Math.floor(Math.random()*25)+1)
+              .sort((a,b)=>a-b);
+}
+
 function modoOrcamento(){
 
   let valor = Number(
@@ -1972,20 +2013,28 @@ function modoOrcamento(){
   const qtdJogos = Math.floor(valor / valorJogo);
   const resto = valor - (qtdJogos * valorJogo);
 
+  const jogosUnicos = new Set();
+
   let html = `
     <div class="card">
       💰 Orçamento: R$${valor.toFixed(2)}<br>
-      🎯 Jogos possíveis: ${qtdJogos}<br>
-      💵 Saldo restante: R$${resto.toFixed(2)}
+      🎯 Jogos trabalhados: ${qtdJogos}<br>
+      💵 Saldo: R$${resto.toFixed(2)}
     </div>
   `;
 
-  for(let i=0;i<qtdJogos;i++){
-    let jogo = gerarLotofacil();
-    html += `<div class="resultado">${jogo.join(" - ")}</div>`;
+  while(jogosUnicos.size < qtdJogos){
+
+    let jogo = gerarJogoTrabalhado();
+    let chave = jogo.join("-");
+
+    if(!jogosUnicos.has(chave)){
+      jogosUnicos.add(chave);
+      html += `<div class="resultado">${jogo.join(" - ")}</div>`;
+    }
   }
 
-  saidaFechamento.innerHTML = html;
+  document.getElementById("saidaFechamento").innerHTML = html;
 }
 
    
