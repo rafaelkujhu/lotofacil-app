@@ -1554,9 +1554,6 @@ function gerarFechamento(){
     document.getElementById("tipoFechamento").value
   );
 
-  }
-
-  // 🔹 gera base de 17
   let base=[];
   while(base.length<17){
     let n=Math.floor(Math.random()*25)+1;
@@ -1565,25 +1562,13 @@ function gerarFechamento(){
 
   base.sort((a,b)=>a-b);
 
-  // 🔥 fechamento real
-  let todos = combinar(base,15); // 136 jogos
-
-  // 💎 redução premium
+  let todos = combinar(base,15);
   let reduzidos = reduzirJogos(todos,30);
 
   let html=`
     <div class="card">
       <strong>Base 17 dezenas</strong><br>
       ${base.join(" - ")}
-    </div>
-
-    <div class="card">
-      ✅ Fechamento profissional 17→15<br>
-      Total completo: 136 jogos<br>
-      Versão reduzida: ${reduzidos.length} jogos
-      <div class="stats">
-        Se as 15 estiverem na base, há alta cobertura de 13–14 pontos.
-      </div>
     </div>
   `;
 
@@ -1593,8 +1578,6 @@ function gerarFechamento(){
 
   saidaFechamento.innerHTML=html;
 }
-
-
 
 function calcularRepeticaoMedia(jogo, concursosBase){
   if(!concursosBase.length) return 0;
